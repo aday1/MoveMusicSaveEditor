@@ -442,7 +442,7 @@ class MidiCCTable(QTableWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setColumnCount(3)
-        self.setHorizontalHeaderLabels(["Channel", "Control", "Value"])
+        self.setHorizontalHeaderLabels(["Channel", "CC #", "-> Value"])
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.setMaximumHeight(150)
 
@@ -750,6 +750,8 @@ class HitZonePanel(QWidget):
         # MIDI
         midi_group = CollapsibleGroup("MIDI")
         self.note_table = MidiNoteTable()
+        self.note_summary_label = QLabel()
+        self.note_summary_label.setWordWrap(True)
         self.note_add_btn = QPushButton("Add Note")
         self.note_remove_btn = QPushButton("Remove Note")
         note_btns = QHBoxLayout()
@@ -757,9 +759,12 @@ class HitZonePanel(QWidget):
         note_btns.addWidget(self.note_remove_btn)
         note_btn_w = QWidget(); note_btn_w.setLayout(note_btns)
         midi_group.form().addRow("Note Mappings:", self.note_table)
+        midi_group.form().addRow("Note Summary:", self.note_summary_label)
         midi_group.form().addRow("", note_btn_w)
 
         self.cc_table = MidiCCTable()
+        self.cc_summary_label = QLabel()
+        self.cc_summary_label.setWordWrap(True)
         self.cc_add_btn = QPushButton("Add CC")
         self.cc_remove_btn = QPushButton("Remove CC")
         cc_btns = QHBoxLayout()
@@ -767,6 +772,7 @@ class HitZonePanel(QWidget):
         cc_btns.addWidget(self.cc_remove_btn)
         cc_btn_w = QWidget(); cc_btn_w.setLayout(cc_btns)
         midi_group.form().addRow("CC Mappings:", self.cc_table)
+        midi_group.form().addRow("CC Summary:", self.cc_summary_label)
         midi_group.form().addRow("", cc_btn_w)
 
         self.msg_type_combo = QComboBox()
@@ -833,6 +839,12 @@ class HitZonePanel(QWidget):
         self.note_remove_btn.clicked.connect(self._remove_note_row)
         self.cc_add_btn.clicked.connect(self._add_cc_row)
         self.cc_remove_btn.clicked.connect(self._remove_cc_row)
+        self.note_table.data_changed.connect(self._refresh_midi_summaries)
+        self.cc_table.data_changed.connect(self._refresh_midi_summaries)
+
+    def _refresh_midi_summaries(self):
+        self.note_summary_label.setText(_format_note_mapping_summary(self.note_table.get_mappings()))
+        self.cc_summary_label.setText(_format_cc_mapping_summary(self.cc_table.get_mappings()))
 
     def _add_note_row(self):
         self.note_table.add_row()
@@ -866,6 +878,7 @@ class HitZonePanel(QWidget):
 
         self.note_table.set_mappings(hz.midi_note_mappings)
         self.cc_table.set_mappings(hz.midi_cc_mappings)
+        self._refresh_midi_summaries()
 
         self.msg_type_combo.blockSignals(True)
         idx = self.msg_type_combo.findText(hz.midi_message_type)
@@ -973,7 +986,10 @@ class MorphZonePanel(QWidget):
         self.x_enabled = QCheckBox()
         x_group.form().addRow("Enabled:", self.x_enabled)
         self.x_cc_table = MidiCCTable()
+        self.x_summary_label = QLabel()
+        self.x_summary_label.setWordWrap(True)
         x_group.form().addRow("Mappings:", self.x_cc_table)
+        x_group.form().addRow("Summary:", self.x_summary_label)
         x_btns = QHBoxLayout()
         self.x_add = QPushButton("Add"); self.x_remove = QPushButton("Remove")
         x_btns.addWidget(self.x_add); x_btns.addWidget(self.x_remove)
@@ -986,7 +1002,10 @@ class MorphZonePanel(QWidget):
         self.y_enabled = QCheckBox()
         y_group.form().addRow("Enabled:", self.y_enabled)
         self.y_cc_table = MidiCCTable()
+        self.y_summary_label = QLabel()
+        self.y_summary_label.setWordWrap(True)
         y_group.form().addRow("Mappings:", self.y_cc_table)
+        y_group.form().addRow("Summary:", self.y_summary_label)
         y_btns = QHBoxLayout()
         self.y_add = QPushButton("Add"); self.y_remove = QPushButton("Remove")
         y_btns.addWidget(self.y_add); y_btns.addWidget(self.y_remove)
@@ -999,7 +1018,10 @@ class MorphZonePanel(QWidget):
         self.z_enabled = QCheckBox()
         z_group.form().addRow("Enabled:", self.z_enabled)
         self.z_cc_table = MidiCCTable()
+        self.z_summary_label = QLabel()
+        self.z_summary_label.setWordWrap(True)
         z_group.form().addRow("Mappings:", self.z_cc_table)
+        z_group.form().addRow("Summary:", self.z_summary_label)
         z_btns = QHBoxLayout()
         self.z_add = QPushButton("Add"); self.z_remove = QPushButton("Remove")
         z_btns.addWidget(self.z_add); z_btns.addWidget(self.z_remove)
@@ -1043,6 +1065,14 @@ class MorphZonePanel(QWidget):
         self.y_remove.clicked.connect(lambda: self._remove_cc_row(self.y_cc_table))
         self.z_add.clicked.connect(lambda: self._add_cc_row(self.z_cc_table))
         self.z_remove.clicked.connect(lambda: self._remove_cc_row(self.z_cc_table))
+        self.x_cc_table.data_changed.connect(self._refresh_axis_summaries)
+        self.y_cc_table.data_changed.connect(self._refresh_axis_summaries)
+        self.z_cc_table.data_changed.connect(self._refresh_axis_summaries)
+
+    def _refresh_axis_summaries(self):
+        self.x_summary_label.setText(_format_cc_mapping_summary(self.x_cc_table.get_mappings(), prefix="X: "))
+        self.y_summary_label.setText(_format_cc_mapping_summary(self.y_cc_table.get_mappings(), prefix="Y: "))
+        self.z_summary_label.setText(_format_cc_mapping_summary(self.z_cc_table.get_mappings(), prefix="Z: "))
 
     def _add_cc_row(self, table):
         table.add_row()
@@ -1082,6 +1112,7 @@ class MorphZonePanel(QWidget):
         self.z_enabled.setChecked(mz.is_z_axis_enabled)
         self.z_enabled.blockSignals(False)
         self.z_cc_table.set_mappings(mz.z_axis_cc_mappings)
+        self._refresh_axis_summaries()
 
         self.dimensions_combo.blockSignals(True)
         idx = self.dimensions_combo.findText(mz.dimensions)
