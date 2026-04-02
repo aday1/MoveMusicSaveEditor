@@ -16,7 +16,7 @@ from typing import Optional, List
 from PyQt6.QtCore import Qt, pyqtSignal, QPoint, QRectF, QRect
 from PyQt6.QtGui import (
     QMouseEvent, QWheelEvent, QPainter, QFont, QFontMetrics,
-    QColor, QPen, QBrush, QPainterPath,
+    QColor, QPen, QBrush, QPainterPath, QKeySequence, QShortcut,
 )
 from PyQt6.QtWidgets import QMenu, QSplitter, QWidget, QVBoxLayout
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
@@ -212,6 +212,7 @@ class SceneViewport(QOpenGLWidget):
     toggle_lock_requested = pyqtSignal(list)  # [elements]
     # Workspace transfer signals
     move_to_workspace_requested = pyqtSignal(list, str)  # [elements], workspace_id
+    status_message = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -258,6 +259,24 @@ class SceneViewport(QOpenGLWidget):
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
+        # Explicit shortcuts keep Alt+Arrow MIDI nudges working on Windows,
+        # where the menu bar can otherwise consume Alt key combos.
+        self._shortcut_cc_up = QShortcut(QKeySequence("Alt+Up"), self)
+        self._shortcut_cc_up.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        self._shortcut_cc_up.activated.connect(lambda: self._on_shortcut_midi_cc(1))
+
+        self._shortcut_cc_down = QShortcut(QKeySequence("Alt+Down"), self)
+        self._shortcut_cc_down.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        self._shortcut_cc_down.activated.connect(lambda: self._on_shortcut_midi_cc(-1))
+
+        self._shortcut_note_up = QShortcut(QKeySequence("Alt+Shift+Up"), self)
+        self._shortcut_note_up.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        self._shortcut_note_up.activated.connect(lambda: self._on_shortcut_midi_note(1))
+
+        self._shortcut_note_down = QShortcut(QKeySequence("Alt+Shift+Down"), self)
+        self._shortcut_note_down.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        self._shortcut_note_down.activated.connect(lambda: self._on_shortcut_midi_note(-1))
+
     # -- Backward-compat property --
 
     @property
@@ -298,6 +317,18 @@ class SceneViewport(QOpenGLWidget):
         """Emit both selection signals."""
         self.selection_changed.emit(list(self.selected_elements))
         self.element_selected.emit(self.selected_element)
+
+    def _on_shortcut_midi_cc(self, delta: int):
+        """Handle Alt+Up/Down MIDI CC nudge shortcuts."""
+        self.setFocus(Qt.FocusReason.ShortcutFocusReason)
+        self._nudge_selected_midi_cc(delta)
+        self.update()
+
+    def _on_shortcut_midi_note(self, delta: int):
+        """Handle Alt+Shift+Up/Down MIDI note nudge shortcuts."""
+        self.setFocus(Qt.FocusReason.ShortcutFocusReason)
+        self._nudge_selected_midi_note(delta)
+        self.update()
 
     def _midi_summary(self, elem, limit: int = 4) -> list:
         """Return short human-readable MIDI mapping summaries for an element."""
@@ -2024,6 +2055,7 @@ class SceneViewport(QOpenGLWidget):
         """Show a status message that fades out after a few seconds."""
         self._status_message = message
         self._status_timer = 120  # frames (about 2 seconds at 60fps)
+        self.status_message.emit(message)
 
 
 def _multiply_quaternions(q1: Quat, q2: Quat) -> Quat:
@@ -2139,6 +2171,7 @@ class QuadViewport(QWidget):
     change_color_requested = pyqtSignal(list)  # [elements]
     toggle_lock_requested = pyqtSignal(list)  # [elements]
     move_to_workspace_requested = pyqtSignal(list, str)  # [elements], workspace_id
+    status_message = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -2190,6 +2223,7 @@ class QuadViewport(QWidget):
             vp.change_color_requested.connect(self.change_color_requested)
             vp.toggle_lock_requested.connect(self.toggle_lock_requested)
             vp.move_to_workspace_requested.connect(self.move_to_workspace_requested)
+            vp.status_message.connect(self.status_message)
             vp.maximize_requested.connect(lambda v=vp: self._toggle_maximize(v))
 
     def _on_child_selection_changed(self, elements):
