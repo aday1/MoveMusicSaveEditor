@@ -4,7 +4,7 @@ A desktop tool for editing [MoveMusic](https://movemusic.com/) `.mmc` save files
 
 MoveMusic is a VR music creation app by **Tim Arterbury** that lets you build MIDI instruments in virtual reality — HitZones (drums/pads), MorphZones (XY/XYZ controllers), TextLabels, and Groups arranged in 3D space.
 
-**MMC Editor** was developed by **aday** so he could edit save files and deploy 3D scenes before putting on the headset. Instead of fumbling with VR controllers to nudge elements around, you get a full desktop editor with multi-select, undo/redo, auto-layout, and 3D export.
+**MMC Editor** was developed by **aday** so he could edit save files and deploy 3D scenes before putting on the headset. Instead of fumbling with VR controllers to nudge elements around, assign MIDI CC, you get a full desktop editor with multi-select, undo/redo, auto-layout, and 3D export.
 
 ---
 
@@ -13,15 +13,23 @@ MoveMusic is a VR music creation app by **Tim Arterbury** that lets you build MI
 - **Full .mmc round-trip** — Parse and re-serialize UE4 GVAS save files byte-perfectly
 - **3D viewport** — Orbit/pan/zoom scene view with OpenGL rendering (single + quad view)
 - **Multi-select** — Shift+click, Ctrl+click, rubber-band marquee selection
+- **Batch delete** — Select All (Ctrl+A) or multi-select then Delete removes all selected in one undo step
 - **Property editing** — All HitZone, MorphZone, TextLabel, and GroupIE properties with undo/redo
 - **MIDI mapping** — Edit note mappings, CC mappings, channels, velocity curves
+- **MIDI nudge** — Alt+Up/Down to increment/decrement CC values on selected elements
 - **Auto-layout** — Arrange selected elements in Row, Grid, or Circle formations
-- **Templates** — Grouped template menu (Keyboard, Controllers, Drums, Utility, Debug)
-- **Keyboard templates** — Full MIDI row and circle layouts with octave color coding
+- **Templates** — 100+ preset templates across Faders, Knobs, XY Pads, Buttons, Drum Pads, Keyboards, Mixer, and Fun Shapes
+- **Template placement orientation** — Drop templates Flat (XY), Vertical (XZ), or Side (YZ) via the Templates menu
+- **Auto-increment MIDI** — Templates automatically assign non-overlapping CC and note values
+- **Geometry layouts** — Each template type supports Row, Circle, Grid, Arc, Diamond, Spiral, Zigzag, and Triangle arrangements
+- **Fun Shapes** — Pixel-art TextLabel overlays (letters A-Z, digits 0-9, symbols, plus real-world objects like House, Tree, Car, Piano) with multi-color definitions
+- **3D gizmo** — Translate, resize, and rotate elements with axis handles and ring gizmos; hover highlights and cursor feedback
+- **Group transform** — Resize and rotate multiple selected elements together
+- **Keyboard templates** — Full MIDI keyboards in 1, 2, 3, 5, and 10 octave sizes with Row, Circle, and Triangle layouts
 - **Mass editing** — Select multiple elements in the tree to batch-change properties
 - **Grid snapping** — Snap-to-grid during drag (toggle with G key)
 - **3D export** — Wavefront OBJ and glTF Binary (.glb) with optional orbit camera for AR overlays
-- **Futuristic UI** — Dark cyberpunk theme inspired by VR interfaces and DAW channel strips
+- **Fancy Futuristic UI** — Dark
 
 ## Quick Start
 
@@ -45,19 +53,19 @@ If you use a desktop shortcut, point it to `launch_editor.bat` in this folder.
 
 ## Template Menu Groups
 
-- **Keyboard**
-	- Keyboard (Full MIDI Row)
-	- Keyboard (Full MIDI Circle)
-	- KEYBOARD L->R (All Octaves 0-127)
-	- KEYBOARD Circle (All Octaves 0-127)
-- **Controllers**
-	- Faders, Knobs, XY Pads, Buttons
-- **Drums**
-	- Drum pad layouts (8/16)
-- **Utility**
-	- Mixer (8 Faders + 8 Knobs)
-- **Debug**
-	- DEBUG: Everything Kitchen Sink
+- **Faders** — 8/16 fader layouts (Row, Circle, Grid, Arc, Diamond, Spiral, Zigzag, Triangle)
+- **Knobs** — 8/16 knob layouts with the same geometry options
+- **XY Pads** — 4/8 XY pad layouts
+- **Buttons** — 8/16 button layouts
+- **Drum Pads** — 8/16 drum pad layouts
+- **Keyboards** — 1, 2, 3, 5, and 10 octave keyboards in Row, Circle, and Triangle
+- **Mixer** — 8-channel mixer strip (Faders + Knobs)
+- **Fun Shapes** — Pixel-art overlays built from TextLabels
+  - Letters A-Z, Digits 0-9
+  - Symbols: &, @, #, !, ?
+  - Objects: House, Tree, Car, Star, Heart, Smiley, Piano, Guitar, Rocket, Robot, Crown, Diamond, Anchor, Umbrella
+  - Multi-color per shape (e.g., red roof, orange walls, blue door on House)
+- **Debug** — Kitchen sink template for testing
 
 ## Keyboard Shortcuts
 
@@ -68,31 +76,35 @@ If you use a desktop shortcut, point it to `launch_editor.bat` in this folder.
 | `Ctrl+Z` / `Ctrl+Y` | Undo / Redo |
 | `Ctrl+A` | Select all elements |
 | `Ctrl+D` | Duplicate selection |
-| `Delete` | Delete selection |
+| `Delete` | Delete selection (single or batch) |
 | `Ctrl+L` | Auto-layout: Row |
 | `G` | Toggle grid snap |
 | `Home` | Fit all in view |
 | `Escape` | Deselect all |
+| `Alt+Up` / `Alt+Down` | Nudge MIDI CC +1 / -1 |
 | `Shift+Click` | Add/remove from selection |
 | `Right-drag` | Orbit camera |
 | `Middle-drag` | Pan |
 | `Scroll` | Zoom |
+| Left-drag gizmo cube | Resize on axis |
+| Left-drag gizmo ring | Rotate on axis |
 
 ## File Structure
 
 ```
 MoveMusicSaveEditor/
-├── editor.py              # Main PyQt6 application
+├── editor.py              # Main PyQt6 application, undo commands, template wiring
 ├── main.py                # Main app entry point
 ├── launch_editor.bat      # Windows launcher that pins working directory
 ├── model.py               # Domain model (HitZone, MorphZone, TextLabel, GroupIE)
 ├── gvas.py                # UE4 GVAS binary format parser/writer
-├── viewport3d.py          # OpenGL 3D viewport with multi-select & overlays
-├── template_generator.py  # Preset layout generators
+├── viewport3d.py          # OpenGL 3D viewport with gizmos, multi-select & overlays
+├── template_generator.py  # 100+ preset layout generators with geometry & pixel art
 ├── export3d.py            # OBJ + glTF/GLB export
 └── theme.py               # Cyberpunk UI stylesheet
 ```
 
 ## License
 
-Personal tool. MoveMusic is created by Tim Arterbury — https://movemusic.com/
+MoveMusic is created by Tim Arterbury — https://movemusic.com/
+The save editor was a weekend vibe by https://aday.net.au
