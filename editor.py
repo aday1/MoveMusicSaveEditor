@@ -311,28 +311,73 @@ class MidiNoteTable(QTableWidget):
         self.setHorizontalHeaderLabels(["Channel", "Note", "Velocity"])
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.setMaximumHeight(150)
-        self.cellChanged.connect(lambda: self.data_changed.emit())
+        # Note: data_changed signal will be connected when spin boxes are created
+
+    def _create_spin_widgets(self, row):
+        """Create enhanced spin box widgets for a table row."""
+        # Channel spin box (1-16)
+        channel_spin = _make_midi_channel_spin(1)
+        channel_spin.valueChanged.connect(lambda: self.data_changed.emit())
+        self.setCellWidget(row, 0, channel_spin)
+
+        # Note spin box (0-127)
+        note_spin = _make_midi_note_spin(60)
+        note_spin.valueChanged.connect(lambda: self.data_changed.emit())
+        self.setCellWidget(row, 1, note_spin)
+
+        # Velocity spin box (0.0-1.0, 2 decimal places)
+        velocity_spin = _make_float_spin(1.0, 0.0, 1.0, decimals=2, step=0.01)
+        velocity_spin.valueChanged.connect(lambda: self.data_changed.emit())
+        self.setCellWidget(row, 2, velocity_spin)
 
     def set_mappings(self, mappings: list):
         self.blockSignals(True)
+
+        # Clear existing rows
+        self.setRowCount(0)
+
+        # Add rows for each mapping
         self.setRowCount(len(mappings))
         for i, m in enumerate(mappings):
-            self.setItem(i, 0, QTableWidgetItem(str(m.channel)))
-            self.setItem(i, 1, QTableWidgetItem(str(m.note)))
-            self.setItem(i, 2, QTableWidgetItem(f"{m.velocity:.2f}"))
+            self._create_spin_widgets(i)
+
+            # Set values
+            self.cellWidget(i, 0).setValue(m.channel)
+            self.cellWidget(i, 1).setValue(m.note)
+            self.cellWidget(i, 2).setValue(m.velocity)
+
         self.blockSignals(False)
 
     def get_mappings(self) -> list:
         mappings = []
         for i in range(self.rowCount()):
             try:
-                ch = int(self.item(i, 0).text()) if self.item(i, 0) else 1
-                note = int(self.item(i, 1).text()) if self.item(i, 1) else 60
-                vel = float(self.item(i, 2).text()) if self.item(i, 2) else 1.0
-                mappings.append(MidiNoteMapping(ch, note, vel))
+                channel_widget = self.cellWidget(i, 0)
+                note_widget = self.cellWidget(i, 1)
+                velocity_widget = self.cellWidget(i, 2)
+
+                if channel_widget and note_widget and velocity_widget:
+                    ch = channel_widget.value()
+                    note = note_widget.value()
+                    vel = velocity_widget.value()
+                    mappings.append(MidiNoteMapping(ch, note, vel))
             except (ValueError, AttributeError):
                 pass
         return mappings
+
+    def add_row(self):
+        """Add a new row with default values."""
+        row = self.rowCount()
+        self.setRowCount(row + 1)
+        self._create_spin_widgets(row)
+        self.data_changed.emit()
+
+    def remove_selected_row(self):
+        """Remove the currently selected row."""
+        current_row = self.currentRow()
+        if current_row >= 0:
+            self.removeRow(current_row)
+            self.data_changed.emit()
 
 
 class MidiCCTable(QTableWidget):
@@ -344,28 +389,72 @@ class MidiCCTable(QTableWidget):
         self.setHorizontalHeaderLabels(["Channel", "Control", "Value"])
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.setMaximumHeight(150)
-        self.cellChanged.connect(lambda: self.data_changed.emit())
+
+    def _create_spin_widgets(self, row):
+        """Create enhanced spin box widgets for a table row."""
+        # Channel spin box (1-16)
+        channel_spin = _make_midi_channel_spin(1)
+        channel_spin.valueChanged.connect(lambda: self.data_changed.emit())
+        self.setCellWidget(row, 0, channel_spin)
+
+        # Control spin box (0-127)
+        control_spin = _make_midi_cc_spin(0)
+        control_spin.valueChanged.connect(lambda: self.data_changed.emit())
+        self.setCellWidget(row, 1, control_spin)
+
+        # Value spin box (0-127)
+        value_spin = _make_midi_cc_spin(0)
+        value_spin.valueChanged.connect(lambda: self.data_changed.emit())
+        self.setCellWidget(row, 2, value_spin)
 
     def set_mappings(self, mappings: list):
         self.blockSignals(True)
+
+        # Clear existing rows
+        self.setRowCount(0)
+
+        # Add rows for each mapping
         self.setRowCount(len(mappings))
         for i, m in enumerate(mappings):
-            self.setItem(i, 0, QTableWidgetItem(str(m.channel)))
-            self.setItem(i, 1, QTableWidgetItem(str(m.control)))
-            self.setItem(i, 2, QTableWidgetItem(str(m.value)))
+            self._create_spin_widgets(i)
+
+            # Set values
+            self.cellWidget(i, 0).setValue(m.channel)
+            self.cellWidget(i, 1).setValue(m.control)
+            self.cellWidget(i, 2).setValue(m.value)
+
         self.blockSignals(False)
 
     def get_mappings(self) -> list:
         mappings = []
         for i in range(self.rowCount()):
             try:
-                ch = int(self.item(i, 0).text()) if self.item(i, 0) else 1
-                ctrl = int(self.item(i, 1).text()) if self.item(i, 1) else 0
-                val = int(self.item(i, 2).text()) if self.item(i, 2) else 0
-                mappings.append(MidiCCMapping(ch, ctrl, val))
+                channel_widget = self.cellWidget(i, 0)
+                control_widget = self.cellWidget(i, 1)
+                value_widget = self.cellWidget(i, 2)
+
+                if channel_widget and control_widget and value_widget:
+                    ch = channel_widget.value()
+                    ctrl = control_widget.value()
+                    val = value_widget.value()
+                    mappings.append(MidiCCMapping(ch, ctrl, val))
             except (ValueError, AttributeError):
                 pass
         return mappings
+
+    def add_row(self):
+        """Add a new row with default values."""
+        row = self.rowCount()
+        self.setRowCount(row + 1)
+        self._create_spin_widgets(row)
+        self.data_changed.emit()
+
+    def remove_selected_row(self):
+        """Remove the currently selected row."""
+        current_row = self.currentRow()
+        if current_row >= 0:
+            self.removeRow(current_row)
+            self.data_changed.emit()
 
 
 class EnhancedDoubleSpinBox(QDoubleSpinBox):
@@ -690,32 +779,16 @@ class HitZonePanel(QWidget):
         self.cc_remove_btn.clicked.connect(self._remove_cc_row)
 
     def _add_note_row(self):
-        r = self.note_table.rowCount()
-        self.note_table.setRowCount(r + 1)
-        self.note_table.setItem(r, 0, QTableWidgetItem("1"))
-        self.note_table.setItem(r, 1, QTableWidgetItem("60"))
-        self.note_table.setItem(r, 2, QTableWidgetItem("1.00"))
-        self.note_table.data_changed.emit()
+        self.note_table.add_row()
 
     def _remove_note_row(self):
-        row = self.note_table.currentRow()
-        if row >= 0:
-            self.note_table.removeRow(row)
-            self.note_table.data_changed.emit()
+        self.note_table.remove_selected_row()
 
     def _add_cc_row(self):
-        r = self.cc_table.rowCount()
-        self.cc_table.setRowCount(r + 1)
-        self.cc_table.setItem(r, 0, QTableWidgetItem("1"))
-        self.cc_table.setItem(r, 1, QTableWidgetItem("0"))
-        self.cc_table.setItem(r, 2, QTableWidgetItem("0"))
-        self.cc_table.data_changed.emit()
+        self.cc_table.add_row()
 
     def _remove_cc_row(self):
-        row = self.cc_table.currentRow()
-        if row >= 0:
-            self.cc_table.removeRow(row)
-            self.cc_table.data_changed.emit()
+        self.cc_table.remove_selected_row()
 
     def load(self, hz: HitZone):
         self._target = hz
@@ -916,18 +989,10 @@ class MorphZonePanel(QWidget):
         self.z_remove.clicked.connect(lambda: self._remove_cc_row(self.z_cc_table))
 
     def _add_cc_row(self, table):
-        r = table.rowCount()
-        table.setRowCount(r + 1)
-        table.setItem(r, 0, QTableWidgetItem("1"))
-        table.setItem(r, 1, QTableWidgetItem("0"))
-        table.setItem(r, 2, QTableWidgetItem("0"))
-        table.data_changed.emit()
+        table.add_row()
 
     def _remove_cc_row(self, table):
-        row = table.currentRow()
-        if row >= 0:
-            table.removeRow(row)
-            table.data_changed.emit()
+        table.remove_selected_row()
 
     def load(self, mz: MorphZone):
         self._target = mz
