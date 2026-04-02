@@ -254,16 +254,6 @@ class BatchScaleCommand(QUndoCommand):
         for elem, (sx, sy, sz) in zip(self.elements, self.old_scales):
             elem.transform.scale = Vec3(sx, sy, sz)
 
-    def redo(self):
-        for elem in self.elements:
-            self.project.elements.append(elem)
-            self.workspace.element_ids.append(elem.unique_id)
-
-    def undo(self):
-        for elem in reversed(self.elements):
-            self.workspace.element_ids.remove(elem.unique_id)
-            self.project.elements.remove(elem)
-
 
 class GroupMembershipCommand(QUndoCommand):
     """Add or remove elements from a group with bounding box update."""

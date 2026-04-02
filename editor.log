@@ -19819,3 +19819,37 @@ AttributeError: 'BatchScaleCommand' object has no attribute 'project'
     ^^^^^^^^^^^^
 AttributeError: 'BatchScaleCommand' object has no attribute 'project'
 
+2026-04-03 10:50:37,743 INFO OpenGL initialized
+2026-04-03 10:50:54,564 INFO _on_viewport_select: None
+2026-04-03 10:50:55,005 INFO _on_viewport_select: None
+2026-04-03 10:50:55,533 INFO _on_viewport_select: TextLabel_C_17
+2026-04-03 10:50:55,533 INFO   tree item found: True
+2026-04-03 10:51:03,168 INFO _on_viewport_select: None
+2026-04-03 10:51:03,813 INFO _on_viewport_select: None
+2026-04-03 10:51:04,102 INFO _on_viewport_select: None
+2026-04-03 10:51:04,278 INFO _on_viewport_select: None
+2026-04-03 10:51:04,390 INFO _on_viewport_select: None
+2026-04-03 10:51:04,615 INFO _on_viewport_select: None
+2026-04-03 10:51:06,769 INFO _on_viewport_select: TextLabel_C_17
+2026-04-03 10:51:06,770 INFO   tree item found: True
+2026-04-03 10:51:51,783 INFO _on_viewport_select: HitZone_14
+2026-04-03 10:51:51,784 INFO   tree item found: True
+2026-04-03 10:51:53,830 INFO _on_viewport_select: None
+2026-04-03 10:51:53,900 INFO _on_viewport_select: None
+2026-04-03 10:51:55,106 INFO _on_viewport_select: HitZone_4
+2026-04-03 10:51:55,107 INFO   tree item found: True
+2026-04-03 10:52:12,615 INFO _on_viewport_select: None
+2026-04-03 10:52:12,720 INFO _on_viewport_select: None
+2026-04-03 10:52:22,159 INFO _on_viewport_select: None
+2026-04-03 10:52:22,209 INFO _on_viewport_select: None
+2026-04-03 10:52:30,224 CRITICAL Traceback (most recent call last):
+  File "C:\aday.slop\MoveMusicSaveEditor\MoveMusicSaveEditor\editor.py", line 1785, in <lambda>
+    self.action_layout_row.triggered.connect(lambda: self._on_auto_layout("Row"))
+                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.slop\MoveMusicSaveEditor\MoveMusicSaveEditor\editor.py", line 2655, in _on_auto_layout
+    QMessageBox.information(self, "Auto Layout",
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\enum.py", line 720, in __call__
+    def __call__(cls, value, names=_not_given, *values, module=None, qualname=None, type=None, start=1, boundary=None):
+    
+KeyboardInterrupt
+
