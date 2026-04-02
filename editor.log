@@ -19716,3 +19716,106 @@ AttributeError: 'BatchScaleCommand' object has no attribute 'project'
 2026-04-03 10:17:58,096 INFO OpenGL initialized
 2026-04-03 10:25:21,629 INFO OpenGL initialized
 2026-04-03 10:28:41,769 INFO OpenGL initialized
+2026-04-03 10:35:31,979 INFO OpenGL initialized
+2026-04-03 10:35:44,072 INFO _on_viewport_select: None
+2026-04-03 10:35:44,753 INFO _on_viewport_select: None
+2026-04-03 10:35:45,923 INFO _on_viewport_select: None
+2026-04-03 10:37:56,915 INFO _on_viewport_select: None
+2026-04-03 10:37:57,352 INFO _on_viewport_select: None
+2026-04-03 10:37:58,600 INFO _on_viewport_select: TextLabel_C_29
+2026-04-03 10:37:58,601 INFO   tree item found: True
+2026-04-03 10:37:59,206 INFO _on_viewport_select: None
+2026-04-03 10:37:59,502 INFO _on_viewport_select: None
+2026-04-03 10:37:59,660 INFO _on_viewport_select: TextLabel_C_29
+2026-04-03 10:37:59,660 INFO   tree item found: True
+2026-04-03 10:38:00,119 INFO _on_viewport_select: None
+2026-04-03 10:38:00,556 INFO _on_viewport_select: TextLabel_C_29
+2026-04-03 10:38:00,556 INFO   tree item found: True
+2026-04-03 10:38:00,943 INFO _on_viewport_select: None
+2026-04-03 10:38:01,283 INFO _on_viewport_select: None
+2026-04-03 10:38:01,399 INFO _on_viewport_select: TextLabel_C_29
+2026-04-03 10:38:01,400 INFO   tree item found: True
+2026-04-03 10:38:03,109 INFO _on_viewport_select: None
+2026-04-03 10:38:03,450 INFO _on_viewport_select: None
+2026-04-03 10:38:03,521 INFO _on_viewport_select: TextLabel_C_29
+2026-04-03 10:38:03,522 INFO   tree item found: True
+2026-04-03 10:38:03,941 INFO _on_viewport_select: None
+2026-04-03 10:38:04,277 INFO _on_viewport_select: None
+2026-04-03 10:38:04,317 INFO _on_viewport_select: TextLabel_C_29
+2026-04-03 10:38:04,317 INFO   tree item found: True
+2026-04-03 10:38:10,563 INFO _on_viewport_select: None
+2026-04-03 10:38:10,943 INFO _on_viewport_select: None
+2026-04-03 10:38:11,207 INFO _on_viewport_select: None
+2026-04-03 10:38:11,618 INFO _on_viewport_select: None
+2026-04-03 10:38:11,700 INFO _on_viewport_select: None
+2026-04-03 10:41:40,527 INFO OpenGL initialized
+2026-04-03 10:41:50,855 INFO _on_viewport_select: TextLabel_C_19
+2026-04-03 10:41:50,856 INFO   tree item found: True
+2026-04-03 10:41:53,356 INFO _on_viewport_select: TextLabel_C_25
+2026-04-03 10:41:53,357 INFO   tree item found: True
+2026-04-03 10:41:54,662 INFO _on_viewport_select: None
+2026-04-03 10:41:54,986 INFO _on_viewport_select: None
+2026-04-03 10:41:55,116 INFO _on_viewport_select: TextLabel_C_25
+2026-04-03 10:41:55,116 INFO   tree item found: True
+2026-04-03 10:41:55,676 INFO _on_viewport_select: TextLabel_C_22
+2026-04-03 10:41:55,676 INFO   tree item found: True
+2026-04-03 10:41:56,471 INFO _on_viewport_select: TextLabel_C_25
+2026-04-03 10:41:56,471 INFO   tree item found: True
+2026-04-03 10:42:00,797 CRITICAL Traceback (most recent call last):
+  File "C:\aday.slop\MoveMusicSaveEditor\MoveMusicSaveEditor\editor.py", line 259, in redo
+    self.project.elements.append(elem)
+    ^^^^^^^^^^^^
+AttributeError: 'BatchScaleCommand' object has no attribute 'project'
+
+2026-04-03 10:42:03,448 CRITICAL Traceback (most recent call last):
+  File "C:\aday.slop\MoveMusicSaveEditor\MoveMusicSaveEditor\editor.py", line 259, in redo
+    self.project.elements.append(elem)
+    ^^^^^^^^^^^^
+AttributeError: 'BatchScaleCommand' object has no attribute 'project'
+
+2026-04-03 10:43:40,541 CRITICAL Traceback (most recent call last):
+  File "C:\aday.slop\MoveMusicSaveEditor\MoveMusicSaveEditor\viewport3d.py", line 783, in paintEvent
+KeyboardInterrupt
+
+2026-04-03 10:43:46,420 INFO OpenGL initialized
+2026-04-03 10:43:52,689 INFO _on_viewport_select: TextLabel_C_15
+2026-04-03 10:43:52,689 INFO   tree item found: True
+2026-04-03 10:43:55,455 INFO _on_viewport_select: HitZone_13
+2026-04-03 10:43:55,455 INFO   tree item found: True
+2026-04-03 10:43:56,548 INFO _on_viewport_select: TextLabel_C_15
+2026-04-03 10:43:56,549 INFO   tree item found: True
+2026-04-03 10:43:57,294 INFO _on_viewport_select: TextLabel_C_15
+2026-04-03 10:43:57,294 INFO   tree item found: True
+2026-04-03 10:44:08,761 INFO _on_viewport_select: HitZone_12
+2026-04-03 10:44:08,761 INFO   tree item found: True
+2026-04-03 10:44:10,777 INFO _on_viewport_select: HitZone_12
+2026-04-03 10:44:10,777 INFO   tree item found: True
+2026-04-03 10:44:11,773 INFO _on_viewport_select: HitZone_12
+2026-04-03 10:44:11,773 INFO   tree item found: True
+2026-04-03 10:44:13,311 CRITICAL Traceback (most recent call last):
+  File "C:\aday.slop\MoveMusicSaveEditor\MoveMusicSaveEditor\editor.py", line 259, in redo
+    self.project.elements.append(elem)
+    ^^^^^^^^^^^^
+AttributeError: 'BatchScaleCommand' object has no attribute 'project'
+
+2026-04-03 10:44:13,540 INFO _on_viewport_select: HitZone_12
+2026-04-03 10:44:13,540 INFO   tree item found: True
+2026-04-03 10:46:42,378 CRITICAL Traceback (most recent call last):
+  File "C:\aday.slop\MoveMusicSaveEditor\MoveMusicSaveEditor\viewport3d.py", line 786, in paintEvent
+    tx = hx * 0.4
+    
+KeyboardInterrupt
+
+2026-04-03 10:46:48,141 INFO OpenGL initialized
+2026-04-03 10:47:06,015 CRITICAL Traceback (most recent call last):
+  File "C:\aday.slop\MoveMusicSaveEditor\MoveMusicSaveEditor\editor.py", line 259, in redo
+    self.project.elements.append(elem)
+    ^^^^^^^^^^^^
+AttributeError: 'BatchScaleCommand' object has no attribute 'project'
+
+2026-04-03 10:47:07,486 CRITICAL Traceback (most recent call last):
+  File "C:\aday.slop\MoveMusicSaveEditor\MoveMusicSaveEditor\editor.py", line 259, in redo
+    self.project.elements.append(elem)
+    ^^^^^^^^^^^^
+AttributeError: 'BatchScaleCommand' object has no attribute 'project'
+

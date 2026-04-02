@@ -383,6 +383,34 @@ class SceneViewport(QOpenGLWidget):
             if midi:
                 self._show_status(f"Hover: {best_elem.display_name or best_elem.unique_id} -> {', '.join(midi)}")
 
+    def _update_gizmo_hover_cursor(self, mx: int, my: int):
+        """Change cursor when hovering over gizmo handles."""
+        if not self.selected_elements:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+            return
+
+        # Check resize handles
+        for axis, (hx, hy) in self._handle_screen_pos.items():
+            if (mx - hx) ** 2 + (my - hy) ** 2 < 900:  # 30px
+                self.setCursor(Qt.CursorShape.SizeAllCursor)
+                self._hover_gizmo = f"resize_{axis}"
+                self.update()
+                return
+
+        # Check rotation ring sample points
+        for axis, pts in getattr(self, '_rot_ring_screen_points', {}).items():
+            for (hx, hy) in pts:
+                if (mx - hx) ** 2 + (my - hy) ** 2 < 900:  # 30px
+                    self.setCursor(Qt.CursorShape.PointingHandCursor)
+                    self._hover_gizmo = f"rotate_{axis}"
+                    self.update()
+                    return
+
+        if getattr(self, '_hover_gizmo', None):
+            self._hover_gizmo = None
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+            self.update()
+
     # -- OpenGL callbacks --
 
     def initializeGL(self):
@@ -541,12 +569,12 @@ class SceneViewport(QOpenGLWidget):
 
     def _draw_selection_gizmo(self, elem):
         p = elem.transform.translation
-        size = 20.0
-        handle_size = 2.5
+        size = 30.0
+        handle_size = 4.0
 
         glPushAttrib(GL_ALL_ATTRIB_BITS)
         glDisable(GL_DEPTH_TEST)
-        glLineWidth(3.0)
+        glLineWidth(4.0)
 
         glBegin(GL_LINES)
         glColor4f(1.0, 0.2, 0.2, 1.0)
@@ -562,7 +590,7 @@ class SceneViewport(QOpenGLWidget):
 
         # Arrow heads
         glBegin(GL_LINES)
-        ah = 3.0
+        ah = 5.0
         glColor4f(1.0, 0.2, 0.2, 1.0)
         glVertex3f(p.x + size, p.y, p.z)
         glVertex3f(p.x + size - ah, p.y + ah * 0.5, p.z)
@@ -592,31 +620,26 @@ class SceneViewport(QOpenGLWidget):
         _draw_solid_box(p.x - hs, p.y - hs, p.z + size - hs,
                         p.x + hs, p.y + hs, p.z + size + hs)
 
-        # Rotation ring handles (small circles at 60% along each axis)
-        rot_dist = size * 0.6
-        ring_r = 3.0
-        ring_segs = 16
-        # X-axis rotation ring (in YZ plane at rot_dist along X) — pastel pink
-        glColor4f(1.0, 0.6, 0.6, 0.9)
-        glBegin(GL_LINE_LOOP)
-        for i in range(ring_segs):
-            a = 2.0 * math.pi * i / ring_segs
-            glVertex3f(p.x + rot_dist, p.y + ring_r * math.cos(a), p.z + ring_r * math.sin(a))
-        glEnd()
-        # Y-axis rotation ring (in XZ plane at rot_dist along Y) — pastel green
-        glColor4f(0.6, 1.0, 0.6, 0.9)
-        glBegin(GL_LINE_LOOP)
-        for i in range(ring_segs):
-            a = 2.0 * math.pi * i / ring_segs
-            glVertex3f(p.x + ring_r * math.cos(a), p.y + rot_dist, p.z + ring_r * math.sin(a))
-        glEnd()
-        # Z-axis rotation ring (in XY plane at rot_dist along Z) — pastel blue
-        glColor4f(0.6, 0.6, 1.0, 0.9)
-        glBegin(GL_LINE_LOOP)
-        for i in range(ring_segs):
-            a = 2.0 * math.pi * i / ring_segs
-            glVertex3f(p.x + ring_r * math.cos(a), p.y + ring_r * math.sin(a), p.z + rot_dist)
-        glEnd()
+        # Rotation ring handles — single thick ring per axis, highlight on hover
+        rot_dist = size * 0.5
+        ring_r = 8.0
+        ring_segs = 32
+        hover = getattr(self, '_hover_gizmo', None)
+        for axis, color_normal, color_hover, ring_fn in [
+            ('x', (1.0, 0.45, 0.45, 0.95), (1.0, 0.8, 0.8, 1.0),
+             lambda i, r=ring_r: (p.x + rot_dist, p.y + r * math.cos(2*math.pi*i/ring_segs), p.z + r * math.sin(2*math.pi*i/ring_segs))),
+            ('y', (0.45, 1.0, 0.45, 0.95), (0.8, 1.0, 0.8, 1.0),
+             lambda i, r=ring_r: (p.x + r * math.cos(2*math.pi*i/ring_segs), p.y + rot_dist, p.z + r * math.sin(2*math.pi*i/ring_segs))),
+            ('z', (0.45, 0.45, 1.0, 0.95), (0.8, 0.8, 1.0, 1.0),
+             lambda i, r=ring_r: (p.x + r * math.cos(2*math.pi*i/ring_segs), p.y + r * math.sin(2*math.pi*i/ring_segs), p.z + rot_dist)),
+        ]:
+            is_hovered = hover == f"rotate_{axis}"
+            glLineWidth(8.0 if is_hovered else 6.0)
+            glColor4f(*(color_hover if is_hovered else color_normal))
+            glBegin(GL_LINE_LOOP)
+            for i in range(ring_segs):
+                glVertex3f(*ring_fn(i))
+            glEnd()
 
         glPopAttrib()
 
@@ -632,16 +655,30 @@ class SceneViewport(QOpenGLWidget):
             if sp:
                 self._handle_screen_pos[axis] = (sp[0], sp[1])
 
-        # Cache rotation handle screen positions (center of each ring)
+        # Cache rotation ring screen points (sample 8 points around each ring)
         self._rot_handle_screen_pos = {}
-        for axis, wx, wy, wz in [
-            ('x', p.x + rot_dist, p.y, p.z),
-            ('y', p.x, p.y + rot_dist, p.z),
-            ('z', p.x, p.y, p.z + rot_dist),
-        ]:
-            sp = self.camera.world_to_screen(wx, wy, wz, w, h)
-            if sp:
-                self._rot_handle_screen_pos[axis] = (sp[0], sp[1])
+        self._rot_ring_screen_points = {}  # axis -> list of (sx, sy)
+        ring_samples = 8
+        ring_world_points = {
+            'x': [(p.x + rot_dist, p.y + ring_r * math.cos(2*math.pi*i/ring_samples),
+                    p.z + ring_r * math.sin(2*math.pi*i/ring_samples)) for i in range(ring_samples)],
+            'y': [(p.x + ring_r * math.cos(2*math.pi*i/ring_samples), p.y + rot_dist,
+                    p.z + ring_r * math.sin(2*math.pi*i/ring_samples)) for i in range(ring_samples)],
+            'z': [(p.x + ring_r * math.cos(2*math.pi*i/ring_samples),
+                    p.y + ring_r * math.sin(2*math.pi*i/ring_samples), p.z + rot_dist) for i in range(ring_samples)],
+        }
+        for axis, world_pts in ring_world_points.items():
+            screen_pts = []
+            for wx, wy, wz in world_pts:
+                sp = self.camera.world_to_screen(wx, wy, wz, w, h)
+                if sp:
+                    screen_pts.append((sp[0], sp[1]))
+            if screen_pts:
+                self._rot_ring_screen_points[axis] = screen_pts
+                # Also keep center for backward compat
+                csp = self.camera.world_to_screen(*world_pts[0][:3], w, h)
+                if csp:
+                    self._rot_handle_screen_pos[axis] = (csp[0], csp[1])
 
     def _draw_element(self, elem, is_selected: bool, in_active_workspace: bool):
         p = elem.transform.translation
@@ -1351,7 +1388,7 @@ class SceneViewport(QOpenGLWidget):
                 # Check resize handles (works for single and multi-selection)
                 if self.selected_elements and hasattr(self, '_handle_screen_pos'):
                     for axis, (hx, hy) in self._handle_screen_pos.items():
-                        if math.sqrt((mx - hx) ** 2 + (my - hy) ** 2) < 20:
+                        if math.sqrt((mx - hx) ** 2 + (my - hy) ** 2) < 30:
                             self._resizing = True
                             self._resize_axis = axis
                             self._drag_start_positions = {}
@@ -1360,17 +1397,18 @@ class SceneViewport(QOpenGLWidget):
                                 self._drag_start_positions[id(elem)] = (s.x, s.y, s.z)
                             return
 
-                # Check rotation handles
-                if self.selected_elements and hasattr(self, '_rot_handle_screen_pos'):
-                    for axis, (hx, hy) in self._rot_handle_screen_pos.items():
-                        if math.sqrt((mx - hx) ** 2 + (my - hy) ** 2) < 20:
-                            self._rotating = True
-                            self._rotate_drag_axis = axis
-                            self._rotation_start_quats = {}
-                            for elem in self.selected_elements:
-                                q = elem.transform.rotation
-                                self._rotation_start_quats[id(elem)] = (q.x, q.y, q.z, q.w)
-                            return
+                # Check rotation handles — test against ring sample points
+                if self.selected_elements and hasattr(self, '_rot_ring_screen_points'):
+                    for axis, pts in self._rot_ring_screen_points.items():
+                        for (hx, hy) in pts:
+                            if (mx - hx) ** 2 + (my - hy) ** 2 < 900:  # 30px radius
+                                self._rotating = True
+                                self._rotate_drag_axis = axis
+                                self._rotation_start_quats = {}
+                                for elem in self.selected_elements:
+                                    q = elem.transform.rotation
+                                    self._rotation_start_quats[id(elem)] = (q.x, q.y, q.z, q.w)
+                                return
 
                 self._handle_pick(mx, my, event.modifiers())
             except Exception:
@@ -1405,6 +1443,7 @@ class SceneViewport(QOpenGLWidget):
             self.update()
         elif event.buttons() == Qt.MouseButton.NoButton:
             self._update_hover_target(event.pos().x(), event.pos().y())
+            self._update_gizmo_hover_cursor(event.pos().x(), event.pos().y())
             self.update()
 
         self._last_mouse = event.pos()
