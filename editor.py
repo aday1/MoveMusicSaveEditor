@@ -1648,6 +1648,14 @@ class MainWindow(QMainWindow):
             return "Other"
 
         category_order = ["Keyboard", "Controllers", "Drums", "Utility", "Debug", "Other"]
+        category_colors = {
+            "Keyboard": ("#E0C14A", "#A48A2F", "#5A5120"),
+            "Controllers": ("#4DA3FF", "#2F6DB4", "#1F3D5E"),
+            "Drums": ("#FF8A3D", "#B45A25", "#5A351F"),
+            "Utility": ("#56C271", "#2D8543", "#20462B"),
+            "Debug": ("#D46BFF", "#8C46B0", "#47235A"),
+            "Other": ("#9099A8", "#596170", "#313843"),
+        }
         categorized = {k: [] for k in category_order}
         for tpl_name in TEMPLATES:
             categorized[_template_category(tpl_name)].append(tpl_name)
@@ -1657,6 +1665,9 @@ class MainWindow(QMainWindow):
             if not names:
                 continue
             submenu = template_menu.addMenu(cat)
+            accent, border, hover = category_colors[cat]
+            submenu.menuAction().setIcon(_make_color_dot_icon(accent))
+            submenu.setStyleSheet(_menu_accent_stylesheet(border, hover))
             for tpl_name in names:
                 action = submenu.addAction(tpl_name)
                 action.triggered.connect(lambda checked, n=tpl_name: self._on_add_template(n))

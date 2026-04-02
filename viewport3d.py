@@ -335,19 +335,19 @@ class SceneViewport(QOpenGLWidget):
         summary = []
         if hasattr(elem, 'x_axis_cc_mappings') and elem.x_axis_cc_mappings:
             for cc in elem.x_axis_cc_mappings:
-                summary.append(f"X-CC{cc.control}={cc.value}")
+                summary.append(f"X CC{cc.control} -> {cc.value}")
         if hasattr(elem, 'y_axis_cc_mappings') and elem.y_axis_cc_mappings:
             for cc in elem.y_axis_cc_mappings:
-                summary.append(f"Y-CC{cc.control}={cc.value}")
+                summary.append(f"Y CC{cc.control} -> {cc.value}")
         if hasattr(elem, 'z_axis_cc_mappings') and elem.z_axis_cc_mappings:
             for cc in elem.z_axis_cc_mappings:
-                summary.append(f"Z-CC{cc.control}={cc.value}")
+                summary.append(f"Z CC{cc.control} -> {cc.value}")
         if hasattr(elem, 'midi_cc_mappings') and elem.midi_cc_mappings:
             for cc in elem.midi_cc_mappings:
-                summary.append(f"CC{cc.control}={cc.value}")
+                summary.append(f"CC{cc.control} -> {cc.value}")
         if hasattr(elem, 'midi_note_mappings') and elem.midi_note_mappings:
             for note in elem.midi_note_mappings:
-                summary.append(f"Note{note.note} Ch{note.channel} Vel{note.velocity}")
+                summary.append(f"Ch{note.channel} Note{note.note} -> Vel{int(note.velocity)}")
         return summary[:limit]
 
     def _update_hover_target(self, mx: int, my: int):
@@ -773,6 +773,7 @@ class SceneViewport(QOpenGLWidget):
             if isinstance(elem, TextLabel) and elem.display_name:
                 label = f'T: "{elem.display_name}"'
             is_sel = id(elem) in sel_set
+            is_hover = elem is self._hover_element
 
             tw = fm.horizontalAdvance(label)
             rx = int(sx - tw / 2)
@@ -790,6 +791,21 @@ class SceneViewport(QOpenGLWidget):
                 painter.setPen(QColor(200, 200, 200))
 
             painter.drawText(rx, ry, label)
+
+            if is_sel or is_hover:
+                midi_lines = self._midi_summary(elem, limit=3)
+                if midi_lines:
+                    badge_text = " | ".join(midi_lines)
+                    badge_w = fm.horizontalAdvance(badge_text)
+                    badge_x = int(sx - badge_w / 2)
+                    badge_y = ry + fm.height() + 6
+                    painter.setPen(Qt.PenStyle.NoPen)
+                    painter.setBrush(QColor(20, 24, 30, 210) if is_sel else QColor(32, 40, 48, 190))
+                    painter.drawRoundedRect(
+                        badge_x - 5, badge_y - fm.ascent() - 2, badge_w + 10, fm.height() + 4, 4, 4
+                    )
+                    painter.setPen(QColor(255, 230, 140) if is_sel else QColor(190, 220, 255))
+                    painter.drawText(badge_x, badge_y, badge_text)
 
     def _draw_grid_coordinates(self, painter: QPainter):
         """Draw grid coordinate numbers at major intersections with enhanced info."""
