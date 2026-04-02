@@ -51,6 +51,24 @@ def _menu_accent_stylesheet(border_hex: str, hover_hex: str) -> str:
         f"QMenu::item:selected {{ background-color: {hover_hex}; }}"
     )
 
+
+def _format_cc_mapping_summary(mappings: list, prefix: str = "") -> str:
+    if not mappings:
+        return f"{prefix}None"
+    parts = [f"Ch{m.channel} CC{m.control} -> {m.value}" for m in mappings[:4]]
+    if len(mappings) > 4:
+        parts.append("...")
+    return prefix + " | ".join(parts)
+
+
+def _format_note_mapping_summary(mappings: list, prefix: str = "") -> str:
+    if not mappings:
+        return f"{prefix}None"
+    parts = [f"Ch{m.channel} Note{m.note} -> Vel{int(m.velocity)}" for m in mappings[:4]]
+    if len(mappings) > 4:
+        parts.append("...")
+    return prefix + " | ".join(parts)
+
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QColor, QIcon, QKeySequence, QPainter, QPixmap, QShortcut, QUndoCommand, QUndoStack
 from PyQt6.QtWidgets import (
