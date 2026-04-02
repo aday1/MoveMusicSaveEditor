@@ -1582,8 +1582,6 @@ class MainWindow(QMainWindow):
     def _setup_menu(self):
         menubar = self.menuBar()
         file_menu = menubar.addMenu("File")
-        file_menu.menuAction().setIcon(_make_color_dot_icon("#4DA3FF"))
-        file_menu.setStyleSheet(_menu_accent_stylesheet("#2F6DB4", "#1F3D5E"))
         file_menu.addAction(self.action_new)
         file_menu.addSeparator()
         file_menu.addAction(self.action_open)
@@ -1591,8 +1589,6 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self.action_save_as)
 
         edit_menu = menubar.addMenu("Edit")
-        edit_menu.menuAction().setIcon(_make_color_dot_icon("#FF8A3D"))
-        edit_menu.setStyleSheet(_menu_accent_stylesheet("#B45A25", "#5A351F"))
         edit_menu.addAction(self.action_undo)
         edit_menu.addAction(self.action_redo)
         edit_menu.addSeparator()
@@ -1601,8 +1597,6 @@ class MainWindow(QMainWindow):
         edit_menu.addAction(self.action_delete)
 
         view_menu = menubar.addMenu("View")
-        view_menu.menuAction().setIcon(_make_color_dot_icon("#56C271"))
-        view_menu.setStyleSheet(_menu_accent_stylesheet("#2D8543", "#20462B"))
         self.action_debug_mode = view_menu.addAction("Debug Mode")
         self.action_debug_mode.setCheckable(True)
         self.action_debug_mode.setChecked(self.debug_mode)
@@ -1610,8 +1604,6 @@ class MainWindow(QMainWindow):
 
         # Templates menu
         template_menu = menubar.addMenu("Templates")
-        template_menu.menuAction().setIcon(_make_color_dot_icon("#E0C14A"))
-        template_menu.setStyleSheet(_menu_accent_stylesheet("#A48A2F", "#5A5120"))
 
         def _template_category(name: str) -> str:
             n = name.lower()
@@ -1628,14 +1620,6 @@ class MainWindow(QMainWindow):
             return "Other"
 
         category_order = ["Keyboard", "Controllers", "Drums", "Utility", "Debug", "Other"]
-        category_colors = {
-            "Keyboard": ("#E0C14A", "#A48A2F", "#5A5120"),
-            "Controllers": ("#4DA3FF", "#2F6DB4", "#1F3D5E"),
-            "Drums": ("#FF8A3D", "#B45A25", "#5A351F"),
-            "Utility": ("#56C271", "#2D8543", "#20462B"),
-            "Debug": ("#D46BFF", "#8C46B0", "#47235A"),
-            "Other": ("#9099A8", "#596170", "#313843"),
-        }
         categorized = {k: [] for k in category_order}
         for tpl_name in TEMPLATES:
             categorized[_template_category(tpl_name)].append(tpl_name)
@@ -1645,12 +1629,10 @@ class MainWindow(QMainWindow):
             if not names:
                 continue
             submenu = template_menu.addMenu(cat)
-            accent, border, hover = category_colors[cat]
-            submenu.menuAction().setIcon(_make_color_dot_icon(accent))
-            submenu.setStyleSheet(_menu_accent_stylesheet(border, hover))
             for tpl_name in names:
                 action = submenu.addAction(tpl_name)
-                action.triggered.connect(lambda checked, n=tpl_name: self._on_add_template(n))
+                action.setData(tpl_name)
+                action.triggered.connect(self._on_template_menu_action)
 
         # Import menu
         import_menu = file_menu.addMenu("Import 3D")
