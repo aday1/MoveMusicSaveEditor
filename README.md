@@ -16,7 +16,8 @@ MoveMusic is a VR music creation app by **Tim Arterbury** that lets you build MI
 - **Property editing** — All HitZone, MorphZone, TextLabel, and GroupIE properties with undo/redo
 - **MIDI mapping** — Edit note mappings, CC mappings, channels, velocity curves
 - **Auto-layout** — Arrange selected elements in Row, Grid, or Circle formations
-- **Templates** — 12 presets (8 Faders, 8 Knobs, 8 XY Pads, Drum Pads, Mixer, etc.)
+- **Templates** — Grouped template menu (Keyboard, Controllers, Drums, Utility, Debug)
+- **Keyboard templates** — Full MIDI row and circle layouts with octave color coding
 - **Mass editing** — Select multiple elements in the tree to batch-change properties
 - **Grid snapping** — Snap-to-grid during drag (toggle with G key)
 - **3D export** — Wavefront OBJ and glTF Binary (.glb) with optional orbit camera for AR overlays
@@ -25,12 +26,38 @@ MoveMusic is a VR music creation app by **Tim Arterbury** that lets you build MI
 ## Quick Start
 
 ```bash
-pip install PyQt6 PyOpenGL
-cd mmc-editor
-python editor.py
+pip install -r requirements.txt
+cd MoveMusicSaveEditor
+python main.py
 ```
 
 Open any `.mmc` file (typically found in your Quest/VR device save data).
+
+### Windows Shortcut Launch (recommended)
+
+To ensure the editor loads templates from this repo copy, launch with:
+
+```bat
+launch_editor.bat
+```
+
+If you use a desktop shortcut, point it to `launch_editor.bat` in this folder.
+
+## Template Menu Groups
+
+- **Keyboard**
+	- Keyboard (Full MIDI Row)
+	- Keyboard (Full MIDI Circle)
+	- KEYBOARD L->R (All Octaves 0-127)
+	- KEYBOARD Circle (All Octaves 0-127)
+- **Controllers**
+	- Faders, Knobs, XY Pads, Buttons
+- **Drums**
+	- Drum pad layouts (8/16)
+- **Utility**
+	- Mixer (8 Faders + 8 Knobs)
+- **Debug**
+	- DEBUG: Everything Kitchen Sink
 
 ## Keyboard Shortcuts
 
@@ -54,8 +81,10 @@ Open any `.mmc` file (typically found in your Quest/VR device save data).
 ## File Structure
 
 ```
-mmc-editor/
+MoveMusicSaveEditor/
 ├── editor.py              # Main PyQt6 application
+├── main.py                # Main app entry point
+├── launch_editor.bat      # Windows launcher that pins working directory
 ├── model.py               # Domain model (HitZone, MorphZone, TextLabel, GroupIE)
 ├── gvas.py                # UE4 GVAS binary format parser/writer
 ├── viewport3d.py          # OpenGL 3D viewport with multi-select & overlays
