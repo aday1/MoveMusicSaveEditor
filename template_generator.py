@@ -643,6 +643,28 @@ def _note_name(note: int) -> str:
     return f"{names[note % 12]}{octave}"
 
 
+def _octave_color(note: int, is_black: bool) -> Color:
+    """Color-code keys by octave while keeping black keys visually dark."""
+    octave_palette = [
+        Color(0.95, 0.35, 0.35, 1.0),  # red
+        Color(0.98, 0.55, 0.25, 1.0),  # orange
+        Color(0.95, 0.82, 0.25, 1.0),  # yellow
+        Color(0.45, 0.82, 0.35, 1.0),  # green
+        Color(0.25, 0.85, 0.75, 1.0),  # mint
+        Color(0.25, 0.65, 0.95, 1.0),  # blue
+        Color(0.45, 0.45, 0.95, 1.0),  # indigo
+        Color(0.72, 0.45, 0.95, 1.0),  # violet
+        Color(0.93, 0.45, 0.82, 1.0),  # magenta
+        Color(0.92, 0.50, 0.65, 1.0),  # rose
+        Color(0.75, 0.75, 0.75, 1.0),  # high octave gray
+    ]
+    octave = max(0, min(10, note // 12))
+    c = octave_palette[octave]
+    if not is_black:
+        return c
+    return Color(c.r * 0.35, c.g * 0.35, c.b * 0.35, 1.0)
+
+
 def generate_keyboard(
     project: Project,
     arrangement: str = "Row",
@@ -692,7 +714,7 @@ def generate_keyboard(
                 translation=Vec3(origin.x + px, origin.y + py, origin.z),
                 scale=Vec3(0.22 if not is_black else 0.18, 0.7 if not is_black else 0.45, 0.12),
             ),
-            color=Color(0.95, 0.95, 0.95, 1.0) if not is_black else Color(0.08, 0.08, 0.08, 1.0),
+            color=_octave_color(note, is_black),
             should_use_velocity_sensitivity=False,
             fixed_midi_velocity_output=127.0,
             midi_note_mappings=[MidiNoteMapping(channel=channel, note=note, velocity=127.0)],
@@ -716,7 +738,7 @@ def generate_keyboard(
                     translation=Vec3(origin.x + px, origin.y + py, origin.z + 20),
                     scale=Vec3(0.22, 0.22, 0.22),
                 ),
-                color=LABEL_COLOR,
+                color=_octave_color(note, False),
             )
             elements.append(tl)
 
@@ -800,6 +822,12 @@ TEMPLATES = {
         p, arrangement="Row", spacing=12, origin=o, channel=1, base_note=0, max_note=127, label_prefix="Key"
     ),
     "Keyboard (Full MIDI Circle)": lambda p, o: generate_keyboard(
+        p, arrangement="Circle", spacing=12, origin=o, channel=1, base_note=0, max_note=127, label_prefix="Key"
+    ),
+    "KEYBOARD L->R (All Octaves 0-127)": lambda p, o: generate_keyboard(
+        p, arrangement="Row", spacing=12, origin=o, channel=1, base_note=0, max_note=127, label_prefix="Key"
+    ),
+    "KEYBOARD Circle (All Octaves 0-127)": lambda p, o: generate_keyboard(
         p, arrangement="Circle", spacing=12, origin=o, channel=1, base_note=0, max_note=127, label_prefix="Key"
     ),
     "Mixer (8 Faders + 8 Knobs)": None,  # special composite — handled separately
