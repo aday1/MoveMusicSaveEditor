@@ -15,25 +15,25 @@ def test_template_no_file():
 
     # Check if project was auto-created
     if window.project is None:
-        print("❌ FAILED: No project auto-created")
+        print("FAILED: No project auto-created")
         return False
 
     if not window.project.workspaces:
-        print("❌ FAILED: No workspaces in auto-created project")
+        print("FAILED: No workspaces in auto-created project")
         return False
 
-    print("✅ SUCCESS: Project auto-created with workspace")
+    print("SUCCESS: Project auto-created with workspace")
     print(f"   Project: {window.project.project_name}")
     print(f"   Workspaces: {len(window.project.workspaces)}")
 
     # Try to add a template
     try:
         window._on_add_template("8 Faders (Row)")
-        print("✅ SUCCESS: Template added without 'Open file first' error")
+        print("SUCCESS: Template added without 'Open file first' error")
         print(f"   Elements in project: {len(window.project.elements)}")
         return True
     except Exception as e:
-        print(f"❌ FAILED: Template add error: {e}")
+        print(f"FAILED: Template add error: {e}")
         return False
 
 if __name__ == "__main__":

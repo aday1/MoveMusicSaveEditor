@@ -368,19 +368,143 @@ class MidiCCTable(QTableWidget):
         return mappings
 
 
-def _make_float_spin(value=0.0, min_val=-99999.0, max_val=99999.0, decimals=4):
-    spin = QDoubleSpinBox()
+class EnhancedDoubleSpinBox(QDoubleSpinBox):
+    """Enhanced double spin box with better keyboard and mouse support."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAccelerated(True)  # Accelerate when holding keys
+        self.setKeyboardTracking(True)  # Update immediately on key press
+
+    def keyPressEvent(self, event):
+        """Handle enhanced keyboard input for better control."""
+        key = event.key()
+        modifiers = event.modifiers()
+
+        if key == Qt.Key.Key_Up:
+            if modifiers & Qt.KeyboardModifier.ShiftModifier:
+                # Shift+Up: Large increment (10x)
+                self.setValue(self.value() + self.singleStep() * 10)
+            elif modifiers & Qt.KeyboardModifier.ControlModifier:
+                # Ctrl+Up: Small increment (0.1x)
+                self.setValue(self.value() + self.singleStep() * 0.1)
+            else:
+                # Normal up
+                super().keyPressEvent(event)
+        elif key == Qt.Key.Key_Down:
+            if modifiers & Qt.KeyboardModifier.ShiftModifier:
+                # Shift+Down: Large decrement (10x)
+                self.setValue(self.value() - self.singleStep() * 10)
+            elif modifiers & Qt.KeyboardModifier.ControlModifier:
+                # Ctrl+Down: Small decrement (0.1x)
+                self.setValue(self.value() - self.singleStep() * 0.1)
+            else:
+                # Normal down
+                super().keyPressEvent(event)
+        else:
+            super().keyPressEvent(event)
+
+    def wheelEvent(self, event):
+        """Handle mouse wheel for increment/decrement."""
+        if self.hasFocus():
+            delta = event.angleDelta().y()
+            if delta > 0:
+                self.stepUp()
+            elif delta < 0:
+                self.stepDown()
+            event.accept()
+        else:
+            super().wheelEvent(event)
+
+
+class EnhancedSpinBox(QSpinBox):
+    """Enhanced integer spin box with better keyboard and mouse support."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAccelerated(True)  # Accelerate when holding keys
+        self.setKeyboardTracking(True)  # Update immediately on key press
+
+    def keyPressEvent(self, event):
+        """Handle enhanced keyboard input for better control."""
+        key = event.key()
+        modifiers = event.modifiers()
+
+        if key == Qt.Key.Key_Up:
+            if modifiers & Qt.KeyboardModifier.ShiftModifier:
+                # Shift+Up: Large increment (10x)
+                self.setValue(self.value() + self.singleStep() * 10)
+            elif modifiers & Qt.KeyboardModifier.ControlModifier:
+                # Ctrl+Up: Small increment (but at least 1)
+                self.setValue(self.value() + max(1, self.singleStep() // 10))
+            else:
+                # Normal up
+                super().keyPressEvent(event)
+        elif key == Qt.Key.Key_Down:
+            if modifiers & Qt.KeyboardModifier.ShiftModifier:
+                # Shift+Down: Large decrement (10x)
+                self.setValue(self.value() - self.singleStep() * 10)
+            elif modifiers & Qt.KeyboardModifier.ControlModifier:
+                # Ctrl+Down: Small decrement (but at least 1)
+                self.setValue(self.value() - max(1, self.singleStep() // 10))
+            else:
+                # Normal down
+                super().keyPressEvent(event)
+        else:
+            super().keyPressEvent(event)
+
+    def wheelEvent(self, event):
+        """Handle mouse wheel for increment/decrement."""
+        if self.hasFocus():
+            delta = event.angleDelta().y()
+            if delta > 0:
+                self.stepUp()
+            elif delta < 0:
+                self.stepDown()
+            event.accept()
+        else:
+            super().wheelEvent(event)
+
+
+def _make_float_spin(value=0.0, min_val=-99999.0, max_val=99999.0, decimals=2, step=1.0):
+    """Create enhanced double spin box with better keyboard/mouse support."""
+    spin = EnhancedDoubleSpinBox()
     spin.setRange(min_val, max_val)
     spin.setDecimals(decimals)
+    spin.setSingleStep(step)
     spin.setValue(value)
     return spin
 
 
-def _make_int_spin(value=0, min_val=-999999, max_val=999999):
-    spin = QSpinBox()
+def _make_int_spin(value=0, min_val=-999999, max_val=999999, step=1):
+    """Create enhanced integer spin box with better keyboard/mouse support."""
+    spin = EnhancedSpinBox()
     spin.setRange(min_val, max_val)
+    spin.setSingleStep(step)
     spin.setValue(value)
     return spin
+
+
+# Specialized spin boxes for different use cases
+def _make_position_spin(value=0.0):
+    """Position values - step by 1 unit, 1 decimal place."""
+    return _make_float_spin(value, -9999.0, 9999.0, decimals=1, step=1.0)
+
+def _make_scale_spin(value=1.0):
+    """Scale values - step by 0.1, 2 decimal places, positive only."""
+    return _make_float_spin(value, 0.01, 100.0, decimals=2, step=0.1)
+
+def _make_midi_cc_spin(value=64):
+    """MIDI CC values - 0-127 range, step by 1."""
+    return _make_int_spin(value, 0, 127, step=1)
+
+def _make_midi_note_spin(value=60):
+    """MIDI note values - 0-127 range, step by 1."""
+    return _make_int_spin(value, 0, 127, step=1)
+
+def _make_midi_channel_spin(value=1):
+    """MIDI channel values - 1-16 range, step by 1."""
+    return _make_int_spin(value, 1, 16, step=1)
 
 
 # ---------------------------------------------------------------------------
@@ -445,9 +569,9 @@ class HitZonePanel(QWidget):
 
         # Transform
         t_group = CollapsibleGroup("Transform")
-        self.pos_x = _make_float_spin()
-        self.pos_y = _make_float_spin()
-        self.pos_z = _make_float_spin()
+        self.pos_x = _make_position_spin()
+        self.pos_y = _make_position_spin()
+        self.pos_z = _make_position_spin()
         pos_row = QHBoxLayout()
         pos_row.addWidget(QLabel("X")); pos_row.addWidget(self.pos_x)
         pos_row.addWidget(QLabel("Y")); pos_row.addWidget(self.pos_y)
@@ -455,10 +579,10 @@ class HitZonePanel(QWidget):
         pos_widget = QWidget(); pos_widget.setLayout(pos_row)
         t_group.form().addRow("Position:", pos_widget)
 
-        self.rot_x = _make_float_spin(-1, 1)
-        self.rot_y = _make_float_spin(-1, 1)
-        self.rot_z = _make_float_spin(-1, 1)
-        self.rot_w = _make_float_spin(-1, 1)
+        self.rot_x = _make_float_spin(-1, 1, decimals=3, step=0.1)
+        self.rot_y = _make_float_spin(-1, 1, decimals=3, step=0.1)
+        self.rot_z = _make_float_spin(-1, 1, decimals=3, step=0.1)
+        self.rot_w = _make_float_spin(-1, 1, decimals=3, step=0.1)
         rot_row = QHBoxLayout()
         rot_row.addWidget(QLabel("X")); rot_row.addWidget(self.rot_x)
         rot_row.addWidget(QLabel("Y")); rot_row.addWidget(self.rot_y)
@@ -467,9 +591,9 @@ class HitZonePanel(QWidget):
         rot_widget = QWidget(); rot_widget.setLayout(rot_row)
         t_group.form().addRow("Rotation:", rot_widget)
 
-        self.scale_x = _make_float_spin(0, 10)
-        self.scale_y = _make_float_spin(0, 10)
-        self.scale_z = _make_float_spin(0, 10)
+        self.scale_x = _make_scale_spin()
+        self.scale_y = _make_scale_spin()
+        self.scale_z = _make_scale_spin()
         scale_row = QHBoxLayout()
         scale_row.addWidget(QLabel("X")); scale_row.addWidget(self.scale_x)
         scale_row.addWidget(QLabel("Y")); scale_row.addWidget(self.scale_y)
@@ -682,9 +806,9 @@ class MorphZonePanel(QWidget):
 
         # Transform
         t_group = CollapsibleGroup("Transform")
-        self.pos_x = _make_float_spin()
-        self.pos_y = _make_float_spin()
-        self.pos_z = _make_float_spin()
+        self.pos_x = _make_position_spin()
+        self.pos_y = _make_position_spin()
+        self.pos_z = _make_position_spin()
         pos_row = QHBoxLayout()
         pos_row.addWidget(QLabel("X")); pos_row.addWidget(self.pos_x)
         pos_row.addWidget(QLabel("Y")); pos_row.addWidget(self.pos_y)
@@ -692,10 +816,10 @@ class MorphZonePanel(QWidget):
         pos_widget = QWidget(); pos_widget.setLayout(pos_row)
         t_group.form().addRow("Position:", pos_widget)
 
-        self.rot_x = _make_float_spin(-1, 1)
-        self.rot_y = _make_float_spin(-1, 1)
-        self.rot_z = _make_float_spin(-1, 1)
-        self.rot_w = _make_float_spin(-1, 1)
+        self.rot_x = _make_float_spin(-1, 1, decimals=3, step=0.1)
+        self.rot_y = _make_float_spin(-1, 1, decimals=3, step=0.1)
+        self.rot_z = _make_float_spin(-1, 1, decimals=3, step=0.1)
+        self.rot_w = _make_float_spin(-1, 1, decimals=3, step=0.1)
         rot_row = QHBoxLayout()
         rot_row.addWidget(QLabel("X")); rot_row.addWidget(self.rot_x)
         rot_row.addWidget(QLabel("Y")); rot_row.addWidget(self.rot_y)
@@ -704,9 +828,9 @@ class MorphZonePanel(QWidget):
         rot_widget = QWidget(); rot_widget.setLayout(rot_row)
         t_group.form().addRow("Rotation:", rot_widget)
 
-        self.scale_x = _make_float_spin(0, 10)
-        self.scale_y = _make_float_spin(0, 10)
-        self.scale_z = _make_float_spin(0, 10)
+        self.scale_x = _make_scale_spin()
+        self.scale_y = _make_scale_spin()
+        self.scale_z = _make_scale_spin()
         scale_row = QHBoxLayout()
         scale_row.addWidget(QLabel("X")); scale_row.addWidget(self.scale_x)
         scale_row.addWidget(QLabel("Y")); scale_row.addWidget(self.scale_y)
@@ -882,9 +1006,9 @@ class TextLabelPanel(QWidget):
 
         # Transform
         t_group = CollapsibleGroup("Transform")
-        self.pos_x = _make_float_spin()
-        self.pos_y = _make_float_spin()
-        self.pos_z = _make_float_spin()
+        self.pos_x = _make_position_spin()
+        self.pos_y = _make_position_spin()
+        self.pos_z = _make_position_spin()
         pos_row = QHBoxLayout()
         pos_row.addWidget(QLabel("X")); pos_row.addWidget(self.pos_x)
         pos_row.addWidget(QLabel("Y")); pos_row.addWidget(self.pos_y)
@@ -892,9 +1016,9 @@ class TextLabelPanel(QWidget):
         pos_widget = QWidget(); pos_widget.setLayout(pos_row)
         t_group.form().addRow("Position:", pos_widget)
 
-        self.scale_x = _make_float_spin(0, 10)
-        self.scale_y = _make_float_spin(0, 10)
-        self.scale_z = _make_float_spin(0, 10)
+        self.scale_x = _make_scale_spin()
+        self.scale_y = _make_scale_spin()
+        self.scale_z = _make_scale_spin()
         scale_row = QHBoxLayout()
         scale_row.addWidget(QLabel("X")); scale_row.addWidget(self.scale_x)
         scale_row.addWidget(QLabel("Y")); scale_row.addWidget(self.scale_y)
@@ -953,9 +1077,9 @@ class GroupIEPanel(QWidget):
 
         # Transform
         t_group = CollapsibleGroup("Transform")
-        self.pos_x = _make_float_spin()
-        self.pos_y = _make_float_spin()
-        self.pos_z = _make_float_spin()
+        self.pos_x = _make_position_spin()
+        self.pos_y = _make_position_spin()
+        self.pos_z = _make_position_spin()
         pos_row = QHBoxLayout()
         pos_row.addWidget(QLabel("X")); pos_row.addWidget(self.pos_x)
         pos_row.addWidget(QLabel("Y")); pos_row.addWidget(self.pos_y)
