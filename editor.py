@@ -31,26 +31,6 @@ def _save_config(cfg: dict):
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     CONFIG_FILE.write_text(json.dumps(cfg, indent=2))
 
-def _make_color_dot_icon(color_hex: str) -> QIcon:
-    """Create a small colored dot icon used for top-level menu grouping."""
-    pix = QPixmap(12, 12)
-    pix.fill(Qt.GlobalColor.transparent)
-    painter = QPainter(pix)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-    painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(QColor(color_hex))
-    painter.drawEllipse(1, 1, 10, 10)
-    painter.end()
-    return QIcon(pix)
-
-
-def _menu_accent_stylesheet(border_hex: str, hover_hex: str) -> str:
-    """Per-menu popup accent colors for visual grouping."""
-    return (
-        f"QMenu {{ border: 1px solid {border_hex}; }}"
-        f"QMenu::item:selected {{ background-color: {hover_hex}; }}"
-    )
-
 
 def _format_cc_mapping_summary(mappings: list, prefix: str = "") -> str:
     if not mappings:
@@ -70,7 +50,7 @@ def _format_note_mapping_summary(mappings: list, prefix: str = "") -> str:
     return prefix + " | ".join(parts)
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QColor, QIcon, QKeySequence, QPainter, QPixmap, QShortcut, QUndoCommand, QUndoStack
+from PyQt6.QtGui import QAction, QColor, QKeySequence, QShortcut, QUndoCommand, QUndoStack
 from PyQt6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox,
     QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView,
