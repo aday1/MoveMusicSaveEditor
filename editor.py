@@ -2769,6 +2769,14 @@ class MainWindow(QMainWindow):
             self.quad_viewport.hide()
             self.outer_splitter.insertWidget(0, self.viewport)
             self.viewport.show()
+
+    def _on_template_menu_action(self, checked=False):
+        action = self.sender()
+        if action is None:
+            return
+        template_name = action.data()
+        if template_name:
+            self._on_add_template(template_name)
         self.outer_splitter.setStretchFactor(0, 3)
         self.outer_splitter.setStretchFactor(1, 2)
 
