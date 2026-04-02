@@ -247,6 +247,7 @@ class SceneViewport(QOpenGLWidget):
         self._status_message = ""  # Current action feedback
         self._status_timer = 0  # Timer for status message fadeout
         self._grid_coords = []  # Grid coordinate positions for labeling
+        self._hover_element = None  # Element currently under cursor
 
         # Overlay buttons (populated during paintEvent)
         self._overlay_buttons = []  # [(QRectF, label_str)]
@@ -297,6 +298,50 @@ class SceneViewport(QOpenGLWidget):
         """Emit both selection signals."""
         self.selection_changed.emit(list(self.selected_elements))
         self.element_selected.emit(self.selected_element)
+
+    def _midi_summary(self, elem, limit: int = 4) -> list:
+        """Return short human-readable MIDI mapping summaries for an element."""
+        summary = []
+        if hasattr(elem, 'x_axis_cc_mappings') and elem.x_axis_cc_mappings:
+            for cc in elem.x_axis_cc_mappings:
+                summary.append(f"X-CC{cc.control}={cc.value}")
+        if hasattr(elem, 'y_axis_cc_mappings') and elem.y_axis_cc_mappings:
+            for cc in elem.y_axis_cc_mappings:
+                summary.append(f"Y-CC{cc.control}={cc.value}")
+        if hasattr(elem, 'z_axis_cc_mappings') and elem.z_axis_cc_mappings:
+            for cc in elem.z_axis_cc_mappings:
+                summary.append(f"Z-CC{cc.control}={cc.value}")
+        if hasattr(elem, 'midi_cc_mappings') and elem.midi_cc_mappings:
+            for cc in elem.midi_cc_mappings:
+                summary.append(f"CC{cc.control}={cc.value}")
+        if hasattr(elem, 'midi_note_mappings') and elem.midi_note_mappings:
+            for note in elem.midi_note_mappings:
+                summary.append(f"Note{note.note} Ch{note.channel} Vel{note.velocity}")
+        return summary[:limit]
+
+    def _update_hover_target(self, mx: int, my: int):
+        """Track hovered element and show quick MIDI summary on hover change."""
+        if not self.project:
+            return
+
+        positions = self._compute_screen_positions_now()
+        best_elem = None
+        best_dist = 80.0
+        for _, (sx, sy, _, elem) in positions.items():
+            dist = math.sqrt((mx - sx) ** 2 + (my - sy) ** 2)
+            threshold = 150.0 if isinstance(elem, GroupIE) else 80.0
+            if dist < threshold and dist < best_dist:
+                best_dist = dist
+                best_elem = elem
+
+        if best_elem is self._hover_element:
+            return
+
+        self._hover_element = best_elem
+        if best_elem is not None:
+            midi = self._midi_summary(best_elem, limit=2)
+            if midi:
+                self._show_status(f"Hover: {best_elem.display_name or best_elem.unique_id} -> {', '.join(midi)}")
 
     # -- OpenGL callbacks --
 
@@ -878,25 +923,16 @@ class SceneViewport(QOpenGLWidget):
             lines.append(f"📦 Size: {grid_size_x:.1f} x {grid_size_y:.1f} x {grid_size_z:.1f} grid units")
 
             # Show MIDI mappings if present
-            midi_info = []
-            if hasattr(e, 'y_axis_cc_mappings') and e.y_axis_cc_mappings:
-                for cc in e.y_axis_cc_mappings:
-                    midi_info.append(f"Y-CC{cc.control}")
-            if hasattr(e, 'x_axis_cc_mappings') and e.x_axis_cc_mappings:
-                for cc in e.x_axis_cc_mappings:
-                    midi_info.append(f"X-CC{cc.control}")
-            if hasattr(e, 'z_axis_cc_mappings') and e.z_axis_cc_mappings:
-                for cc in e.z_axis_cc_mappings:
-                    midi_info.append(f"Z-CC{cc.control}")
-            if hasattr(e, 'midi_cc_mappings') and e.midi_cc_mappings:
-                for cc in e.midi_cc_mappings:
-                    midi_info.append(f"CC{cc.control}")
-            if hasattr(e, 'midi_note_mappings') and e.midi_note_mappings:
-                for note in e.midi_note_mappings:
-                    midi_info.append(f"Note{note.note}")
+            midi_info = self._midi_summary(e, limit=4)
 
             if midi_info:
                 lines.append(f"🎵 MIDI: {', '.join(midi_info[:4])}")  # Show first 4 mappings
+        elif self._hover_element is not None:
+            h = self._hover_element
+            lines.append(f"👆 Hover: {h.display_name or h.unique_id}")
+            hover_midi = self._midi_summary(h, limit=3)
+            if hover_midi:
+                lines.append(f"🎵 MIDI: {', '.join(hover_midi)}")
         else:
             lines.append("❌ No selection - Click to select")
 
@@ -1001,16 +1037,16 @@ class SceneViewport(QOpenGLWidget):
             midi_controls = []
             if hasattr(elem, 'y_axis_cc_mappings') and elem.y_axis_cc_mappings:
                 for cc in elem.y_axis_cc_mappings:
-                    midi_controls.append(f"Y-axis: CC{cc.control}")
+                    midi_controls.append(f"Y-axis: CC{cc.control} value={cc.value}")
             if hasattr(elem, 'x_axis_cc_mappings') and elem.x_axis_cc_mappings:
                 for cc in elem.x_axis_cc_mappings:
-                    midi_controls.append(f"X-axis: CC{cc.control}")
+                    midi_controls.append(f"X-axis: CC{cc.control} value={cc.value}")
             if hasattr(elem, 'z_axis_cc_mappings') and elem.z_axis_cc_mappings:
                 for cc in elem.z_axis_cc_mappings:
-                    midi_controls.append(f"Z-axis: CC{cc.control}")
+                    midi_controls.append(f"Z-axis: CC{cc.control} value={cc.value}")
             if hasattr(elem, 'midi_cc_mappings') and elem.midi_cc_mappings:
                 for cc in elem.midi_cc_mappings:
-                    midi_controls.append(f"Button: CC{cc.control}")
+                    midi_controls.append(f"Button: CC{cc.control} value={cc.value}")
             if hasattr(elem, 'midi_note_mappings') and elem.midi_note_mappings:
                 for note in elem.midi_note_mappings:
                     midi_controls.append(f"Drum: Note{note.note} Ch{note.channel}")
@@ -1019,11 +1055,19 @@ class SceneViewport(QOpenGLWidget):
                 shortcuts.append("")
                 shortcuts.extend(["🎵 MIDI MAPPINGS:"] + midi_controls[:4])
                 if elem_type == "MorphZone":
-                    shortcuts.append("Alt+↑↓: Adjust CC values ±1")
+                    shortcuts.append("Alt+↑↓: Adjust CC output values ±1")
                 elif elem_type == "HitZone" and midi_controls[0].startswith("Drum"):
                     shortcuts.append("Alt+Shift+↑↓: Adjust note values ±1")
                 elif elem_type == "HitZone":
-                    shortcuts.append("Alt+↑↓: Adjust CC values ±1")
+                    shortcuts.append("Alt+↑↓: Adjust CC output values ±1")
+
+            shortcuts.extend([
+                "",
+                "ℹ️ MIDI SHORTCUT RULES:",
+                "Alt+↑↓ needs CC mappings on the selected object(s)",
+                "If you see 'No MIDI CC mappings', use Alt+Shift+↑↓ for note mappings",
+                "CC values clamp at 0..127, so values at limits will not change",
+            ])
 
             shortcuts.extend([
                 "",
@@ -1068,7 +1112,7 @@ class SceneViewport(QOpenGLWidget):
                 "Ctrl+R/T: Rotate all X-axis ±15°",
                 "",
                 "🎵 BULK MIDI EDITING:",
-                "Alt+↑↓: Adjust all CC values ±1",
+                "Alt+↑↓: Adjust all CC output values ±1",
                 "Alt+Shift+↑↓: Adjust all note values ±1",
                 "",
                 "⚙️ BULK ACTIONS:",
@@ -1246,6 +1290,9 @@ class SceneViewport(QOpenGLWidget):
             self.update()
         elif event.buttons() & Qt.MouseButton.LeftButton and self._dragging_element and self.selected_elements:
             self._handle_drag(dx, dy, bool(event.modifiers() & Qt.KeyboardModifier.ShiftModifier))
+            self.update()
+        elif event.buttons() == Qt.MouseButton.NoButton:
+            self._update_hover_target(event.pos().x(), event.pos().y())
             self.update()
 
         self._last_mouse = event.pos()
@@ -1543,7 +1590,11 @@ class SceneViewport(QOpenGLWidget):
             # Replace selection
             if best_elem is not None:
                 self.selected_elements = [best_elem]
-                self._show_status(f"Selected: {best_elem.display_name or best_elem.unique_id}")
+                midi = self._midi_summary(best_elem, limit=2)
+                if midi:
+                    self._show_status(f"Selected: {best_elem.display_name or best_elem.unique_id} -> {', '.join(midi)}")
+                else:
+                    self._show_status(f"Selected: {best_elem.display_name or best_elem.unique_id}")
             else:
                 # Miss on empty — start marquee select
                 self._marquee_active = True
@@ -1841,44 +1892,48 @@ class SceneViewport(QOpenGLWidget):
             return
 
         changed_count = 0
-        updated_controls = []
+        updated_values = []
         undo_changes = []
+        total_cc_mappings = 0
         for elem in self.selected_elements:
             # Handle MorphZones with CC mappings
             if hasattr(elem, 'x_axis_cc_mappings') and elem.x_axis_cc_mappings:
                 old_maps = copy.deepcopy(elem.x_axis_cc_mappings)
                 field_changed = False
                 for cc_map in elem.x_axis_cc_mappings:
-                    old_val = cc_map.control
-                    cc_map.control = max(0, min(127, cc_map.control + delta))
-                    if cc_map.control != old_val:
+                    total_cc_mappings += 1
+                    old_val = cc_map.value
+                    cc_map.value = max(0, min(127, cc_map.value + delta))
+                    if cc_map.value != old_val:
                         changed_count += 1
                         field_changed = True
-                        updated_controls.append(cc_map.control)
+                        updated_values.append(cc_map.value)
                 if field_changed:
                     undo_changes.append((elem, 'x_axis_cc_mappings', old_maps, copy.deepcopy(elem.x_axis_cc_mappings)))
             if hasattr(elem, 'y_axis_cc_mappings') and elem.y_axis_cc_mappings:
                 old_maps = copy.deepcopy(elem.y_axis_cc_mappings)
                 field_changed = False
                 for cc_map in elem.y_axis_cc_mappings:
-                    old_val = cc_map.control
-                    cc_map.control = max(0, min(127, cc_map.control + delta))
-                    if cc_map.control != old_val:
+                    total_cc_mappings += 1
+                    old_val = cc_map.value
+                    cc_map.value = max(0, min(127, cc_map.value + delta))
+                    if cc_map.value != old_val:
                         changed_count += 1
                         field_changed = True
-                        updated_controls.append(cc_map.control)
+                        updated_values.append(cc_map.value)
                 if field_changed:
                     undo_changes.append((elem, 'y_axis_cc_mappings', old_maps, copy.deepcopy(elem.y_axis_cc_mappings)))
             if hasattr(elem, 'z_axis_cc_mappings') and elem.z_axis_cc_mappings:
                 old_maps = copy.deepcopy(elem.z_axis_cc_mappings)
                 field_changed = False
                 for cc_map in elem.z_axis_cc_mappings:
-                    old_val = cc_map.control
-                    cc_map.control = max(0, min(127, cc_map.control + delta))
-                    if cc_map.control != old_val:
+                    total_cc_mappings += 1
+                    old_val = cc_map.value
+                    cc_map.value = max(0, min(127, cc_map.value + delta))
+                    if cc_map.value != old_val:
                         changed_count += 1
                         field_changed = True
-                        updated_controls.append(cc_map.control)
+                        updated_values.append(cc_map.value)
                 if field_changed:
                     undo_changes.append((elem, 'z_axis_cc_mappings', old_maps, copy.deepcopy(elem.z_axis_cc_mappings)))
 
@@ -1887,12 +1942,13 @@ class SceneViewport(QOpenGLWidget):
                 old_maps = copy.deepcopy(elem.midi_cc_mappings)
                 field_changed = False
                 for cc_map in elem.midi_cc_mappings:
-                    old_val = cc_map.control
-                    cc_map.control = max(0, min(127, cc_map.control + delta))
-                    if cc_map.control != old_val:
+                    total_cc_mappings += 1
+                    old_val = cc_map.value
+                    cc_map.value = max(0, min(127, cc_map.value + delta))
+                    if cc_map.value != old_val:
                         changed_count += 1
                         field_changed = True
-                        updated_controls.append(cc_map.control)
+                        updated_values.append(cc_map.value)
                 if field_changed:
                     undo_changes.append((elem, 'midi_cc_mappings', old_maps, copy.deepcopy(elem.midi_cc_mappings)))
 
@@ -1903,14 +1959,26 @@ class SceneViewport(QOpenGLWidget):
             if undo_changes:
                 self.midi_mappings_nudged.emit(undo_changes, f"Nudge MIDI CC {direction}")
 
-            preview_controls = ", ".join(str(v) for v in updated_controls[:4])
-            if len(updated_controls) > 4:
-                preview_controls += ", ..."
+            preview_values = ", ".join(str(v) for v in updated_values[:4])
+            if len(updated_values) > 4:
+                preview_values += ", ..."
+            selected_preview = ""
+            if self.selected_element is not None:
+                selected_midi = self._midi_summary(self.selected_element, limit=2)
+                if selected_midi:
+                    selected_preview = f" | Selected: {', '.join(selected_midi)}"
             self._show_status(
-                f"Nudged {changed_count} MIDI CC values {direction} by {abs(delta)} -> CC {preview_controls}"
+                f"Nudged {changed_count} MIDI CC values {direction} by {abs(delta)} -> value {preview_values}{selected_preview}"
+            )
+        elif total_cc_mappings > 0:
+            limit_text = "127 (max)" if delta > 0 else "0 (min)"
+            self._show_status(
+                f"MIDI CC mappings found, but all selected CC values are already at {limit_text}."
             )
         else:
-            self._show_status("No MIDI CC mappings found on selected elements!")
+            self._show_status(
+                "No MIDI CC mappings on selected elements (note-only objects use Alt+Shift+Up/Down)."
+            )
 
     def _nudge_selected_midi_note(self, delta: int):
         """Nudge MIDI note values of selected elements."""

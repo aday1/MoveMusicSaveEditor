@@ -636,6 +636,93 @@ def generate_buttons(
     return elements
 
 
+def _note_name(note: int) -> str:
+    """Convert MIDI note number (0-127) to a human-readable name, e.g. C4."""
+    names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+    octave = note // 12 - 1
+    return f"{names[note % 12]}{octave}"
+
+
+def generate_keyboard(
+    project: Project,
+    arrangement: str = "Row",
+    spacing: float = 12.0,
+    origin: Vec3 = None,
+    channel: int = 1,
+    base_note: int = 0,
+    max_note: int = 127,
+    label_prefix: str = "Key",
+) -> List:
+    """Generate a full MIDI keyboard as HitZones across the available note range.
+
+    Each key is set to Hold behavior so press/release produces Note On/Note Off behavior.
+    We also include a CC mapping per key (CC number == note number) so each key carries
+    explicit CC metadata for users who want both note and CC reference information.
+    """
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    base_note = max(0, min(127, int(base_note)))
+    max_note = max(0, min(127, int(max_note)))
+    if max_note < base_note:
+        base_note, max_note = max_note, base_note
+
+    notes = list(range(base_note, max_note + 1))
+    count = len(notes)
+
+    if arrangement == "Circle":
+        radius = max(120.0, count * 2.6)
+        positions = _circle_positions(count, radius)
+    else:
+        positions = _row_positions(count, spacing)
+
+    elements = []
+
+    black_keys = {1, 3, 6, 8, 10}
+    for i, (px, py) in enumerate(positions):
+        note = notes[i]
+        note_name = _note_name(note)
+        is_black = (note % 12) in black_keys
+
+        hz_id = project.generate_id("HitZone")
+        hz = HitZone(
+            unique_id=hz_id,
+            display_name=f"{label_prefix} {note_name}",
+            transform=Transform(
+                translation=Vec3(origin.x + px, origin.y + py, origin.z),
+                scale=Vec3(0.22 if not is_black else 0.18, 0.7 if not is_black else 0.45, 0.12),
+            ),
+            color=Color(0.95, 0.95, 0.95, 1.0) if not is_black else Color(0.08, 0.08, 0.08, 1.0),
+            should_use_velocity_sensitivity=False,
+            fixed_midi_velocity_output=127.0,
+            midi_note_mappings=[MidiNoteMapping(channel=channel, note=note, velocity=127.0)],
+            midi_cc_mappings=[MidiCCMapping(channel=channel, control=note, value=127)],
+            behavior="EHitZoneBehavior::Hold",
+            midi_message_type="EMidiMessageType::Note",
+        )
+        elements.append(hz)
+
+        # Add labels for octave starts (C notes) plus min/max note for quick orientation.
+        if note % 12 == 0 or note == base_note or note == max_note:
+            tl_id = project.generate_id("TextLabel_C")
+            tl = TextLabel(
+                unique_id=tl_id,
+                display_name=(
+                    f"{note_name} #{note} Ch{channel}\n"
+                    f"CC{note}=127\n"
+                    "Note On/Off (Hold)"
+                ),
+                transform=Transform(
+                    translation=Vec3(origin.x + px, origin.y + py, origin.z + 20),
+                    scale=Vec3(0.22, 0.22, 0.22),
+                ),
+                color=LABEL_COLOR,
+            )
+            elements.append(tl)
+
+    return elements
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
@@ -709,6 +796,12 @@ TEMPLATES = {
     "8 Buttons (Row)":      lambda p, o: generate_buttons(p, 8, "Row", 25, o, base_cc=70),
     "8 Buttons (Circle)":   lambda p, o: generate_buttons(p, 8, "Circle", 50, o, base_cc=70),
     "16 Drum Pads (4x4)":   lambda p, o: generate_drum_pads(p, 16, "Row", 30, o, base_note=36, channel=10),
+    "Keyboard (Full MIDI Row)": lambda p, o: generate_keyboard(
+        p, arrangement="Row", spacing=12, origin=o, channel=1, base_note=0, max_note=127, label_prefix="Key"
+    ),
+    "Keyboard (Full MIDI Circle)": lambda p, o: generate_keyboard(
+        p, arrangement="Circle", spacing=12, origin=o, channel=1, base_note=0, max_note=127, label_prefix="Key"
+    ),
     "Mixer (8 Faders + 8 Knobs)": None,  # special composite — handled separately
     "DEBUG: Everything Kitchen Sink": lambda p, o: generate_debug_everything(p, o),
 }
