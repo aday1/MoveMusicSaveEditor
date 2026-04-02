@@ -1,6 +1,0 @@
-PyQt6>=6.5
-PyOpenGL>=3.1
-trimesh>=3.21.0          # Robust 3D file import with GLB/OBJ support
-pillow>=10.0.0           # Image capture and processing
-imageio[ffmpeg]>=2.31.0  # High-quality GIF generation
-numpy>=1.24.0            # Mesh data manipulation (required by trimesh)
