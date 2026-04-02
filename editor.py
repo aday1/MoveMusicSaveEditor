@@ -3378,7 +3378,8 @@ class MainWindow(QMainWindow):
 
     def _on_add_template(self, template_name: str):
         """Generate a preset layout from a template and add to active workspace."""
-        # Project should always exist since we start with a blank one
+        if not self.project:
+            self._create_new_project()
 
         # Find active workspace
         active_ws = self._get_selected_workspace()
@@ -3400,10 +3401,18 @@ class MainWindow(QMainWindow):
 
         generator = TEMPLATES.get(template_name)
         if not generator:
+            QMessageBox.warning(self, "Template Missing", f"Template '{template_name}' was not found.")
             return
 
-        elements = generator(self.project, origin)
+        try:
+            elements = generator(self.project, origin)
+        except Exception as e:
+            logging.exception("Template generation failed: %s", template_name)
+            QMessageBox.critical(self, "Template Error", f"Failed to generate '{template_name}':\n{e}")
+            return
+
         if not elements:
+            self.statusbar.showMessage(f"Template '{template_name}' produced no elements.", 4000)
             return
 
         cmd = AddTemplateCommand(self.project, active_ws, elements, f"Add {template_name}")
@@ -3411,6 +3420,11 @@ class MainWindow(QMainWindow):
         self._rebuild_tree()
         self._update_statusbar()
         self._sync_viewports()
+
+        # Make the add operation obvious: select new elements and focus them.
+        self._sync_selection(elements)
+        self.statusbar.showMessage(f"Added template '{template_name}' ({len(elements)} elements)", 4000)
+        self._active_viewport()._focus_selected()
 
 
 def run_editor():

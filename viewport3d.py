@@ -1045,9 +1045,6 @@ class SceneViewport(QOpenGLWidget):
 
     def _draw_shortcuts_overlay(self, painter: QPainter):
         """Draw context-sensitive shortcuts overlay based on current selection."""
-        if not self._show_shortcuts:
-            return
-
         # Build context-sensitive shortcuts based on selection
         shortcuts = []
 
@@ -1173,7 +1170,7 @@ class SceneViewport(QOpenGLWidget):
         shortcuts.extend([
             "",
             "💡 DISPLAY CONTROLS:",
-            "H: Hide/show this panel",
+            "Shortcut help is pinned visible",
             "N: Toggle grid coordinate numbers",
             "G: Toggle grid snap",
             "Right-click: Context menu",
@@ -1514,9 +1511,9 @@ class SceneViewport(QOpenGLWidget):
             self._show_status(f"Grid snap: {'ON' if self._snap_grid_enabled else 'OFF'} ({self._snap_grid_size:.0f} units)")
             self.update()
         elif key == Qt.Key.Key_H:
-            # Toggle shortcuts display
-            self._show_shortcuts = not self._show_shortcuts
-            self._show_status(f"Shortcuts: {'VISIBLE' if self._show_shortcuts else 'HIDDEN'} (Press H to toggle)")
+            # Keep shortcut help pinned visible to avoid losing the on-screen guide.
+            self._show_shortcuts = True
+            self._show_status("Shortcut help is pinned visible")
             self.update()
         elif key == Qt.Key.Key_N:
             # Toggle grid coordinate numbers
