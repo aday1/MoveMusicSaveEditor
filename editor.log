@@ -5027,3 +5027,677 @@ Traceback (most recent call last):
     bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:14:42,802 INFO OpenGL initialized
+2026-04-02 20:14:42,831 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:14:42,855 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:14:43,157 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:14:49,499 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:14:51,262 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:14:54,476 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:14:55,770 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:14:57,207 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:14:58,626 INFO _on_viewport_select: HitZone_148
+2026-04-02 20:14:58,627 INFO   tree item found: True
+2026-04-02 20:14:58,735 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:00,762 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:00,793 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:00,828 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:00,867 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:00,905 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:00,942 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:00,977 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:01,012 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:01,050 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:01,084 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:01,123 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:01,159 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:01,909 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:02,113 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:02,476 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:02,635 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:02,803 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:04,061 INFO _on_viewport_select: HitZone_150
+2026-04-02 20:15:04,062 INFO   tree item found: True
+2026-04-02 20:15:04,141 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:04,163 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:04,201 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:04,743 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:04,868 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:05,057 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:05,209 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:05,589 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:05,757 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:05,922 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:06,245 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:06,420 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:06,588 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:06,774 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:07,124 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:07,305 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:07,569 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:07,750 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:07,944 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:08,253 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:08,429 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:09,010 INFO _on_viewport_select: HitZone_150
+2026-04-02 20:15:09,011 INFO   tree item found: True
+2026-04-02 20:15:09,080 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:10,061 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:13,107 INFO _on_viewport_select: HitZone_152
+2026-04-02 20:15:13,107 INFO   tree item found: True
+2026-04-02 20:15:13,194 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:13,202 INFO _on_viewport_select: HitZone_152
+2026-04-02 20:15:13,202 INFO   tree item found: True
+2026-04-02 20:15:13,277 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:13,856 INFO _on_viewport_select: HitZone_69
+2026-04-02 20:15:13,856 INFO   tree item found: True
+2026-04-02 20:15:13,938 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:14,307 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:14,441 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:14,622 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:14,780 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:15,309 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:15,453 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:15,622 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:15,766 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:15,941 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:16,108 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:16,289 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:16,484 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:16,650 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:18,260 INFO _on_viewport_select: TextLabel_C_155
+2026-04-02 20:15:18,260 INFO   tree item found: True
+2026-04-02 20:15:18,316 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:18,338 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:18,442 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:19,294 INFO _on_viewport_select: HitZone_154
+2026-04-02 20:15:19,296 INFO   tree item found: True
+2026-04-02 20:15:19,453 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:20,714 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:21,098 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:24,773 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'
+2026-04-02 20:15:24,850 ERROR paintEvent overlay failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 744, in paintEvent
+    self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 830, in _draw_grid_coordinates
+    bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'QPoint' object has no attribute 'adjusted'

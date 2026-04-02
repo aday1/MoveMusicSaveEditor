@@ -31,8 +31,28 @@ def _save_config(cfg: dict):
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     CONFIG_FILE.write_text(json.dumps(cfg, indent=2))
 
+def _make_color_dot_icon(color_hex: str) -> QIcon:
+    """Create a small colored dot icon used for top-level menu grouping."""
+    pix = QPixmap(12, 12)
+    pix.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pix)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(QColor(color_hex))
+    painter.drawEllipse(1, 1, 10, 10)
+    painter.end()
+    return QIcon(pix)
+
+
+def _menu_accent_stylesheet(border_hex: str, hover_hex: str) -> str:
+    """Per-menu popup accent colors for visual grouping."""
+    return (
+        f"QMenu {{ border: 1px solid {border_hex}; }}"
+        f"QMenu::item:selected {{ background-color: {hover_hex}; }}"
+    )
+
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QColor, QUndoCommand, QUndoStack
+from PyQt6.QtGui import QAction, QColor, QIcon, QPainter, QPixmap, QUndoCommand, QUndoStack
 from PyQt6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox,
     QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView,
@@ -1504,6 +1524,8 @@ class MainWindow(QMainWindow):
     def _setup_menu(self):
         menubar = self.menuBar()
         file_menu = menubar.addMenu("File")
+        file_menu.menuAction().setIcon(_make_color_dot_icon("#4DA3FF"))
+        file_menu.setStyleSheet(_menu_accent_stylesheet("#2F6DB4", "#1F3D5E"))
         file_menu.addAction(self.action_new)
         file_menu.addSeparator()
         file_menu.addAction(self.action_open)
@@ -1511,6 +1533,8 @@ class MainWindow(QMainWindow):
         file_menu.addAction(self.action_save_as)
 
         edit_menu = menubar.addMenu("Edit")
+        edit_menu.menuAction().setIcon(_make_color_dot_icon("#FF8A3D"))
+        edit_menu.setStyleSheet(_menu_accent_stylesheet("#B45A25", "#5A351F"))
         edit_menu.addAction(self.action_undo)
         edit_menu.addAction(self.action_redo)
         edit_menu.addSeparator()
@@ -1519,6 +1543,8 @@ class MainWindow(QMainWindow):
         edit_menu.addAction(self.action_delete)
 
         view_menu = menubar.addMenu("View")
+        view_menu.menuAction().setIcon(_make_color_dot_icon("#56C271"))
+        view_menu.setStyleSheet(_menu_accent_stylesheet("#2D8543", "#20462B"))
         self.action_debug_mode = view_menu.addAction("Debug Mode")
         self.action_debug_mode.setCheckable(True)
         self.action_debug_mode.setChecked(self.debug_mode)
@@ -1526,6 +1552,8 @@ class MainWindow(QMainWindow):
 
         # Templates menu
         template_menu = menubar.addMenu("Templates")
+        template_menu.menuAction().setIcon(_make_color_dot_icon("#E0C14A"))
+        template_menu.setStyleSheet(_menu_accent_stylesheet("#A48A2F", "#5A5120"))
 
         def _template_category(name: str) -> str:
             n = name.lower()
