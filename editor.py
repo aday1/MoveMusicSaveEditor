@@ -50,7 +50,7 @@ def _format_note_mapping_summary(mappings: list, prefix: str = "") -> str:
     return prefix + " | ".join(parts)
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QColor, QKeySequence, QShortcut, QUndoCommand, QUndoStack
+from PyQt6.QtGui import QAction, QActionGroup, QColor, QKeySequence, QShortcut, QUndoCommand, QUndoStack
 from PyQt6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox,
     QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView,
@@ -153,34 +153,35 @@ class BatchDeleteCommand(QUndoCommand):
         self.element_data = []  # will store (element, project_index, [(workspace, ws_index), ...])
 
     def redo(self):
-        # Store deletion information
+        # Store deletion information — capture indices BEFORE any removal
         self.element_data = []
         for element in self.elements:
-            # Find project index
+            if element not in self.project.elements:
+                continue
             project_index = self.project.elements.index(element)
-
-            # Find all workspace references
             workspace_refs = []
             for ws in self.project.workspaces:
                 if element.unique_id in ws.element_ids:
                     ws_index = ws.element_ids.index(element.unique_id)
                     workspace_refs.append((ws, ws_index))
-
             self.element_data.append((element, project_index, workspace_refs))
 
-        # Remove elements (in reverse order to preserve indices)
+        # Remove elements (reverse order to preserve earlier indices)
         for element, _, workspace_refs in reversed(self.element_data):
-            self.project.elements.remove(element)
+            if element in self.project.elements:
+                self.project.elements.remove(element)
             for ws, _ in workspace_refs:
                 if element.unique_id in ws.element_ids:
                     ws.element_ids.remove(element.unique_id)
 
     def undo(self):
-        # Restore elements
+        # Restore in forward order (lowest index first) so inserts don't shift
         for element, project_index, workspace_refs in self.element_data:
-            self.project.elements.insert(project_index, element)
+            idx = min(project_index, len(self.project.elements))
+            self.project.elements.insert(idx, element)
             for ws, ws_index in workspace_refs:
-                ws.element_ids.insert(ws_index, element.unique_id)
+                ws_idx = min(ws_index, len(ws.element_ids))
+                ws.element_ids.insert(ws_idx, element.unique_id)
 
 
 class DuplicateElementCommand(QUndoCommand):
@@ -206,6 +207,52 @@ class AddTemplateCommand(QUndoCommand):
         self.project = project
         self.workspace = workspace
         self.elements = elements
+
+    def redo(self):
+        for elem in self.elements:
+            self.project.elements.append(elem)
+            self.workspace.element_ids.append(elem.unique_id)
+
+    def undo(self):
+        for elem in reversed(self.elements):
+            if elem in self.project.elements:
+                self.project.elements.remove(elem)
+            if elem.unique_id in self.workspace.element_ids:
+                self.workspace.element_ids.remove(elem.unique_id)
+
+
+class BatchRotateCommand(QUndoCommand):
+    """Rotate one or more elements as a single undo step."""
+    def __init__(self, elements, old_rotations, new_rotations, description="Rotate elements"):
+        super().__init__(description)
+        self.elements = elements
+        self.old_rotations = old_rotations  # list of (x, y, z, w) tuples
+        self.new_rotations = new_rotations
+
+    def redo(self):
+        for elem, (qx, qy, qz, qw) in zip(self.elements, self.new_rotations):
+            elem.transform.rotation = Quat(x=qx, y=qy, z=qz, w=qw)
+
+    def undo(self):
+        for elem, (qx, qy, qz, qw) in zip(self.elements, self.old_rotations):
+            elem.transform.rotation = Quat(x=qx, y=qy, z=qz, w=qw)
+
+
+class BatchScaleCommand(QUndoCommand):
+    """Scale one or more elements as a single undo step."""
+    def __init__(self, elements, old_scales, new_scales, description="Resize elements"):
+        super().__init__(description)
+        self.elements = elements
+        self.old_scales = old_scales  # list of (sx, sy, sz) tuples
+        self.new_scales = new_scales
+
+    def redo(self):
+        for elem, (sx, sy, sz) in zip(self.elements, self.new_scales):
+            elem.transform.scale = Vec3(sx, sy, sz)
+
+    def undo(self):
+        for elem, (sx, sy, sz) in zip(self.elements, self.old_scales):
+            elem.transform.scale = Vec3(sx, sy, sz)
 
     def redo(self):
         for elem in self.elements:
@@ -1642,6 +1689,19 @@ class MainWindow(QMainWindow):
                 action.setData(tpl_name)
                 action.triggered.connect(self._on_template_menu_action)
 
+        # Template orientation submenu
+        template_menu.addSeparator()
+        orient_menu = template_menu.addMenu("Placement Orientation")
+        self._template_orientation = "Flat"
+        orient_group = QActionGroup(self)
+        for label in ("Flat (XY)", "Vertical (XZ)", "Side (YZ)"):
+            act = orient_menu.addAction(label)
+            act.setCheckable(True)
+            act.setActionGroup(orient_group)
+            if label.startswith("Flat"):
+                act.setChecked(True)
+            act.triggered.connect(lambda checked, l=label: self._set_template_orientation(l))
+
         # Import menu
         import_menu = file_menu.addMenu("Import 3D")
         self.action_import_glb = import_menu.addAction("GLB/glTF File...")
@@ -1689,6 +1749,8 @@ class MainWindow(QMainWindow):
         self.viewport.midi_mappings_nudged.connect(self._on_viewport_midi_nudged)
         self.viewport.status_message.connect(lambda msg: self.statusbar.showMessage(msg, 2500))
         self.viewport.element_scaled.connect(self._on_viewport_scale)
+        self.viewport.elements_scaled.connect(self._on_viewport_elements_scaled)
+        self.viewport.elements_rotated.connect(self._on_viewport_elements_rotated)
         self.viewport.add_element_requested.connect(self._on_viewport_add_element)
         self.viewport.duplicate_element_requested.connect(self._on_viewport_duplicate_element)
         self.viewport.delete_element_requested.connect(self._on_viewport_delete_element)
@@ -1714,6 +1776,8 @@ class MainWindow(QMainWindow):
         self.quad_viewport.midi_mappings_nudged.connect(self._on_viewport_midi_nudged)
         self.quad_viewport.status_message.connect(lambda msg: self.statusbar.showMessage(msg, 2500))
         self.quad_viewport.element_scaled.connect(self._on_viewport_scale)
+        self.quad_viewport.elements_scaled.connect(self._on_viewport_elements_scaled)
+        self.quad_viewport.elements_rotated.connect(self._on_viewport_elements_rotated)
         self.quad_viewport.add_element_requested.connect(self._on_viewport_add_element)
         self.quad_viewport.duplicate_element_requested.connect(self._on_viewport_duplicate_element)
         self.quad_viewport.delete_element_requested.connect(self._on_viewport_delete_element)
@@ -2532,6 +2596,29 @@ class MainWindow(QMainWindow):
         elif widget is self.groupie_panel and self.groupie_panel._target is elem:
             self.groupie_panel.load(elem)
 
+    def _on_viewport_elements_scaled(self, elements, old_scales):
+        """Batch scale from multi-select resize — single undo step."""
+        new_scales = [(e.transform.scale.x, e.transform.scale.y, e.transform.scale.z)
+                      for e in elements]
+        # Restore old scales, then push command
+        for elem, (sx, sy, sz) in zip(elements, old_scales):
+            elem.transform.scale = Vec3(sx, sy, sz)
+        cmd = BatchScaleCommand(elements, old_scales, new_scales, "Resize elements")
+        self.undo_stack.push(cmd)
+        self._sync_viewports()
+
+    def _on_viewport_elements_rotated(self, elements, old_quats):
+        """Batch rotate from keyboard or mouse drag — single undo step."""
+        new_quats = [(e.transform.rotation.x, e.transform.rotation.y,
+                      e.transform.rotation.z, e.transform.rotation.w)
+                     for e in elements]
+        # Restore old rotations, then push command
+        for elem, (qx, qy, qz, qw) in zip(elements, old_quats):
+            elem.transform.rotation = Quat(x=qx, y=qy, z=qz, w=qw)
+        cmd = BatchRotateCommand(elements, old_quats, new_quats, "Rotate elements")
+        self.undo_stack.push(cmd)
+        self._sync_viewports()
+
     def _on_viewport_elements_moved(self, elements, old_positions):
         """Batch move from multi-select drag — single undo step."""
         new_positions = [Vec3(e.transform.translation.x, e.transform.translation.y,
@@ -2780,6 +2867,15 @@ class MainWindow(QMainWindow):
             self.quad_viewport.hide()
             self.outer_splitter.insertWidget(0, self.viewport)
             self.viewport.show()
+
+    def _set_template_orientation(self, label: str):
+        if label.startswith("Flat"):
+            self._template_orientation = "Flat"
+        elif label.startswith("Vertical"):
+            self._template_orientation = "Vertical"
+        elif label.startswith("Side"):
+            self._template_orientation = "Side"
+        self.statusbar.showMessage(f"Template placement: {self._template_orientation}", 2500)
 
     def _on_template_menu_action(self, checked=False):
         action = self.sender()
@@ -3544,6 +3640,20 @@ class MainWindow(QMainWindow):
                 logging.exception("Template generation failed: %s", template_name)
                 QMessageBox.critical(self, "Template Error", f"Failed to generate '{template_name}':\n{e}")
                 return
+
+        # Apply placement orientation (remap flat XY layout to vertical/side planes)
+        if self._template_orientation == "Vertical":
+            for elem in elements:
+                p = elem.transform.translation
+                dy = p.y - origin.y
+                p.y = origin.y
+                p.z = origin.z + dy
+        elif self._template_orientation == "Side":
+            for elem in elements:
+                p = elem.transform.translation
+                dx = p.x - origin.x
+                p.x = origin.x
+                p.y = origin.y + dx
 
         if not elements:
             self.statusbar.showMessage(f"Template '{template_name}' produced no elements.", 4000)

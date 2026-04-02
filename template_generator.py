@@ -1621,21 +1621,21 @@ _SHAPE_SPIRAL_ART = [
 ]
 
 _SHAPE_QUAKE = [
-    "     NNNN     ",
-    "    NNNNN     ",
-    "   NNNNN      ",
-    "  NNNNNNNNNN  ",
-    " NNNNNNNNNNN  ",
-    "NNNNNNNNNNNN  ",
-    "      NNNNN   ",
-    "     NNNNN    ",
-    "    NNNNN     ",
-    "  NNNNNNNNNNNN",
-    "  NNNNNNNNNNN ",
-    "  NNNNNNNNNN  ",
-    "      NNNNN   ",
-    "     NNNNN    ",
-    "    NNNN      ",
+    "     OOOO     ",
+    "    OOOOO     ",
+    "   OOOOO      ",
+    "  OOOOOOOOOO  ",
+    " RRRRRRRRRRR  ",
+    "RRRRRRRRRRRR  ",
+    "      RRRRR   ",
+    "     OOOOO    ",
+    "    OOOOO     ",
+    "  OOOOOOOOOOOO",
+    "  RRRRRRRRRRR ",
+    "  RRRRRRRRRR  ",
+    "      RRRRR   ",
+    "     OOOO     ",
+    "    OOOO      ",
 ]
 
 _SHAPE_FRAME = [

@@ -198,6 +198,8 @@ class SceneViewport(QOpenGLWidget):
     # New multi-select signals
     selection_changed = pyqtSignal(list)
     elements_moved = pyqtSignal(list, list)   # [elements], [(old_x, old_y, old_z), ...]
+    elements_scaled = pyqtSignal(list, list)  # [elements], [(old_sx, old_sy, old_sz), ...]
+    elements_rotated = pyqtSignal(list, list) # [elements], [(old_qx, old_qy, old_qz, old_qw), ...]
     midi_mappings_nudged = pyqtSignal(list, str)  # [(obj, attr, old_val, new_val)], description
     auto_layout_requested = pyqtSignal(str)   # "Row" / "Grid" / "Circle"
     maximize_requested = pyqtSignal()
@@ -233,6 +235,11 @@ class SceneViewport(QOpenGLWidget):
         self._resizing = False
         self._resize_axis = None
 
+        # Rotation drag
+        self._rotating = False
+        self._rotate_drag_axis = None
+        self._rotation_start_quats = {}  # id(elem) -> (qx, qy, qz, qw)
+
         # Marquee (box) select
         self._marquee_active = False
         self._marquee_start = QPoint()
@@ -256,6 +263,7 @@ class SceneViewport(QOpenGLWidget):
         # Cached screen positions for picking & labels
         self._screen_positions = {}  # id(elem) -> (sx, sy, depth, elem)
         self._handle_screen_pos = {}  # axis -> (sx, sy)
+        self._rot_handle_screen_pos = {}  # axis -> (sx, sy)
 
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
@@ -584,6 +592,32 @@ class SceneViewport(QOpenGLWidget):
         _draw_solid_box(p.x - hs, p.y - hs, p.z + size - hs,
                         p.x + hs, p.y + hs, p.z + size + hs)
 
+        # Rotation ring handles (small circles at 60% along each axis)
+        rot_dist = size * 0.6
+        ring_r = 3.0
+        ring_segs = 16
+        # X-axis rotation ring (in YZ plane at rot_dist along X) — pastel pink
+        glColor4f(1.0, 0.6, 0.6, 0.9)
+        glBegin(GL_LINE_LOOP)
+        for i in range(ring_segs):
+            a = 2.0 * math.pi * i / ring_segs
+            glVertex3f(p.x + rot_dist, p.y + ring_r * math.cos(a), p.z + ring_r * math.sin(a))
+        glEnd()
+        # Y-axis rotation ring (in XZ plane at rot_dist along Y) — pastel green
+        glColor4f(0.6, 1.0, 0.6, 0.9)
+        glBegin(GL_LINE_LOOP)
+        for i in range(ring_segs):
+            a = 2.0 * math.pi * i / ring_segs
+            glVertex3f(p.x + ring_r * math.cos(a), p.y + rot_dist, p.z + ring_r * math.sin(a))
+        glEnd()
+        # Z-axis rotation ring (in XY plane at rot_dist along Z) — pastel blue
+        glColor4f(0.6, 0.6, 1.0, 0.9)
+        glBegin(GL_LINE_LOOP)
+        for i in range(ring_segs):
+            a = 2.0 * math.pi * i / ring_segs
+            glVertex3f(p.x + ring_r * math.cos(a), p.y + ring_r * math.sin(a), p.z + rot_dist)
+        glEnd()
+
         glPopAttrib()
 
         # Cache handle screen positions
@@ -597,6 +631,17 @@ class SceneViewport(QOpenGLWidget):
             sp = self.camera.world_to_screen(wx, wy, wz, w, h)
             if sp:
                 self._handle_screen_pos[axis] = (sp[0], sp[1])
+
+        # Cache rotation handle screen positions (center of each ring)
+        self._rot_handle_screen_pos = {}
+        for axis, wx, wy, wz in [
+            ('x', p.x + rot_dist, p.y, p.z),
+            ('y', p.x, p.y + rot_dist, p.z),
+            ('z', p.x, p.y, p.z + rot_dist),
+        ]:
+            sp = self.camera.world_to_screen(wx, wy, wz, w, h)
+            if sp:
+                self._rot_handle_screen_pos[axis] = (sp[0], sp[1])
 
     def _draw_element(self, elem, is_selected: bool, in_active_workspace: bool):
         p = elem.transform.translation
@@ -625,7 +670,7 @@ class SceneViewport(QOpenGLWidget):
         glPopMatrix()
 
     def _draw_hit_zone_box(self, s, c, alpha, is_selected):
-        hx, hy, hz = 15.0 * s.x, 15.0 * s.y, 2.5 * s.z
+        hx, hy, hz = max(15.0 * s.x, 3.0), max(15.0 * s.y, 3.0), max(2.5 * s.z, 1.0)
 
         if is_selected:
             glLineWidth(3.0)
@@ -641,7 +686,9 @@ class SceneViewport(QOpenGLWidget):
 
     def _draw_morph_zone(self, mz, s, c, alpha, is_selected):
         ext = mz.mesh_extent
-        hx, hy, hz = ext.x * s.x * 0.5, ext.y * s.y * 0.5, ext.z * s.z * 0.5
+        hx = max(ext.x * s.x * 0.5, 3.0)
+        hy = max(ext.y * s.y * 0.5, 3.0)
+        hz = max(ext.z * s.z * 0.5, 1.0)
 
         if is_selected:
             glLineWidth(3.0)
@@ -683,14 +730,14 @@ class SceneViewport(QOpenGLWidget):
             glEnd()
 
     def _draw_text_label(self, tl, s, c, alpha, is_selected):
-        hx, hy = 10.0 * s.x, 8.0 * s.y
+        hx, hy = max(10.0 * s.x, 3.0), max(8.0 * s.y, 3.0)
 
         if is_selected:
             glLineWidth(3.0)
             glColor4f(1.0, 1.0, 0.2, 1.0)
             _draw_wire_box(-hx, -hy, -0.5, hx, hy, 0.5)
 
-        glColor4f(c.r, c.g, c.b, alpha * 0.4)
+        glColor4f(c.r, c.g, c.b, alpha * 0.7)
         _draw_solid_box(-hx, -hy, -0.5, hx, hy, 0.5)
 
         glLineWidth(1.5)
@@ -710,9 +757,9 @@ class SceneViewport(QOpenGLWidget):
 
     def _draw_group_ie(self, grp, s, c, alpha, is_selected):
         bb = grp.bounding_box
-        hx = (bb.max.x - bb.min.x) * s.x * 0.5
-        hy = (bb.max.y - bb.min.y) * s.y * 0.5
-        hz = (bb.max.z - bb.min.z) * s.z * 0.5
+        hx = max((bb.max.x - bb.min.x) * s.x * 0.5, 3.0)
+        hy = max((bb.max.y - bb.min.y) * s.y * 0.5, 3.0)
+        hz = max((bb.max.z - bb.min.z) * s.z * 0.5, 1.0)
 
         if is_selected:
             glLineWidth(3.0)
@@ -1134,6 +1181,7 @@ class SceneViewport(QOpenGLWidget):
                 "R/T: Rotate Z-axis ±15°",
                 "Shift+R/T: Rotate Y-axis ±15°",
                 "Ctrl+R/T: Rotate X-axis ±15°",
+                "Drag ring handle: Free rotate",
                 "",
                 "⚙️ ACTIONS:",
                 "Ctrl+D: Duplicate element",
@@ -1300,14 +1348,28 @@ class SceneViewport(QOpenGLWidget):
                 if self._check_overlay_click(mx, my):
                     return
 
-                # Check resize handles (only if single selection)
-                if len(self.selected_elements) == 1 and hasattr(self, '_handle_screen_pos'):
+                # Check resize handles (works for single and multi-selection)
+                if self.selected_elements and hasattr(self, '_handle_screen_pos'):
                     for axis, (hx, hy) in self._handle_screen_pos.items():
                         if math.sqrt((mx - hx) ** 2 + (my - hy) ** 2) < 20:
                             self._resizing = True
                             self._resize_axis = axis
-                            s = self.selected_elements[0].transform.scale
-                            self._drag_start_positions = {id(self.selected_elements[0]): (s.x, s.y, s.z)}
+                            self._drag_start_positions = {}
+                            for elem in self.selected_elements:
+                                s = elem.transform.scale
+                                self._drag_start_positions[id(elem)] = (s.x, s.y, s.z)
+                            return
+
+                # Check rotation handles
+                if self.selected_elements and hasattr(self, '_rot_handle_screen_pos'):
+                    for axis, (hx, hy) in self._rot_handle_screen_pos.items():
+                        if math.sqrt((mx - hx) ** 2 + (my - hy) ** 2) < 20:
+                            self._rotating = True
+                            self._rotate_drag_axis = axis
+                            self._rotation_start_quats = {}
+                            for elem in self.selected_elements:
+                                q = elem.transform.rotation
+                                self._rotation_start_quats[id(elem)] = (q.x, q.y, q.z, q.w)
                             return
 
                 self._handle_pick(mx, my, event.modifiers())
@@ -1335,6 +1397,9 @@ class SceneViewport(QOpenGLWidget):
         elif event.buttons() & Qt.MouseButton.LeftButton and self._resizing and self.selected_elements:
             self._handle_resize_drag(dx, dy)
             self.update()
+        elif event.buttons() & Qt.MouseButton.LeftButton and self._rotating and self.selected_elements:
+            self._handle_rotate_drag(dx, dy)
+            self.update()
         elif event.buttons() & Qt.MouseButton.LeftButton and self._dragging_element and self.selected_elements:
             self._handle_drag(dx, dy, bool(event.modifiers() & Qt.KeyboardModifier.ShiftModifier))
             self.update()
@@ -1358,13 +1423,32 @@ class SceneViewport(QOpenGLWidget):
             self.update()
         elif event.button() == Qt.MouseButton.LeftButton and self._resizing:
             if self.selected_elements and self._drag_start_positions and self._mouse_moved:
-                elem = self.selected_elements[-1]
-                old = self._drag_start_positions.get(id(elem))
-                if old:
-                    self.element_scaled.emit(elem, old[0], old[1], old[2])
+                elems = []
+                old_scales = []
+                for elem in self.selected_elements:
+                    old = self._drag_start_positions.get(id(elem))
+                    if old:
+                        elems.append(elem)
+                        old_scales.append(old)
+                if elems:
+                    self.elements_scaled.emit(elems, old_scales)
             self._resizing = False
             self._resize_axis = None
             self._drag_start_positions = {}
+        elif event.button() == Qt.MouseButton.LeftButton and self._rotating:
+            if self.selected_elements and self._rotation_start_quats and self._mouse_moved:
+                old_quats = []
+                elems = []
+                for elem in self.selected_elements:
+                    old = self._rotation_start_quats.get(id(elem))
+                    if old:
+                        elems.append(elem)
+                        old_quats.append(old)
+                if elems:
+                    self.elements_rotated.emit(elems, old_quats)
+            self._rotating = False
+            self._rotate_drag_axis = None
+            self._rotation_start_quats = {}
         elif event.button() == Qt.MouseButton.LeftButton and self._dragging_element:
             if self.selected_elements and self._drag_start_positions and self._mouse_moved:
                 if len(self.selected_elements) == 1:
@@ -1524,6 +1608,9 @@ class SceneViewport(QOpenGLWidget):
         elif key == Qt.Key.Key_R:
             # Rotate selected elements
             if self.selected_elements:
+                old_quats = [(e.transform.rotation.x, e.transform.rotation.y,
+                              e.transform.rotation.z, e.transform.rotation.w)
+                             for e in self.selected_elements]
                 angle = 15.0  # degrees
                 if mods & Qt.KeyboardModifier.ControlModifier:
                     # Ctrl+R: Rotate around X-axis
@@ -1537,12 +1624,16 @@ class SceneViewport(QOpenGLWidget):
                     # R: Rotate around Z-axis (most common for groups)
                     self._rotate_selected_elements(angle, 'z')
                     self._show_status(f"Rotated {len(self.selected_elements)} element(s) around Z-axis (+{angle}°)")
+                self.elements_rotated.emit(list(self.selected_elements), old_quats)
                 self.update()
             else:
                 self._show_status("No elements selected to rotate!")
         elif key == Qt.Key.Key_T:
             # Rotate selected elements counter-clockwise (opposite of R)
             if self.selected_elements:
+                old_quats = [(e.transform.rotation.x, e.transform.rotation.y,
+                              e.transform.rotation.z, e.transform.rotation.w)
+                             for e in self.selected_elements]
                 angle = -15.0  # degrees
                 if mods & Qt.KeyboardModifier.ControlModifier:
                     self._rotate_selected_elements(angle, 'x')
@@ -1553,6 +1644,7 @@ class SceneViewport(QOpenGLWidget):
                 else:
                     self._rotate_selected_elements(angle, 'z')
                     self._show_status(f"Rotated {len(self.selected_elements)} element(s) around Z-axis ({angle}°)")
+                self.elements_rotated.emit(list(self.selected_elements), old_quats)
                 self.update()
             else:
                 self._show_status("No elements selected to rotate!")
@@ -1869,13 +1961,21 @@ class SceneViewport(QOpenGLWidget):
             return
         speed = self.camera.distance * 0.0005
         delta = dx * speed
-        s = self.selected_elements[-1].transform.scale
-        if self._resize_axis == 'x':
-            s.x = max(0.05, s.x + delta)
-        elif self._resize_axis == 'y':
-            s.y = max(0.05, s.y + delta)
-        elif self._resize_axis == 'z':
-            s.z = max(0.05, s.z + delta)
+        for elem in self.selected_elements:
+            s = elem.transform.scale
+            if self._resize_axis == 'x':
+                s.x = max(0.05, s.x + delta)
+            elif self._resize_axis == 'y':
+                s.y = max(0.05, s.y + delta)
+            elif self._resize_axis == 'z':
+                s.z = max(0.05, s.z + delta)
+
+    def _handle_rotate_drag(self, dx, dy):
+        """Rotate all selected elements based on mouse drag."""
+        if not self.selected_elements or not self._rotate_drag_axis:
+            return
+        angle = dx * 0.5  # degrees per pixel
+        self._rotate_selected_elements(angle, self._rotate_drag_axis)
 
     def _rotate_selected_elements(self, angle_degrees: float, axis: str):
         """Rotate selected elements around specified axis."""
@@ -2184,6 +2284,8 @@ class QuadViewport(QWidget):
     delete_elements_requested = pyqtSignal(list)  # batch delete
     selection_changed = pyqtSignal(list)
     elements_moved = pyqtSignal(list, list)
+    elements_scaled = pyqtSignal(list, list)
+    elements_rotated = pyqtSignal(list, list)
     midi_mappings_nudged = pyqtSignal(list, str)  # [(obj, attr, old_val, new_val)], description
     auto_layout_requested = pyqtSignal(str)
     add_to_group_requested = pyqtSignal(list, str)  # [elements], group_id
@@ -2232,6 +2334,8 @@ class QuadViewport(QWidget):
             vp.element_moved.connect(self.element_moved)
             vp.element_scaled.connect(self.element_scaled)
             vp.elements_moved.connect(self.elements_moved)
+            vp.elements_scaled.connect(self.elements_scaled)
+            vp.elements_rotated.connect(self.elements_rotated)
             vp.midi_mappings_nudged.connect(self.midi_mappings_nudged)
             vp.add_element_requested.connect(self.add_element_requested)
             vp.duplicate_element_requested.connect(self.duplicate_element_requested)
