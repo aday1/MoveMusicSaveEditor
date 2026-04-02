@@ -8,6 +8,7 @@ clickable HUD toolbar, grid snapping, and overlays.
 
 from __future__ import annotations
 
+import copy
 import logging
 import math
 from typing import Optional, List
@@ -197,6 +198,7 @@ class SceneViewport(QOpenGLWidget):
     # New multi-select signals
     selection_changed = pyqtSignal(list)
     elements_moved = pyqtSignal(list, list)   # [elements], [(old_x, old_y, old_z), ...]
+    midi_mappings_nudged = pyqtSignal(list, str)  # [(obj, attr, old_val, new_val)], description
     auto_layout_requested = pyqtSignal(str)   # "Row" / "Grid" / "Circle"
     maximize_requested = pyqtSignal()
     # Group management signals
@@ -1839,38 +1841,74 @@ class SceneViewport(QOpenGLWidget):
             return
 
         changed_count = 0
+        updated_controls = []
+        undo_changes = []
         for elem in self.selected_elements:
             # Handle MorphZones with CC mappings
             if hasattr(elem, 'x_axis_cc_mappings') and elem.x_axis_cc_mappings:
+                old_maps = copy.deepcopy(elem.x_axis_cc_mappings)
+                field_changed = False
                 for cc_map in elem.x_axis_cc_mappings:
                     old_val = cc_map.control
                     cc_map.control = max(0, min(127, cc_map.control + delta))
                     if cc_map.control != old_val:
                         changed_count += 1
+                        field_changed = True
+                        updated_controls.append(cc_map.control)
+                if field_changed:
+                    undo_changes.append((elem, 'x_axis_cc_mappings', old_maps, copy.deepcopy(elem.x_axis_cc_mappings)))
             if hasattr(elem, 'y_axis_cc_mappings') and elem.y_axis_cc_mappings:
+                old_maps = copy.deepcopy(elem.y_axis_cc_mappings)
+                field_changed = False
                 for cc_map in elem.y_axis_cc_mappings:
                     old_val = cc_map.control
                     cc_map.control = max(0, min(127, cc_map.control + delta))
                     if cc_map.control != old_val:
                         changed_count += 1
+                        field_changed = True
+                        updated_controls.append(cc_map.control)
+                if field_changed:
+                    undo_changes.append((elem, 'y_axis_cc_mappings', old_maps, copy.deepcopy(elem.y_axis_cc_mappings)))
             if hasattr(elem, 'z_axis_cc_mappings') and elem.z_axis_cc_mappings:
+                old_maps = copy.deepcopy(elem.z_axis_cc_mappings)
+                field_changed = False
                 for cc_map in elem.z_axis_cc_mappings:
                     old_val = cc_map.control
                     cc_map.control = max(0, min(127, cc_map.control + delta))
                     if cc_map.control != old_val:
                         changed_count += 1
+                        field_changed = True
+                        updated_controls.append(cc_map.control)
+                if field_changed:
+                    undo_changes.append((elem, 'z_axis_cc_mappings', old_maps, copy.deepcopy(elem.z_axis_cc_mappings)))
 
             # Handle HitZones with CC mappings
             if hasattr(elem, 'midi_cc_mappings') and elem.midi_cc_mappings:
+                old_maps = copy.deepcopy(elem.midi_cc_mappings)
+                field_changed = False
                 for cc_map in elem.midi_cc_mappings:
                     old_val = cc_map.control
                     cc_map.control = max(0, min(127, cc_map.control + delta))
                     if cc_map.control != old_val:
                         changed_count += 1
+                        field_changed = True
+                        updated_controls.append(cc_map.control)
+                if field_changed:
+                    undo_changes.append((elem, 'midi_cc_mappings', old_maps, copy.deepcopy(elem.midi_cc_mappings)))
 
         if changed_count:
             direction = "UP" if delta > 0 else "DOWN"
-            self._show_status(f"Nudged {changed_count} MIDI CC values {direction} by {abs(delta)}")
+            # Re-emit current selection so external property panels refresh to the saved values.
+            self._emit_selection()
+            if undo_changes:
+                self.midi_mappings_nudged.emit(undo_changes, f"Nudge MIDI CC {direction}")
+
+            preview_controls = ", ".join(str(v) for v in updated_controls[:4])
+            if len(updated_controls) > 4:
+                preview_controls += ", ..."
+            self._show_status(
+                f"Nudged {changed_count} MIDI CC values {direction} by {abs(delta)} -> CC {preview_controls}"
+            )
         else:
             self._show_status("No MIDI CC mappings found on selected elements!")
 
@@ -1881,18 +1919,36 @@ class SceneViewport(QOpenGLWidget):
             return
 
         changed_count = 0
+        updated_notes = []
+        undo_changes = []
         for elem in self.selected_elements:
             # Handle HitZones with note mappings
             if hasattr(elem, 'midi_note_mappings') and elem.midi_note_mappings:
+                old_maps = copy.deepcopy(elem.midi_note_mappings)
+                field_changed = False
                 for note_map in elem.midi_note_mappings:
                     old_val = note_map.note
                     note_map.note = max(0, min(127, note_map.note + delta))
                     if note_map.note != old_val:
                         changed_count += 1
+                        field_changed = True
+                        updated_notes.append(note_map.note)
+                if field_changed:
+                    undo_changes.append((elem, 'midi_note_mappings', old_maps, copy.deepcopy(elem.midi_note_mappings)))
 
         if changed_count:
             direction = "UP" if delta > 0 else "DOWN"
-            self._show_status(f"Nudged {changed_count} MIDI notes {direction} by {abs(delta)}")
+            # Re-emit current selection so external property panels refresh to the saved values.
+            self._emit_selection()
+            if undo_changes:
+                self.midi_mappings_nudged.emit(undo_changes, f"Nudge MIDI note {direction}")
+
+            preview_notes = ", ".join(str(v) for v in updated_notes[:4])
+            if len(updated_notes) > 4:
+                preview_notes += ", ..."
+            self._show_status(
+                f"Nudged {changed_count} MIDI notes {direction} by {abs(delta)} -> Note {preview_notes}"
+            )
         else:
             self._show_status("No MIDI note mappings found on selected elements!")
 
@@ -2006,6 +2062,7 @@ class QuadViewport(QWidget):
     delete_elements_requested = pyqtSignal(list)  # batch delete
     selection_changed = pyqtSignal(list)
     elements_moved = pyqtSignal(list, list)
+    midi_mappings_nudged = pyqtSignal(list, str)  # [(obj, attr, old_val, new_val)], description
     auto_layout_requested = pyqtSignal(str)
     add_to_group_requested = pyqtSignal(list, str)  # [elements], group_id
     remove_from_group_requested = pyqtSignal(list, str)  # [elements], group_id
@@ -2052,6 +2109,7 @@ class QuadViewport(QWidget):
             vp.element_moved.connect(self.element_moved)
             vp.element_scaled.connect(self.element_scaled)
             vp.elements_moved.connect(self.elements_moved)
+            vp.midi_mappings_nudged.connect(self.midi_mappings_nudged)
             vp.add_element_requested.connect(self.add_element_requested)
             vp.duplicate_element_requested.connect(self.duplicate_element_requested)
             vp.delete_element_requested.connect(self.delete_element_requested)

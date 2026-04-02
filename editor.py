@@ -237,6 +237,24 @@ class BatchMoveCommand(QUndoCommand):
             elem.transform.translation = copy.deepcopy(pos)
 
 
+class MultiSetPropertyCommand(QUndoCommand):
+    """Apply multiple property assignments as a single undo step."""
+    def __init__(self, changes: list, description: str = "Change properties"):
+        super().__init__(description)
+        self.changes = [
+            (obj, attr, copy.deepcopy(old_val), copy.deepcopy(new_val))
+            for obj, attr, old_val, new_val in changes
+        ]
+
+    def redo(self):
+        for obj, attr, _, new_val in self.changes:
+            setattr(obj, attr, copy.deepcopy(new_val))
+
+    def undo(self):
+        for obj, attr, old_val, _ in self.changes:
+            setattr(obj, attr, copy.deepcopy(old_val))
+
+
 # ---------------------------------------------------------------------------
 # Property panel widgets
 # ---------------------------------------------------------------------------
@@ -1556,6 +1574,7 @@ class MainWindow(QMainWindow):
         self.viewport.element_selected.connect(self._on_viewport_select)
         self.viewport.element_moved.connect(self._on_viewport_move)
         self.viewport.elements_moved.connect(self._on_viewport_elements_moved)
+        self.viewport.midi_mappings_nudged.connect(self._on_viewport_midi_nudged)
         self.viewport.element_scaled.connect(self._on_viewport_scale)
         self.viewport.add_element_requested.connect(self._on_viewport_add_element)
         self.viewport.duplicate_element_requested.connect(self._on_viewport_duplicate_element)
@@ -1579,6 +1598,7 @@ class MainWindow(QMainWindow):
         self.quad_viewport.element_selected.connect(self._on_viewport_select)
         self.quad_viewport.element_moved.connect(self._on_viewport_move)
         self.quad_viewport.elements_moved.connect(self._on_viewport_elements_moved)
+        self.quad_viewport.midi_mappings_nudged.connect(self._on_viewport_midi_nudged)
         self.quad_viewport.element_scaled.connect(self._on_viewport_scale)
         self.quad_viewport.add_element_requested.connect(self._on_viewport_add_element)
         self.quad_viewport.duplicate_element_requested.connect(self._on_viewport_duplicate_element)
@@ -2404,6 +2424,15 @@ class MainWindow(QMainWindow):
         for elem, (ox, oy, oz) in zip(elements, old_positions):
             elem.transform.translation = Vec3(ox, oy, oz)
         cmd = BatchMoveCommand(elements, old_vecs, new_positions, "Move elements")
+        self.undo_stack.push(cmd)
+        self._sync_viewports()
+
+    def _on_viewport_midi_nudged(self, changes, description):
+        """MIDI mappings nudged from viewport keyboard shortcut — single undo step."""
+        if not changes:
+            return
+
+        cmd = MultiSetPropertyCommand(changes, description or "Nudge MIDI mappings")
         self.undo_stack.push(cmd)
         self._sync_viewports()
 
