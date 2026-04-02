@@ -843,7 +843,8 @@ class SceneViewport(QOpenGLWidget):
             metrics = painter.fontMetrics()
             text_rect = metrics.boundingRect(grid_info)
             bg_rect = text_rect.adjusted(-8, -4, 8, 4)
-            bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+            top_right = self.rect().topRight()
+            bg_rect.moveTopRight(QPoint(top_right.x() - 10, top_right.y() + 10))
 
             painter.fillRect(bg_rect, QColor(40, 45, 55, 180))
             painter.drawText(bg_rect.adjusted(8, 4, -8, -4), grid_info)
