@@ -52,7 +52,7 @@ def _menu_accent_stylesheet(border_hex: str, hover_hex: str) -> str:
     )
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QAction, QColor, QIcon, QPainter, QPixmap, QUndoCommand, QUndoStack
+from PyQt6.QtGui import QAction, QColor, QIcon, QKeySequence, QPainter, QPixmap, QShortcut, QUndoCommand, QUndoStack
 from PyQt6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox,
     QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView,
@@ -1361,8 +1361,37 @@ class MainWindow(QMainWindow):
         self._setup_menu()
         self._setup_statusbar()
         self._connect_signals()
+        self._setup_global_shortcuts()
 
         self.undo_stack.cleanChanged.connect(self._on_clean_changed)
+
+    def _setup_global_shortcuts(self):
+        """Editor-wide shortcuts for MIDI nudging regardless of focused widget."""
+        self._shortcut_cc_up = QShortcut(QKeySequence("Alt+Up"), self)
+        self._shortcut_cc_up.setContext(Qt.ShortcutContext.WindowShortcut)
+        self._shortcut_cc_up.activated.connect(lambda: self._trigger_active_viewport_midi_cc(1))
+
+        self._shortcut_cc_down = QShortcut(QKeySequence("Alt+Down"), self)
+        self._shortcut_cc_down.setContext(Qt.ShortcutContext.WindowShortcut)
+        self._shortcut_cc_down.activated.connect(lambda: self._trigger_active_viewport_midi_cc(-1))
+
+        self._shortcut_note_up = QShortcut(QKeySequence("Alt+Shift+Up"), self)
+        self._shortcut_note_up.setContext(Qt.ShortcutContext.WindowShortcut)
+        self._shortcut_note_up.activated.connect(lambda: self._trigger_active_viewport_midi_note(1))
+
+        self._shortcut_note_down = QShortcut(QKeySequence("Alt+Shift+Down"), self)
+        self._shortcut_note_down.setContext(Qt.ShortcutContext.WindowShortcut)
+        self._shortcut_note_down.activated.connect(lambda: self._trigger_active_viewport_midi_note(-1))
+
+    def _trigger_active_viewport_midi_cc(self, delta: int):
+        vp = self._active_viewport()
+        if vp is not None and hasattr(vp, '_on_shortcut_midi_cc'):
+            vp._on_shortcut_midi_cc(delta)
+
+    def _trigger_active_viewport_midi_note(self, delta: int):
+        vp = self._active_viewport()
+        if vp is not None and hasattr(vp, '_on_shortcut_midi_note'):
+            vp._on_shortcut_midi_note(delta)
 
         # Start with a blank project so users can immediately add templates
         self._create_new_project()
