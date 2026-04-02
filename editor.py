@@ -1447,15 +1447,25 @@ class MainWindow(QMainWindow):
             action = template_menu.addAction(tpl_name)
             action.triggered.connect(lambda checked, n=tpl_name: self._on_add_template(n))
 
+        # Import menu
+        import_menu = file_menu.addMenu("Import 3D")
+        self.action_import_glb = import_menu.addAction("GLB/glTF File...")
+        self.action_import_obj = import_menu.addAction("Wavefront OBJ...")
+        self.action_import_glb.triggered.connect(self._on_import_glb)
+        self.action_import_obj.triggered.connect(self._on_import_obj)
+
         # Export menu
         file_menu.addSeparator()
         export_menu = file_menu.addMenu("Export 3D")
         self.action_export_obj = export_menu.addAction("Wavefront OBJ...")
         self.action_export_glb = export_menu.addAction("glTF Binary (.glb)...")
         self.action_export_glb_orbit = export_menu.addAction("glTF with Orbit Camera...")
+        export_menu.addSeparator()
+        self.action_export_gif = export_menu.addAction("Orbit Animation GIF...")
         self.action_export_obj.triggered.connect(self._on_export_obj)
         self.action_export_glb.triggered.connect(self._on_export_glb)
         self.action_export_glb_orbit.triggered.connect(lambda: self._on_export_glb(orbit=True))
+        self.action_export_gif.triggered.connect(self._on_export_gif)
 
     def _setup_statusbar(self):
         self.statusbar = QStatusBar()
@@ -2397,6 +2407,126 @@ class MainWindow(QMainWindow):
                 self.statusbar.showMessage(f"Exported to {path}", 5000)
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", str(e))
+
+    def _on_import_glb(self):
+        """Import GLB/glTF file and add elements to current project."""
+        if not self.project:
+            self._on_new()  # Create new project if none exists
+
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Import GLB/glTF File", "",
+            "glTF Files (*.glb *.gltf);;All Files (*.*)"
+        )
+        if path:
+            try:
+                from import3d import load_glb, Import3DError
+                elements = load_glb(path, self.project)
+
+                # Add imported elements to current workspace
+                if self.project.workspaces:
+                    workspace = self.project.workspaces[self.project.active_workspace_index]
+                    for element in elements:
+                        self.project.elements.append(element)
+                        workspace.element_ids.append(element.unique_id)
+
+                # Update UI
+                self._refresh_ui()
+                self._mark_modified()
+                self.statusbar.showMessage(f"Imported {len(elements)} elements from {path}", 5000)
+
+                # Fit view to show imported elements
+                self._on_fit_all()
+
+            except Import3DError as e:
+                QMessageBox.critical(self, "Import Error", str(e))
+            except Exception as e:
+                QMessageBox.critical(self, "Import Error", f"Failed to import GLB file: {str(e)}")
+
+    def _on_import_obj(self):
+        """Import OBJ file and add elements to current project."""
+        if not self.project:
+            self._on_new()  # Create new project if none exists
+
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Import OBJ File", "",
+            "Wavefront OBJ (*.obj);;All Files (*.*)"
+        )
+        if path:
+            try:
+                from import3d import load_obj, Import3DError
+                elements = load_obj(path, self.project)
+
+                # Add imported elements to current workspace
+                if self.project.workspaces:
+                    workspace = self.project.workspaces[self.project.active_workspace_index]
+                    for element in elements:
+                        self.project.elements.append(element)
+                        workspace.element_ids.append(element.unique_id)
+
+                # Update UI
+                self._refresh_ui()
+                self._mark_modified()
+                self.statusbar.showMessage(f"Imported {len(elements)} elements from {path}", 5000)
+
+                # Fit view to show imported elements
+                self._on_fit_all()
+
+            except Import3DError as e:
+                QMessageBox.critical(self, "Import Error", str(e))
+            except Exception as e:
+                QMessageBox.critical(self, "Import Error", f"Failed to import OBJ file: {str(e)}")
+
+    def _on_export_gif(self):
+        """Export project as orbit animation GIF."""
+        if not self.project:
+            return
+
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Orbit GIF", "",
+            "Animated GIF (*.gif);;All Files (*.*)"
+        )
+        if path:
+            try:
+                from gif_export import export_orbit_gif, GifExportError
+
+                # Show progress dialog since GIF export can take time
+                progress = QMessageBox(self)
+                progress.setWindowTitle("Exporting GIF")
+                progress.setText("Capturing orbit animation frames...")
+                progress.setStandardButtons(QMessageBox.StandardButton.NoButton)
+                progress.setModal(True)
+                progress.show()
+
+                # Process events to show dialog
+                from PyQt6.QtWidgets import QApplication
+                QApplication.processEvents()
+
+                # Export GIF (4 second animation at 15fps)
+                success = export_orbit_gif(
+                    self.project, path, self._active_viewport(),
+                    duration=4.0, fps=15, size=(800, 600)
+                )
+
+                progress.close()
+
+                if success:
+                    self.statusbar.showMessage(f"GIF exported to {path}", 5000)
+                    # Ask user if they want to open the file
+                    reply = QMessageBox.question(
+                        self, "Export Complete",
+                        f"GIF exported successfully!\n\nWould you like to open the file?",
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                    )
+                    if reply == QMessageBox.StandardButton.Yes:
+                        import os
+                        os.startfile(path)  # Windows
+                else:
+                    QMessageBox.warning(self, "Export Warning", "GIF export completed with warnings.")
+
+            except GifExportError as e:
+                QMessageBox.critical(self, "Export Error", str(e))
+            except Exception as e:
+                QMessageBox.critical(self, "Export Error", f"Failed to export GIF: {str(e)}")
 
     def _on_fit_all(self):
         self._active_viewport()._fit_all()

@@ -216,10 +216,14 @@ def export_glb(project: Project, filepath: str, include_camera_orbit: bool = Fal
             "name": f"mat_{i}",
             "pbrMetallicRoughness": {
                 "baseColorFactor": [c.r, c.g, c.b, c.a],
-                "metallicFactor": 0.1,
-                "roughnessFactor": 0.8,
+                "metallicFactor": 0.0,  # Non-metallic for better Blender display
+                "roughnessFactor": 0.9,  # More realistic for UI elements
             },
             "alphaMode": "OPAQUE" if c.a >= 0.99 else "BLEND",
+            "extras": {
+                "generator": "MoveMusicSaveEditor",
+                "intended_for": "blender"
+            }
         })
 
         meshes.append({
@@ -339,7 +343,22 @@ def _build_gltf_json(
     animation=None,
 ):
     gltf = {
-        "asset": {"version": "2.0", "generator": "MMCEditor"},
+        "asset": {
+            "version": "2.0",
+            "generator": "MoveMusicSaveEditor v1.0",
+            "extras": {
+                "source_application": "MoveMusic Save Editor",
+                "export_target": "blender",
+                "coordinate_system": "Z_UP_CONVERTED_TO_Y_UP",
+                "units": "metric",
+                "scale": 0.01,  # Blender units (elements are in game units, ~100x larger)
+                "recommended_import_settings": {
+                    "scale": 0.01,
+                    "up_axis": "Y",
+                    "forward_axis": "Z"
+                }
+            }
+        },
         "scene": 0,
         "scenes": [{"nodes": scene_nodes}],
         "nodes": nodes,

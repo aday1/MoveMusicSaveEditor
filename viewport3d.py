@@ -358,10 +358,26 @@ class SceneViewport(QOpenGLWidget):
 
     def _draw_grid(self):
         glLineWidth(1.0)
-        cx = round(self.camera.target[0] / 50) * 50
-        cy = round(self.camera.target[1] / 50) * 50
-        half = 500
-        step = 25
+
+        # Dynamic grid spacing based on camera distance
+        distance = self.camera.distance
+        if distance < 50:
+            base_step = 5
+            coord_interval = 25
+        elif distance < 200:
+            base_step = 25
+            coord_interval = 50
+        elif distance < 800:
+            base_step = 25
+            coord_interval = 100
+        else:
+            base_step = 50
+            coord_interval = 200
+
+        cx = round(self.camera.target[0] / base_step) * base_step
+        cy = round(self.camera.target[1] / base_step) * base_step
+        half = min(1000, int(distance * 8))  # Dynamic grid extent
+        step = base_step
 
         snap_on = self._snap_grid_enabled
         snap_sz = self._snap_grid_size
@@ -372,29 +388,35 @@ class SceneViewport(QOpenGLWidget):
         glBegin(GL_LINES)
         for i in range(-half, half + 1, step):
             if snap_on and snap_sz > 0:
-                # Snap grid lines are brighter
-                world_coord = i  # relative to cx/cy
+                # Enhanced snap grid visual feedback
+                world_coord = i
                 if (i % int(snap_sz * 10)) == 0:
-                    a = 0.35
-                elif (i % 100) == 0:
-                    a = 0.25
-                    # Store major grid coordinates for labeling
-                    if i % 100 == 0:  # Every 100 units
-                        self._grid_coords.append((cx + i, cy + i))
+                    a = 0.45  # Brighter snap lines
+                elif (i % coord_interval) == 0:
+                    a = 0.4   # Enhanced major line opacity (was 0.25)
+                    # Store coordinates for labeling at dynamic interval
+                    self._grid_coords.append((cx + i, cy + i))
                 else:
-                    a = 0.08
+                    a = 0.12  # Regular grid lines
             else:
-                a = 0.12 if (i % 100) != 0 else 0.25
-                # Store major grid coordinates for labeling
-                if i % 100 == 0:  # Every 100 units
+                # Enhanced visibility without snap grid
+                is_major = (i % coord_interval) == 0
+                a = 0.4 if is_major else 0.15  # Enhanced major/minor contrast
+
+                # Store coordinates for labeling at dynamic interval
+                if is_major:
                     self._grid_coords.append((cx + i, cy + i))
 
-            glColor4f(0.5, 0.5, 0.5, a)
+            # Slightly warmer grid color for better visibility
+            glColor4f(0.6, 0.6, 0.65, a)
             glVertex3f(cx + i, cy - half, 0)
             glVertex3f(cx + i, cy + half, 0)
             glVertex3f(cx - half, cy + i, 0)
             glVertex3f(cx + half, cy + i, 0)
         glEnd()
+
+        # Add grid cell count overlay in corner
+        self._grid_cell_count = len([coord for coord in self._grid_coords if abs(coord[0] - cx) <= half and abs(coord[1] - cy) <= half])
 
     def _draw_world_axes(self):
         glLineWidth(2.0)
@@ -692,14 +714,15 @@ class SceneViewport(QOpenGLWidget):
             painter.drawText(rx, ry, label)
 
     def _draw_grid_coordinates(self, painter: QPainter):
-        """Draw grid coordinate numbers at major intersections."""
+        """Draw grid coordinate numbers at major intersections with enhanced info."""
         if not self._show_grid_coords or not hasattr(self, '_grid_coords'):
             return
 
         font = QFont("Segoe UI", 8)
         painter.setFont(font)
-        painter.setPen(QColor(120, 120, 140, 180))
+        painter.setPen(QColor(140, 140, 160, 200))  # Slightly brighter text
 
+        # Draw coordinate labels
         for world_x, world_y in self._grid_coords:
             # Convert world coordinates to screen
             screen_pos = self.camera.world_to_screen(world_x, world_y, 0, self.width(), self.height())
@@ -711,6 +734,25 @@ class SceneViewport(QOpenGLWidget):
                     # Show X,Y coordinates
                     coord_text = f"({world_x:.0f},{world_y:.0f})"
                     painter.drawText(int(sx + 5), int(sy - 5), coord_text)
+
+        # Draw grid info overlay in top-right corner
+        if hasattr(self, '_grid_cell_count'):
+            distance = self.camera.distance
+            grid_info = f"Grid: {self._grid_cell_count} cells | Scale: {distance:.0f}"
+
+            # Set font for grid info
+            info_font = QFont("Segoe UI", 9, QFont.Weight.Bold)
+            painter.setFont(info_font)
+            painter.setPen(QColor(160, 180, 200, 220))
+
+            # Draw background rectangle
+            metrics = painter.fontMetrics()
+            text_rect = metrics.boundingRect(grid_info)
+            bg_rect = text_rect.adjusted(-8, -4, 8, 4)
+            bg_rect.moveTopRight(self.rect().topRight().adjusted(-10, 10))
+
+            painter.fillRect(bg_rect, QColor(40, 45, 55, 180))
+            painter.drawText(bg_rect.adjusted(8, 4, -8, -4), grid_info)
 
     def _draw_axis_hud(self, painter: QPainter):
         ox, oy = 50, self.height() - 50
