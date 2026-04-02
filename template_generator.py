@@ -363,11 +363,11 @@ def generate_faders(
         elements.append(mz)
         member_ids.append(mz_id)
 
-        # Text label above the fader
+        # Text label above the fader with clear MIDI info
         tl_id = project.generate_id("TextLabel_C")
         tl = TextLabel(
             unique_id=tl_id,
-            display_name=f"{name}\nCC{base_cc + i}",
+            display_name=f"{name}\nCC{base_cc + i}\nCh{channel}",
             transform=Transform(
                 translation=Vec3(origin.x + px, origin.y + py, origin.z + 30),
                 scale=Vec3(0.3, 0.3, 0.3),
@@ -377,9 +377,9 @@ def generate_faders(
         elements.append(tl)
         member_ids.append(tl_id)
 
-    # Group containing all faders + labels
-    group = _make_group(project, f"{label_prefix}s ({arrangement}, {color_mode})", origin, member_ids, elements)
-    elements.append(group)
+    # Don't create a group - users find them annoying to manage
+    # group = _make_group(project, f"{label_prefix}s ({arrangement}, {color_mode})", origin, member_ids, elements)
+    # elements.append(group)
 
     return elements
 
@@ -443,8 +443,9 @@ def generate_knobs(
         elements.append(tl)
         member_ids.append(tl_id)
 
-    group = _make_group(project, f"{label_prefix}s", origin, member_ids, elements)
-    elements.append(group)
+    # Don't auto-group knobs
+    # group = _make_group(project, f"{label_prefix}s", origin, member_ids, elements)
+    # elements.append(group)
     return elements
 
 
@@ -497,7 +498,7 @@ def generate_xy_pads(
         tl_id = project.generate_id("TextLabel_C")
         tl = TextLabel(
             unique_id=tl_id,
-            display_name=name,
+            display_name=f"{name}\nX:CC{base_cc_x + i}\nY:CC{base_cc_y + i}",
             transform=Transform(
                 translation=Vec3(origin.x + px, origin.y + py, origin.z + 25),
                 scale=Vec3(0.3, 0.3, 0.3),
@@ -507,8 +508,9 @@ def generate_xy_pads(
         elements.append(tl)
         member_ids.append(tl_id)
 
-    group = _make_group(project, f"{label_prefix}s", origin, member_ids, elements)
-    elements.append(group)
+    # Don't auto-group knobs
+    # group = _make_group(project, f"{label_prefix}s", origin, member_ids, elements)
+    # elements.append(group)
     return elements
 
 
@@ -567,8 +569,9 @@ def generate_drum_pads(
         elements.append(tl)
         member_ids.append(tl_id)
 
-    group = _make_group(project, f"{label_prefix}s", origin, member_ids, elements)
-    elements.append(group)
+    # Don't auto-group knobs
+    # group = _make_group(project, f"{label_prefix}s", origin, member_ids, elements)
+    # elements.append(group)
     return elements
 
 
@@ -627,8 +630,9 @@ def generate_buttons(
         elements.append(tl)
         member_ids.append(tl_id)
 
-    group = _make_group(project, f"{label_prefix}s", origin, member_ids, elements)
-    elements.append(group)
+    # Don't auto-group knobs
+    # group = _make_group(project, f"{label_prefix}s", origin, member_ids, elements)
+    # elements.append(group)
     return elements
 
 
@@ -694,17 +698,17 @@ def _make_group(
 # ---------------------------------------------------------------------------
 
 TEMPLATES = {
-    "8 Faders (Row)":       lambda p, o: generate_faders(p, 8, "Row", 30, o),
-    "8 Faders (Circle)":    lambda p, o: generate_faders(p, 8, "Circle", 60, o),
-    "8 Knobs (Row)":        lambda p, o: generate_knobs(p, 8, "Row", 30, o),
-    "8 Knobs (Circle)":     lambda p, o: generate_knobs(p, 8, "Circle", 60, o),
-    "8 XY Pads (Row)":      lambda p, o: generate_xy_pads(p, 8, "Row", 40, o),
-    "8 XY Pads (Circle)":   lambda p, o: generate_xy_pads(p, 8, "Circle", 80, o),
-    "8 Drum Pads (2x4)":    lambda p, o: generate_drum_pads(p, 8, "Row", 30, o),
-    "8 Drum Pads (Circle)": lambda p, o: generate_drum_pads(p, 8, "Circle", 60, o),
-    "8 Buttons (Row)":      lambda p, o: generate_buttons(p, 8, "Row", 25, o),
-    "8 Buttons (Circle)":   lambda p, o: generate_buttons(p, 8, "Circle", 50, o),
-    "16 Drum Pads (4x4)":   lambda p, o: generate_drum_pads(p, 16, "Row", 30, o, base_note=36),
+    "8 Faders (Row)":       lambda p, o: generate_faders(p, 8, "Row", 30, o, base_cc=1),
+    "8 Faders (Circle)":    lambda p, o: generate_faders(p, 8, "Circle", 60, o, base_cc=1),
+    "8 Knobs (Row)":        lambda p, o: generate_knobs(p, 8, "Row", 30, o, base_cc=20),
+    "8 Knobs (Circle)":     lambda p, o: generate_knobs(p, 8, "Circle", 60, o, base_cc=20),
+    "8 XY Pads (Row)":      lambda p, o: generate_xy_pads(p, 8, "Row", 40, o, base_cc_x=40, base_cc_y=50),
+    "8 XY Pads (Circle)":   lambda p, o: generate_xy_pads(p, 8, "Circle", 80, o, base_cc_x=40, base_cc_y=50),
+    "8 Drum Pads (2x4)":    lambda p, o: generate_drum_pads(p, 8, "Row", 30, o, base_note=36, channel=10),
+    "8 Drum Pads (Circle)": lambda p, o: generate_drum_pads(p, 8, "Circle", 60, o, base_note=36, channel=10),
+    "8 Buttons (Row)":      lambda p, o: generate_buttons(p, 8, "Row", 25, o, base_cc=70),
+    "8 Buttons (Circle)":   lambda p, o: generate_buttons(p, 8, "Circle", 50, o, base_cc=70),
+    "16 Drum Pads (4x4)":   lambda p, o: generate_drum_pads(p, 16, "Row", 30, o, base_note=36, channel=10),
     "Mixer (8 Faders + 8 Knobs)": None,  # special composite — handled separately
     "DEBUG: Everything Kitchen Sink": lambda p, o: generate_debug_everything(p, o),
 }
@@ -716,26 +720,17 @@ def generate_mixer(project: Project, origin: Vec3 = None) -> List:
         origin = Vec3(0, 0, 0)
 
     all_elements = []
-    all_member_ids = []
 
-    # Faders at base
+    # Faders at base (CC 1-8)
     fader_origin = Vec3(origin.x, origin.y, origin.z)
     faders = generate_faders(project, 8, "Row", 30, fader_origin, base_cc=1, label_prefix="Vol")
-    # Remove the auto-generated group (last element), we'll make our own
-    fader_group = faders.pop()
     all_elements.extend(faders)
-    all_member_ids.extend([e.unique_id for e in faders])
 
-    # Knobs above
+    # Knobs above (CC 9-16, instead of 20-27 to keep mixer compact)
     knob_origin = Vec3(origin.x, origin.y, origin.z + 60)
-    knobs = generate_knobs(project, 8, "Row", 30, knob_origin, base_cc=16, label_prefix="Pan")
-    knob_group = knobs.pop()
+    knobs = generate_knobs(project, 8, "Row", 30, knob_origin, base_cc=9, label_prefix="Pan")
     all_elements.extend(knobs)
-    all_member_ids.extend([e.unique_id for e in knobs])
 
-    # One big group for the whole mixer
-    group = _make_group(project, "Mixer", origin, all_member_ids, all_elements)
-    all_elements.append(group)
     return all_elements
 
 

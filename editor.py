@@ -1137,6 +1137,9 @@ class MainWindow(QMainWindow):
 
         self.undo_stack.cleanChanged.connect(self._on_clean_changed)
 
+        # Start with a blank project so users can immediately add templates
+        self._create_new_project()
+
     def _setup_ui(self):
         # Outer vertical splitter: 3D viewport on top, tree+props on bottom
         self.outer_splitter = QSplitter(Qt.Orientation.Vertical)
@@ -1423,7 +1426,10 @@ class MainWindow(QMainWindow):
         """Create a new blank project."""
         if not self._check_unsaved_changes():
             return
+        self._create_new_project()
 
+    def _create_new_project(self):
+        """Create a new blank project without checking for unsaved changes."""
         # Create blank project with one workspace
         self.project = Project()
         self.project.project_name = "Untitled"
@@ -2899,9 +2905,7 @@ class MainWindow(QMainWindow):
 
     def _on_add_template(self, template_name: str):
         """Generate a preset layout from a template and add to active workspace."""
-        if not self.project:
-            QMessageBox.warning(self, "No Project", "Open a file first.")
-            return
+        # Project should always exist since we start with a blank one
 
         # Find active workspace
         active_ws = self._get_selected_workspace()
@@ -2913,7 +2917,8 @@ class MainWindow(QMainWindow):
         if not active_ws and self.project.workspaces:
             active_ws = self.project.workspaces[0]
         if not active_ws:
-            QMessageBox.warning(self, "No Workspace", "Create a workspace first.")
+            # This shouldn't happen since new projects get a default workspace
+            QMessageBox.warning(self, "No Workspace", "Something went wrong - no active workspace found.")
             return
 
         # Origin near camera target

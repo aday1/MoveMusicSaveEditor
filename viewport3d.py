@@ -239,6 +239,13 @@ class SceneViewport(QOpenGLWidget):
         self._snap_grid_enabled = False
         self._snap_grid_size = 5.0
 
+        # UI state
+        self._show_shortcuts = True  # Always show shortcuts by default
+        self._show_grid_coords = True  # Show grid coordinate numbers
+        self._status_message = ""  # Current action feedback
+        self._status_timer = 0  # Timer for status message fadeout
+        self._grid_coords = []  # Grid coordinate positions for labeling
+
         # Overlay buttons (populated during paintEvent)
         self._overlay_buttons = []  # [(QRectF, label_str)]
 
@@ -359,6 +366,9 @@ class SceneViewport(QOpenGLWidget):
         snap_on = self._snap_grid_enabled
         snap_sz = self._snap_grid_size
 
+        # Store grid coordinate positions for text rendering later
+        self._grid_coords = []
+
         glBegin(GL_LINES)
         for i in range(-half, half + 1, step):
             if snap_on and snap_sz > 0:
@@ -368,10 +378,17 @@ class SceneViewport(QOpenGLWidget):
                     a = 0.35
                 elif (i % 100) == 0:
                     a = 0.25
+                    # Store major grid coordinates for labeling
+                    if i % 100 == 0:  # Every 100 units
+                        self._grid_coords.append((cx + i, cy + i))
                 else:
                     a = 0.08
             else:
                 a = 0.12 if (i % 100) != 0 else 0.25
+                # Store major grid coordinates for labeling
+                if i % 100 == 0:  # Every 100 units
+                    self._grid_coords.append((cx + i, cy + i))
+
             glColor4f(0.5, 0.5, 0.5, a)
             glVertex3f(cx + i, cy - half, 0)
             glVertex3f(cx + i, cy + half, 0)
@@ -608,21 +625,29 @@ class SceneViewport(QOpenGLWidget):
         _draw_wire_box(-hx, -hy, -hz, hx, hy, hz)
         glDisable(GL_LINE_STIPPLE)
 
-        glColor4f(c.r, c.g, c.b, alpha * 0.06)
-        _draw_solid_box(-hx, -hy, -hz, hx, hy, hz)
+        # Don't draw solid box - it creates massive overlays that block interaction
+        # glColor4f(c.r, c.g, c.b, alpha * 0.06)
+        # _draw_solid_box(-hx, -hy, -hz, hx, hy, hz)
 
     # -- QPainter overlay (labels + HUD + toolbar + marquee) --
 
     def paintEvent(self, event):
         super().paintEvent(event)
 
+        # Update status timer
+        if self._status_timer > 0:
+            self._status_timer -= 1
+
         painter = QPainter(self)
         try:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            self._draw_grid_coordinates(painter)  # Grid coordinate numbers
             self._draw_element_labels(painter)
             self._draw_axis_hud(painter)
             self._draw_info_hud(painter)
             self._draw_overlay_toolbar(painter)
+            self._draw_shortcuts_overlay(painter)  # Always visible shortcuts
+            self._draw_status_message(painter)     # Action feedback
             if self._marquee_rect:
                 self._draw_marquee(painter)
         except Exception:
@@ -665,6 +690,27 @@ class SceneViewport(QOpenGLWidget):
                 painter.setPen(QColor(200, 200, 200))
 
             painter.drawText(rx, ry, label)
+
+    def _draw_grid_coordinates(self, painter: QPainter):
+        """Draw grid coordinate numbers at major intersections."""
+        if not self._show_grid_coords or not hasattr(self, '_grid_coords'):
+            return
+
+        font = QFont("Segoe UI", 8)
+        painter.setFont(font)
+        painter.setPen(QColor(120, 120, 140, 180))
+
+        for world_x, world_y in self._grid_coords:
+            # Convert world coordinates to screen
+            screen_pos = self.camera.world_to_screen(world_x, world_y, 0, self.width(), self.height())
+            if screen_pos:
+                sx, sy = screen_pos[0], screen_pos[1]
+
+                # Only draw if on screen
+                if 20 < sx < self.width() - 80 and 20 < sy < self.height() - 30:
+                    # Show X,Y coordinates
+                    coord_text = f"({world_x:.0f},{world_y:.0f})"
+                    painter.drawText(int(sx + 5), int(sy - 5), coord_text)
 
     def _draw_axis_hud(self, painter: QPainter):
         ox, oy = 50, self.height() - 50
@@ -739,59 +785,89 @@ class SceneViewport(QOpenGLWidget):
             cx = sum(e.transform.translation.x for e in self.selected_elements) / n
             cy = sum(e.transform.translation.y for e in self.selected_elements) / n
             cz = sum(e.transform.translation.z for e in self.selected_elements) / n
-            lines.append(f"Selected: {n} elements")
+            lines.append(f"🎯 EDITING: {n} elements")
             lines.append(f"Centroid: X={cx:.1f}  Y={cy:.1f}  Z={cz:.1f}")
+
+            # Show grid position of centroid
+            grid_cx = round(cx / 25) * 25
+            grid_cy = round(cy / 25) * 25
+            grid_cz = round(cz / 25) * 25
+            lines.append(f"📐 Grid center: ({grid_cx:.0f},{grid_cy:.0f},{grid_cz:.0f})")
+
+            # Show bounding box in grid units
+            min_x = min(e.transform.translation.x for e in self.selected_elements)
+            max_x = max(e.transform.translation.x for e in self.selected_elements)
+            min_y = min(e.transform.translation.y for e in self.selected_elements)
+            max_y = max(e.transform.translation.y for e in self.selected_elements)
+            span_x = (max_x - min_x) / 25
+            span_y = (max_y - min_y) / 25
+            lines.append(f"📦 Span: {span_x:.1f} x {span_y:.1f} grid units")
         elif len(self.selected_elements) == 1:
             e = self.selected_elements[0]
             p = e.transform.translation
             s = e.transform.scale
-            lines.append(f"Selected: {e.display_name or e.unique_id}")
+            lines.append(f"🎯 EDITING: {e.display_name or e.unique_id}")
             lines.append(f"Pos: X={p.x:.1f}  Y={p.y:.1f}  Z={p.z:.1f}")
+
+            # Show grid coordinates and snapped position
+            grid_x = round(p.x / 25) * 25  # 25-unit grid
+            grid_y = round(p.y / 25) * 25
+            grid_z = round(p.z / 25) * 25
+            lines.append(f"📐 Grid: ({grid_x:.0f},{grid_y:.0f},{grid_z:.0f})")
+
+            # Show offset from grid
+            offset_x = p.x - grid_x
+            offset_y = p.y - grid_y
+            offset_z = p.z - grid_z
+            if abs(offset_x) > 0.1 or abs(offset_y) > 0.1 or abs(offset_z) > 0.1:
+                lines.append(f"📏 Offset: X{offset_x:+.1f} Y{offset_y:+.1f} Z{offset_z:+.1f}")
+
             lines.append(f"Scale: {s.x:.2f} x {s.y:.2f} x {s.z:.2f}")
+
+            # Show physical size in grid units
+            phys_x = s.x * 50  # 50 = base cube size
+            phys_y = s.y * 50
+            phys_z = s.z * 50
+            grid_size_x = phys_x / 25  # How many grid squares
+            grid_size_y = phys_y / 25
+            grid_size_z = phys_z / 25
+            lines.append(f"📦 Size: {grid_size_x:.1f} x {grid_size_y:.1f} x {grid_size_z:.1f} grid units")
+
+            # Show MIDI mappings if present
+            midi_info = []
+            if hasattr(e, 'y_axis_cc_mappings') and e.y_axis_cc_mappings:
+                for cc in e.y_axis_cc_mappings:
+                    midi_info.append(f"Y-CC{cc.control}")
+            if hasattr(e, 'x_axis_cc_mappings') and e.x_axis_cc_mappings:
+                for cc in e.x_axis_cc_mappings:
+                    midi_info.append(f"X-CC{cc.control}")
+            if hasattr(e, 'z_axis_cc_mappings') and e.z_axis_cc_mappings:
+                for cc in e.z_axis_cc_mappings:
+                    midi_info.append(f"Z-CC{cc.control}")
+            if hasattr(e, 'midi_cc_mappings') and e.midi_cc_mappings:
+                for cc in e.midi_cc_mappings:
+                    midi_info.append(f"CC{cc.control}")
+            if hasattr(e, 'midi_note_mappings') and e.midi_note_mappings:
+                for note in e.midi_note_mappings:
+                    midi_info.append(f"Note{note.note}")
+
+            if midi_info:
+                lines.append(f"🎵 MIDI: {', '.join(midi_info[:4])}")  # Show first 4 mappings
         else:
-            lines.append("No selection")
+            lines.append("❌ No selection - Click to select")
 
         lines.append("")
         lines.append("LMB: Select | Shift+LMB: Multi-select | MMB: Pan | RMB: Orbit")
         if self._snap_grid_enabled:
-            lines.append(f"Snap grid: ON ({self._snap_grid_size:.0f} units)")
+            lines.append(f"📐 Snap grid: ON ({self._snap_grid_size:.0f} units)")
+        if self._show_grid_coords:
+            lines.append("📍 Grid coordinates: VISIBLE")
+        lines.append("Press H for shortcuts • Press N for grid numbers")
 
         y = 15
         for line in lines:
             painter.drawText(10, y, line)
             y += 15
-
-        # Shortcut reference in bottom-right
-        shortcuts = [
-            "Shift+Click: Multi-select",
-            "Drag empty: Marquee select",
-            "Ctrl+A: Select all  |  Esc: Deselect",
-            "Tab / Shift+Tab: Next / Prev",
-            "F: Focus  |  Home: Fit all",
-            "Ctrl+D: Duplicate  |  Del: Delete",
-            "Ctrl+L: Layout Row",
-            "Arrows: Pan  |  1/3/7: Front/Side/Top",
-            "5: Ortho toggle  |  0: Perspective",
-            "Right-click: Context menu",
-        ]
-        font_sm = QFont("Segoe UI", 7)
-        painter.setFont(font_sm)
-        fm_sm = QFontMetrics(font_sm)
-        line_h = fm_sm.height() + 2
-        block_h = len(shortcuts) * line_h + 8
-        block_w = max(fm_sm.horizontalAdvance(s) for s in shortcuts) + 16
-        bx = self.width() - block_w - 8
-        by = self.height() - block_h - 8
-
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(QColor(20, 20, 25, 180))
-        painter.drawRoundedRect(bx, by, block_w, block_h, 6, 6)
-
-        painter.setPen(QColor(170, 170, 180))
-        ty = by + line_h
-        for s in shortcuts:
-            painter.drawText(bx + 8, ty, s)
-            ty += line_h
 
     def _draw_overlay_toolbar(self, painter: QPainter):
         """Draw clickable toolbar buttons at top-center of viewport."""
@@ -839,6 +915,220 @@ class SceneViewport(QOpenGLWidget):
         painter.setPen(QPen(QColor(100, 180, 255), 1.5, Qt.PenStyle.DashLine))
         painter.setBrush(QColor(100, 180, 255, 40))
         painter.drawRect(r)
+
+    def _draw_shortcuts_overlay(self, painter: QPainter):
+        """Draw context-sensitive shortcuts overlay based on current selection."""
+        if not self._show_shortcuts:
+            return
+
+        # Build context-sensitive shortcuts based on selection
+        shortcuts = []
+
+        if len(self.selected_elements) == 0:
+            shortcuts = [
+                "🔍 NO SELECTION",
+                "Click any element to select it",
+                "Shift+Click: Add to selection",
+                "Ctrl+A: Select all elements",
+                "Drag empty space: Marquee select",
+                "",
+                "📂 TEMPLATES:",
+                "Templates menu → Add elements",
+                "",
+                "📷 CAMERA CONTROLS:",
+                "RMB drag: Orbit camera",
+                "MMB/Shift+RMB: Pan camera",
+                "Mouse wheel: Zoom",
+                "1/3/7: Front/Side/Top views",
+                "5: Ortho toggle  |  Home: Fit all",
+            ]
+        elif len(self.selected_elements) == 1:
+            elem = self.selected_elements[0]
+            elem_type = type(elem).__name__
+
+            shortcuts = [f"🎯 EDITING: {elem.display_name or elem.unique_id}"]
+            shortcuts.append(f"Type: {elem_type}")
+
+            # Position info
+            p = elem.transform.translation
+            shortcuts.append(f"Position: X={p.x:.1f}, Y={p.y:.1f}, Z={p.z:.1f}")
+
+            # Show available MIDI controls
+            midi_controls = []
+            if hasattr(elem, 'y_axis_cc_mappings') and elem.y_axis_cc_mappings:
+                for cc in elem.y_axis_cc_mappings:
+                    midi_controls.append(f"Y-axis: CC{cc.control}")
+            if hasattr(elem, 'x_axis_cc_mappings') and elem.x_axis_cc_mappings:
+                for cc in elem.x_axis_cc_mappings:
+                    midi_controls.append(f"X-axis: CC{cc.control}")
+            if hasattr(elem, 'z_axis_cc_mappings') and elem.z_axis_cc_mappings:
+                for cc in elem.z_axis_cc_mappings:
+                    midi_controls.append(f"Z-axis: CC{cc.control}")
+            if hasattr(elem, 'midi_cc_mappings') and elem.midi_cc_mappings:
+                for cc in elem.midi_cc_mappings:
+                    midi_controls.append(f"Button: CC{cc.control}")
+            if hasattr(elem, 'midi_note_mappings') and elem.midi_note_mappings:
+                for note in elem.midi_note_mappings:
+                    midi_controls.append(f"Drum: Note{note.note} Ch{note.channel}")
+
+            if midi_controls:
+                shortcuts.append("")
+                shortcuts.extend(["🎵 MIDI MAPPINGS:"] + midi_controls[:4])
+                if elem_type == "MorphZone":
+                    shortcuts.append("Alt+↑↓: Adjust CC values ±1")
+                elif elem_type == "HitZone" and midi_controls[0].startswith("Drum"):
+                    shortcuts.append("Alt+Shift+↑↓: Adjust note values ±1")
+                elif elem_type == "HitZone":
+                    shortcuts.append("Alt+↑↓: Adjust CC values ±1")
+
+            shortcuts.extend([
+                "",
+                "⚡ MOVEMENT (Selected Element):",
+                "Drag: Move freely",
+                "Ctrl+←→: Nudge X-axis ±1 unit",
+                "Ctrl+↑↓: Nudge Y-axis ±1 unit",
+                "Ctrl+PgUp/Dn: Nudge Z-axis ±1 unit",
+                "",
+                "📐 GRID INFO:",
+                f"Grid position: ({p.x//25*25:.0f},{p.y//25*25:.0f},{p.z//25*25:.0f})",
+                f"Grid offset: {p.x%25:+.1f},{p.y%25:+.1f},{p.z%25:+.1f}",
+                "G: Toggle snap to grid",
+                "N: Toggle grid coordinate numbers",
+                "",
+                "🔄 ROTATION:",
+                "R/T: Rotate Z-axis ±15°",
+                "Shift+R/T: Rotate Y-axis ±15°",
+                "Ctrl+R/T: Rotate X-axis ±15°",
+                "",
+                "⚙️ ACTIONS:",
+                "Ctrl+D: Duplicate element",
+                "Delete: Remove element",
+                "F: Focus camera on element",
+            ])
+        else:
+            # Multiple selection
+            n = len(self.selected_elements)
+            shortcuts = [
+                f"🎯 EDITING: {n} Elements",
+                "Multiple elements selected",
+                "",
+                "⚡ BULK MOVEMENT:",
+                "Drag: Move all together",
+                "Ctrl+←→: Nudge all X-axis ±1",
+                "Ctrl+↑↓: Nudge all Y-axis ±1",
+                "Ctrl+PgUp/Dn: Nudge all Z-axis ±1",
+                "",
+                "🔄 BULK ROTATION:",
+                "R/T: Rotate all Z-axis ±15°",
+                "Shift+R/T: Rotate all Y-axis ±15°",
+                "Ctrl+R/T: Rotate all X-axis ±15°",
+                "",
+                "🎵 BULK MIDI EDITING:",
+                "Alt+↑↓: Adjust all CC values ±1",
+                "Alt+Shift+↑↓: Adjust all note values ±1",
+                "",
+                "⚙️ BULK ACTIONS:",
+                "Ctrl+D: Duplicate all selected",
+                "Delete: Remove all selected",
+                "Ctrl+L: Arrange in row layout",
+                "Esc: Deselect all",
+            ]
+
+        # Always show toggle option
+        shortcuts.extend([
+            "",
+            "💡 DISPLAY CONTROLS:",
+            "H: Hide/show this panel",
+            "N: Toggle grid coordinate numbers",
+            "G: Toggle grid snap",
+            "Right-click: Context menu",
+        ])
+
+        font_sm = QFont("Segoe UI", 9)
+        painter.setFont(font_sm)
+        fm_sm = QFontMetrics(font_sm)
+        line_h = fm_sm.height() + 3
+
+        # Filter out empty lines for width calculation
+        non_empty = [s for s in shortcuts if s.strip()]
+        block_w = min(450, max(fm_sm.horizontalAdvance(s) for s in non_empty) + 20)
+        block_h = len(shortcuts) * line_h + 20
+
+        # Position on right side, but not at the very edge
+        bx = self.width() - block_w - 15
+        by = 50  # Below toolbar
+
+        # Semi-transparent dark background
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(0, 0, 0, 160))
+        painter.drawRoundedRect(bx, by, block_w, block_h, 8, 8)
+
+        # Border
+        painter.setPen(QPen(QColor(100, 150, 200), 1))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(bx, by, block_w, block_h, 8, 8)
+
+        # Content
+        painter.setPen(QColor(220, 220, 230))
+        ty = by + line_h
+
+        for s in shortcuts:
+            if s.strip():  # Non-empty lines
+                if s.startswith('🎯') or s.startswith('🔍'):
+                    # Main header - larger and brighter
+                    font_header = QFont("Segoe UI", 11, QFont.Weight.Bold)
+                    painter.setFont(font_header)
+                    painter.setPen(QColor(255, 255, 255))
+                    painter.drawText(bx + 10, ty, s)
+                    painter.setFont(font_sm)  # Reset font
+                elif s.startswith('🎵') or s.startswith('⚡') or s.startswith('🔄') or s.startswith('⚙️') or s.startswith('📷') or s.startswith('📂') or s.startswith('💡'):
+                    # Section headers
+                    painter.setPen(QColor(150, 200, 255))
+                    painter.drawText(bx + 10, ty, s)
+                elif s.startswith('Type:') or s.startswith('Position:') or s.startswith('Y-axis:') or s.startswith('X-axis:') or s.startswith('Z-axis:') or s.startswith('Button:') or s.startswith('Drum:'):
+                    # Data lines
+                    painter.setPen(QColor(180, 255, 180))
+                    painter.drawText(bx + 10, ty, s)
+                else:
+                    # Regular shortcuts
+                    painter.setPen(QColor(220, 220, 230))
+                    painter.drawText(bx + 10, ty, s)
+            ty += line_h
+
+    def _draw_status_message(self, painter: QPainter):
+        """Draw temporary status message in center of screen."""
+        if not self._status_message or self._status_timer <= 0:
+            return
+
+        # Fade out effect
+        alpha = min(255, self._status_timer * 2)
+
+        font = QFont("Segoe UI", 14, QFont.Weight.Bold)
+        painter.setFont(font)
+        fm = QFontMetrics(font)
+
+        text_w = fm.horizontalAdvance(self._status_message)
+        text_h = fm.height()
+
+        # Center on screen
+        x = (self.width() - text_w) // 2
+        y = (self.height() // 2) + 100  # Below center
+
+        # Background
+        padding = 15
+        bg_rect = QRectF(x - padding, y - text_h - padding//2, text_w + padding*2, text_h + padding)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(40, 40, 50, alpha))
+        painter.drawRoundedRect(bg_rect, 8, 8)
+
+        # Border
+        painter.setPen(QPen(QColor(100, 180, 255, alpha), 2))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(bg_rect, 8, 8)
+
+        # Text
+        painter.setPen(QColor(255, 255, 255, alpha))
+        painter.drawText(x, y, self._status_message)
 
     # -- Mouse interaction --
 
@@ -1008,17 +1298,55 @@ class SceneViewport(QOpenGLWidget):
             else:
                 self._cycle_selection(1)
         elif key == Qt.Key.Key_Left:
-            self.camera.pan(30, 0)
+            if mods & Qt.KeyboardModifier.ControlModifier:
+                # Ctrl+Left: Nudge selected elements left (X-)
+                self._nudge_selected_position(-1.0, 0.0, 0.0)
+            else:
+                self.camera.pan(30, 0)
             self.update()
         elif key == Qt.Key.Key_Right:
-            self.camera.pan(-30, 0)
+            if mods & Qt.KeyboardModifier.ControlModifier:
+                # Ctrl+Right: Nudge selected elements right (X+)
+                self._nudge_selected_position(1.0, 0.0, 0.0)
+            else:
+                self.camera.pan(-30, 0)
             self.update()
         elif key == Qt.Key.Key_Up:
-            self.camera.pan(0, 30)
+            if mods & Qt.KeyboardModifier.AltModifier and mods & Qt.KeyboardModifier.ShiftModifier:
+                # Alt+Shift+Up: Nudge MIDI note values up
+                self._nudge_selected_midi_note(1)
+            elif mods & Qt.KeyboardModifier.AltModifier:
+                # Alt+Up: Nudge MIDI CC values up
+                self._nudge_selected_midi_cc(1)
+            elif mods & Qt.KeyboardModifier.ControlModifier:
+                # Ctrl+Up: Nudge selected elements forward (Y+)
+                self._nudge_selected_position(0.0, 1.0, 0.0)
+            else:
+                self.camera.pan(0, 30)
             self.update()
         elif key == Qt.Key.Key_Down:
-            self.camera.pan(0, -30)
+            if mods & Qt.KeyboardModifier.AltModifier and mods & Qt.KeyboardModifier.ShiftModifier:
+                # Alt+Shift+Down: Nudge MIDI note values down
+                self._nudge_selected_midi_note(-1)
+            elif mods & Qt.KeyboardModifier.AltModifier:
+                # Alt+Down: Nudge MIDI CC values down
+                self._nudge_selected_midi_cc(-1)
+            elif mods & Qt.KeyboardModifier.ControlModifier:
+                # Ctrl+Down: Nudge selected elements back (Y-)
+                self._nudge_selected_position(0.0, -1.0, 0.0)
+            else:
+                self.camera.pan(0, -30)
             self.update()
+        elif key == Qt.Key.Key_PageUp:
+            if mods & Qt.KeyboardModifier.ControlModifier:
+                # Ctrl+PageUp: Nudge selected elements up (Z+)
+                self._nudge_selected_position(0.0, 0.0, 1.0)
+                self.update()
+        elif key == Qt.Key.Key_PageDown:
+            if mods & Qt.KeyboardModifier.ControlModifier:
+                # Ctrl+PageDown: Nudge selected elements down (Z-)
+                self._nudge_selected_position(0.0, 0.0, -1.0)
+                self.update()
         elif key == Qt.Key.Key_1:
             self.camera.ortho = False
             self.camera.yaw = 0.0
@@ -1045,7 +1373,53 @@ class SceneViewport(QOpenGLWidget):
         elif key == Qt.Key.Key_G:
             # Toggle grid snap
             self._snap_grid_enabled = not self._snap_grid_enabled
+            self._show_status(f"Grid snap: {'ON' if self._snap_grid_enabled else 'OFF'} ({self._snap_grid_size:.0f} units)")
             self.update()
+        elif key == Qt.Key.Key_H:
+            # Toggle shortcuts display
+            self._show_shortcuts = not self._show_shortcuts
+            self._show_status(f"Shortcuts: {'VISIBLE' if self._show_shortcuts else 'HIDDEN'} (Press H to toggle)")
+            self.update()
+        elif key == Qt.Key.Key_N:
+            # Toggle grid coordinate numbers
+            self._show_grid_coords = not self._show_grid_coords
+            self._show_status(f"Grid coordinates: {'VISIBLE' if self._show_grid_coords else 'HIDDEN'} (Press N to toggle)")
+            self.update()
+        elif key == Qt.Key.Key_R:
+            # Rotate selected elements
+            if self.selected_elements:
+                angle = 15.0  # degrees
+                if mods & Qt.KeyboardModifier.ControlModifier:
+                    # Ctrl+R: Rotate around X-axis
+                    self._rotate_selected_elements(angle, 'x')
+                    self._show_status(f"Rotated {len(self.selected_elements)} element(s) around X-axis (+{angle}°)")
+                elif mods & Qt.KeyboardModifier.ShiftModifier:
+                    # Shift+R: Rotate around Y-axis
+                    self._rotate_selected_elements(angle, 'y')
+                    self._show_status(f"Rotated {len(self.selected_elements)} element(s) around Y-axis (+{angle}°)")
+                else:
+                    # R: Rotate around Z-axis (most common for groups)
+                    self._rotate_selected_elements(angle, 'z')
+                    self._show_status(f"Rotated {len(self.selected_elements)} element(s) around Z-axis (+{angle}°)")
+                self.update()
+            else:
+                self._show_status("No elements selected to rotate!")
+        elif key == Qt.Key.Key_T:
+            # Rotate selected elements counter-clockwise (opposite of R)
+            if self.selected_elements:
+                angle = -15.0  # degrees
+                if mods & Qt.KeyboardModifier.ControlModifier:
+                    self._rotate_selected_elements(angle, 'x')
+                    self._show_status(f"Rotated {len(self.selected_elements)} element(s) around X-axis ({angle}°)")
+                elif mods & Qt.KeyboardModifier.ShiftModifier:
+                    self._rotate_selected_elements(angle, 'y')
+                    self._show_status(f"Rotated {len(self.selected_elements)} element(s) around Y-axis ({angle}°)")
+                else:
+                    self._rotate_selected_elements(angle, 'z')
+                    self._show_status(f"Rotated {len(self.selected_elements)} element(s) around Z-axis ({angle}°)")
+                self.update()
+            else:
+                self._show_status("No elements selected to rotate!")
         else:
             super().keyPressEvent(event)
 
@@ -1103,7 +1477,11 @@ class SceneViewport(QOpenGLWidget):
 
         for elem_id, (sx, sy, depth, elem) in positions.items():
             dist = math.sqrt((mx - sx) ** 2 + (my - sy) ** 2)
-            if dist < best_dist:
+
+            # Use larger hit radius for groups to make them easier to select
+            threshold = 150.0 if isinstance(elem, GroupIE) else 80.0
+
+            if dist < threshold and dist < best_dist:
                 best_dist = dist
                 best_elem = elem
 
@@ -1121,12 +1499,14 @@ class SceneViewport(QOpenGLWidget):
             # Replace selection
             if best_elem is not None:
                 self.selected_elements = [best_elem]
+                self._show_status(f"Selected: {best_elem.display_name or best_elem.unique_id}")
             else:
                 # Miss on empty — start marquee select
                 self._marquee_active = True
                 self._marquee_start = QPoint(mx, my)
                 self._marquee_rect = None
                 self.selected_elements = []
+                self._show_status("Click and drag to marquee select")
 
         # Set up drag if we have a selection
         if self.selected_elements and best_elem is not None:
@@ -1356,6 +1736,138 @@ class SceneViewport(QOpenGLWidget):
             s.y = max(0.05, s.y + delta)
         elif self._resize_axis == 'z':
             s.z = max(0.05, s.z + delta)
+
+    def _rotate_selected_elements(self, angle_degrees: float, axis: str):
+        """Rotate selected elements around specified axis."""
+        if not self.selected_elements:
+            return
+
+        # Create rotation quaternion for the specified axis
+        angle_rad = math.radians(angle_degrees)
+        cos_half = math.cos(angle_rad * 0.5)
+        sin_half = math.sin(angle_rad * 0.5)
+
+        if axis == 'x':
+            rot_quat = Quat(x=sin_half, y=0.0, z=0.0, w=cos_half)
+        elif axis == 'y':
+            rot_quat = Quat(x=0.0, y=sin_half, z=0.0, w=cos_half)
+        else:  # 'z'
+            rot_quat = Quat(x=0.0, y=0.0, z=sin_half, w=cos_half)
+
+        # Apply rotation to each selected element
+        for elem in self.selected_elements:
+            # Combine with existing rotation: new_rotation = rotation * existing_rotation
+            existing = elem.transform.rotation
+            new_quat = _multiply_quaternions(rot_quat, existing)
+            elem.transform.rotation = new_quat
+
+    def _nudge_selected_position(self, dx: float, dy: float, dz: float):
+        """Nudge selected elements by small amounts in X/Y/Z."""
+        if not self.selected_elements:
+            self._show_status("No elements selected to nudge!")
+            return
+
+        nudge_amount = 1.0  # units
+        if self._snap_grid_enabled:
+            nudge_amount = self._snap_grid_size
+
+        for elem in self.selected_elements:
+            p = elem.transform.translation
+            p.x += dx * nudge_amount
+            p.y += dy * nudge_amount
+            p.z += dz * nudge_amount
+
+        # Show status feedback
+        direction = ""
+        if dx > 0: direction = "RIGHT"
+        elif dx < 0: direction = "LEFT"
+        elif dy > 0: direction = "FORWARD"
+        elif dy < 0: direction = "BACK"
+        elif dz > 0: direction = "UP"
+        elif dz < 0: direction = "DOWN"
+
+        count = len(self.selected_elements)
+        elem_text = "element" if count == 1 else f"{count} elements"
+        self._show_status(f"Nudged {elem_text} {direction} by {nudge_amount:.1f} units")
+
+    def _nudge_selected_midi_cc(self, delta: int):
+        """Nudge MIDI CC values of selected elements."""
+        if not self.selected_elements:
+            self._show_status("No elements selected to nudge MIDI CC!")
+            return
+
+        changed_count = 0
+        for elem in self.selected_elements:
+            # Handle MorphZones with CC mappings
+            if hasattr(elem, 'x_axis_cc_mappings') and elem.x_axis_cc_mappings:
+                for cc_map in elem.x_axis_cc_mappings:
+                    old_val = cc_map.control
+                    cc_map.control = max(0, min(127, cc_map.control + delta))
+                    if cc_map.control != old_val:
+                        changed_count += 1
+            if hasattr(elem, 'y_axis_cc_mappings') and elem.y_axis_cc_mappings:
+                for cc_map in elem.y_axis_cc_mappings:
+                    old_val = cc_map.control
+                    cc_map.control = max(0, min(127, cc_map.control + delta))
+                    if cc_map.control != old_val:
+                        changed_count += 1
+            if hasattr(elem, 'z_axis_cc_mappings') and elem.z_axis_cc_mappings:
+                for cc_map in elem.z_axis_cc_mappings:
+                    old_val = cc_map.control
+                    cc_map.control = max(0, min(127, cc_map.control + delta))
+                    if cc_map.control != old_val:
+                        changed_count += 1
+
+            # Handle HitZones with CC mappings
+            if hasattr(elem, 'midi_cc_mappings') and elem.midi_cc_mappings:
+                for cc_map in elem.midi_cc_mappings:
+                    old_val = cc_map.control
+                    cc_map.control = max(0, min(127, cc_map.control + delta))
+                    if cc_map.control != old_val:
+                        changed_count += 1
+
+        if changed_count:
+            direction = "UP" if delta > 0 else "DOWN"
+            self._show_status(f"Nudged {changed_count} MIDI CC values {direction} by {abs(delta)}")
+        else:
+            self._show_status("No MIDI CC mappings found on selected elements!")
+
+    def _nudge_selected_midi_note(self, delta: int):
+        """Nudge MIDI note values of selected elements."""
+        if not self.selected_elements:
+            self._show_status("No elements selected to nudge MIDI notes!")
+            return
+
+        changed_count = 0
+        for elem in self.selected_elements:
+            # Handle HitZones with note mappings
+            if hasattr(elem, 'midi_note_mappings') and elem.midi_note_mappings:
+                for note_map in elem.midi_note_mappings:
+                    old_val = note_map.note
+                    note_map.note = max(0, min(127, note_map.note + delta))
+                    if note_map.note != old_val:
+                        changed_count += 1
+
+        if changed_count:
+            direction = "UP" if delta > 0 else "DOWN"
+            self._show_status(f"Nudged {changed_count} MIDI notes {direction} by {abs(delta)}")
+        else:
+            self._show_status("No MIDI note mappings found on selected elements!")
+
+    def _show_status(self, message: str):
+        """Show a status message that fades out after a few seconds."""
+        self._status_message = message
+        self._status_timer = 120  # frames (about 2 seconds at 60fps)
+
+
+def _multiply_quaternions(q1: Quat, q2: Quat) -> Quat:
+    """Multiply two quaternions (q1 * q2)."""
+    return Quat(
+        w=q1.w*q2.w - q1.x*q2.x - q1.y*q2.y - q1.z*q2.z,
+        x=q1.w*q2.x + q1.x*q2.w + q1.y*q2.z - q1.z*q2.y,
+        y=q1.w*q2.y - q1.x*q2.z + q1.y*q2.w + q1.z*q2.x,
+        z=q1.w*q2.z + q1.x*q2.y - q1.y*q2.x + q1.z*q2.w
+    )
 
 
 # ---------------------------------------------------------------------------
