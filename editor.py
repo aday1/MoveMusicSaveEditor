@@ -2436,6 +2436,17 @@ class MainWindow(QMainWindow):
         self.undo_stack.push(cmd)
         self._sync_viewports()
 
+        affected_elements = {obj for obj, _, _, _ in changes}
+        widget = self.scroll.widget()
+        if widget is self.hitzone_panel and self.hitzone_panel._target in affected_elements:
+            self.hitzone_panel.load(self.hitzone_panel._target)
+        elif widget is self.morphzone_panel and self.morphzone_panel._target in affected_elements:
+            self.morphzone_panel.load(self.morphzone_panel._target)
+        elif widget is self.textlabel_panel and self.textlabel_panel._target in affected_elements:
+            self.textlabel_panel.load(self.textlabel_panel._target)
+        elif widget is self.groupie_panel and self.groupie_panel._target in affected_elements:
+            self.groupie_panel.load(self.groupie_panel._target)
+
     # -- Auto-layout --
 
     def _on_auto_layout(self, arrangement: str):
