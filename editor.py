@@ -1526,9 +1526,34 @@ class MainWindow(QMainWindow):
 
         # Templates menu
         template_menu = menubar.addMenu("Templates")
+
+        def _template_category(name: str) -> str:
+            n = name.lower()
+            if "keyboard" in n:
+                return "Keyboard"
+            if "drum" in n:
+                return "Drums"
+            if "fader" in n or "knob" in n or "xy" in n or "button" in n:
+                return "Controllers"
+            if "mixer" in n:
+                return "Utility"
+            if "debug" in n:
+                return "Debug"
+            return "Other"
+
+        category_order = ["Keyboard", "Controllers", "Drums", "Utility", "Debug", "Other"]
+        categorized = {k: [] for k in category_order}
         for tpl_name in TEMPLATES:
-            action = template_menu.addAction(tpl_name)
-            action.triggered.connect(lambda checked, n=tpl_name: self._on_add_template(n))
+            categorized[_template_category(tpl_name)].append(tpl_name)
+
+        for cat in category_order:
+            names = categorized[cat]
+            if not names:
+                continue
+            submenu = template_menu.addMenu(cat)
+            for tpl_name in names:
+                action = submenu.addAction(tpl_name)
+                action.triggered.connect(lambda checked, n=tpl_name: self._on_add_template(n))
 
         # Import menu
         import_menu = file_menu.addMenu("Import 3D")
