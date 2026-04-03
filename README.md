@@ -65,6 +65,23 @@ launch_editor.bat
 
 If you use a desktop shortcut, point it to `launch_editor.bat` in this folder.
 
+## Acid-Banger Plug-and-Play
+
+Use this when driving `acid-banger` from MoveMusicSaveEditor with no manual MIDI learn setup.
+
+1) In MoveMusicSaveEditor, add template:
+   `Templates -> Acid Banger Starter (CC16-39)`
+2) In acid-banger, run the bridge (`bridge/server.mjs`) and enable OSC bridge in the UI.
+3) Keep defaults:
+   - OSC host: `127.0.0.1`
+   - OSC port: `57121`
+   - OSC namespace: `/mmc`
+4) MoveMusic sends `/mmc/midi/cc` and `/mmc/midi/note`; acid-banger now consumes both.
+5) For TouchOSC, use `File -> Export 3D -> TouchOSC Layout Blueprint (.json)...` (or MIDI Overview `Export TouchOSC`) to export a build-sheet JSON using the same namespace/address scheme.
+
+Default acid-banger learned map is Channel 1, CC 16-39.
+See `acid-banger/bridge/README.txt` for the exact CC-to-target list.
+
 ## Template Menu Groups
 
 - **Faders** — 8/16 fader layouts (Row, Circle, Grid, Arc, Diamond, Spiral, Zigzag, Triangle)
@@ -74,6 +91,7 @@ If you use a desktop shortcut, point it to `launch_editor.bat` in this folder.
 - **Drum Pads** — 8/16 drum pad layouts
 - **Keyboards** — 1, 2, 3, 5, and 10 octave keyboards in Row, Circle, and Triangle
 - **Mixer** — 8-channel mixer strip (Faders + Knobs)
+- **Acid Banger** — Starter bank for acid-banger default CC16-39 mapping
 - **Bitwig** — Performance grid with macros, scenes, and XY pads
 - **Reaper** — Mixer + transport layout for desktop DAW control
 - **Resolume** — Clip/layer performance layout for VJ triggering

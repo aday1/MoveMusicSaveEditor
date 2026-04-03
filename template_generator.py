@@ -996,6 +996,69 @@ def generate_mixer(project: Project, origin: Vec3 = None) -> List:
     return all_elements
 
 
+def generate_acid_banger_starter(project: Project, origin: Vec3 = None) -> List:
+    """Acid-banger starter mapped to Channel 1 CC16-39."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+
+    all_elements.extend(
+        generate_faders(
+            project,
+            count=8,
+            arrangement="Row",
+            spacing=28,
+            origin=Vec3(origin.x, origin.y, origin.z),
+            base_cc=16,
+            channel=1,
+            label_prefix="Acid Fader",
+            color_mode="Gradient",
+        )
+    )
+
+    all_elements.extend(
+        generate_knobs(
+            project,
+            count=8,
+            arrangement="Row",
+            spacing=28,
+            origin=Vec3(origin.x, origin.y + 45, origin.z),
+            base_cc=24,
+            channel=1,
+            label_prefix="Acid Knob",
+            color_mode="Cool",
+        )
+    )
+
+    all_elements.extend(
+        generate_buttons(
+            project,
+            count=8,
+            arrangement="Row",
+            spacing=24,
+            origin=Vec3(origin.x, origin.y + 80, origin.z),
+            base_cc=32,
+            channel=1,
+            label_prefix="Acid Trig",
+        )
+    )
+
+    title_id = project.generate_id("TextLabel_C")
+    title = TextLabel(
+        unique_id=title_id,
+        display_name="Acid Banger Starter Ch1 CC16-39",
+        transform=Transform(
+            translation=Vec3(origin.x, origin.y + 112, origin.z),
+            scale=Vec3(0.35, 0.35, 0.35),
+        ),
+        color=LABEL_COLOR,
+    )
+    all_elements.append(title)
+
+    return all_elements
+
+
 def generate_bitwig_performance(project: Project, origin: Vec3 = None) -> List:
     """Bitwig-style performance layout: XY pads, macro knobs, scene selectors, layer mixers."""
     if origin is None:
@@ -1670,6 +1733,7 @@ def generate_debug_everything(project: Project, origin: Vec3 = None) -> List:
 
 # Replace the sentinel with the actual function
 TEMPLATES["Mixer (8 Faders + 8 Knobs)"] = lambda p, o: generate_mixer(p, o)
+TEMPLATES["Acid Banger Starter (CC16-39)"] = lambda p, o: generate_acid_banger_starter(p, o)
 
 # DAW / Performance packs
 TEMPLATES["Bitwig: Performance Grid"] = lambda p, o: generate_bitwig_performance(p, o)

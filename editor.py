@@ -3519,8 +3519,8 @@ class MainWindow(QMainWindow):
 
         cfg = _load_config()
         host = str(cfg.get("osc_bridge_host", "127.0.0.1"))
-        port = int(cfg.get("osc_bridge_port", 9001))
-        namespace = str(cfg.get("osc_bridge_namespace", "/mmc/midi"))
+        port = int(cfg.get("osc_bridge_port", 57121))
+        namespace = str(cfg.get("osc_bridge_namespace", "/mmc"))
 
         try:
             from export_touchosc import export_touchosc_layout
@@ -4490,7 +4490,7 @@ class MainWindow(QMainWindow):
         bar_cfg = self.performance_panel.get_transport_config()
         mode = bar_cfg.get("mode", "osc")
         osc_host = bar_cfg.get("osc_host", "127.0.0.1")
-        osc_port = int(bar_cfg.get("osc_port", 9001))
+        osc_port = int(bar_cfg.get("osc_port", 57121))
         osc_ns = bar_cfg.get("osc_ns", "/mmc")
         midi_port_name = bar_cfg.get("midi_port")  # may be None
 
@@ -4624,9 +4624,9 @@ class MidiOverviewDialog(QWidget):
         self._updating_table = False
         cfg = _load_config()
         self._osc_host = str(cfg.get("osc_bridge_host", "127.0.0.1"))
-        self._osc_port = int(cfg.get("osc_bridge_port", 9001))
+        self._osc_port = int(cfg.get("osc_bridge_port", 57121))
         self._test_transport = str(cfg.get("midi_test_transport", "osc"))
-        self._osc_namespace = str(cfg.get("osc_bridge_namespace", "/mmc/midi"))
+        self._osc_namespace = str(cfg.get("osc_bridge_namespace", "/mmc"))
         self._preferred_midi_output = str(cfg.get("preferred_midi_output", "Loopback Midi"))
 
         layout = QVBoxLayout(self)
@@ -4759,10 +4759,10 @@ class MidiOverviewDialog(QWidget):
     def _persist_osc_settings(self):
         host = self._osc_host_edit.text().strip() or "127.0.0.1"
         port = int(self._osc_port_spin.value())
-        namespace = self._osc_ns_edit.text().strip() or "/mmc/midi"
+        namespace = self._osc_ns_edit.text().strip() or "/mmc"
         if not namespace.startswith("/"):
             namespace = "/" + namespace
-        namespace = namespace.rstrip("/") or "/mmc/midi"
+        namespace = namespace.rstrip("/") or "/mmc"
         self._osc_ns_edit.setText(namespace)
         cfg = _load_config()
         cfg["osc_bridge_host"] = host
@@ -5106,7 +5106,7 @@ class MidiOverviewDialog(QWidget):
         self._mark_status(f"Ready to send test MIDI to {self._port_combo.currentText()}.")
 
     def _osc_addresses(self) -> tuple[str, str]:
-        namespace = self._osc_ns_edit.text().strip() or "/mmc/midi"
+        namespace = self._osc_ns_edit.text().strip() or "/mmc"
         if not namespace.startswith("/"):
             namespace = "/" + namespace
         namespace = namespace.rstrip("/")
@@ -5268,7 +5268,7 @@ class MidiOverviewDialog(QWidget):
         cfg = _load_config()
         mode = str(cfg.get("midi_test_transport", "osc"))
         osc_host = str(cfg.get("osc_bridge_host", "127.0.0.1"))
-        osc_port = int(cfg.get("osc_bridge_port", 9001))
+        osc_port = int(cfg.get("osc_bridge_port", 57121))
         osc_ns = str(cfg.get("osc_namespace", "/mmc"))
         cc_addr = f"{osc_ns}/midi/cc"
         note_addr = f"{osc_ns}/midi/note"
@@ -5439,7 +5439,7 @@ class MidiOverviewDialog(QWidget):
                 file_path,
                 osc_host=self._osc_host_edit.text().strip() or "127.0.0.1",
                 osc_port=int(self._osc_port_spin.value()),
-                osc_namespace=self._osc_ns_edit.text().strip() or "/mmc/midi",
+                osc_namespace=self._osc_ns_edit.text().strip() or "/mmc",
             )
             self._mark_status(
                 f"TouchOSC export complete: {summary['page_count']} page(s), "

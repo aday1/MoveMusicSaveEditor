@@ -18,11 +18,24 @@ class _Page:
 
 
 def _norm_namespace(namespace: str) -> str:
-    ns = (namespace or "/mmc/midi").strip()
+    ns = (namespace or "/mmc").strip()
     if not ns.startswith("/"):
         ns = "/" + ns
     ns = ns.rstrip("/")
-    return ns or "/mmc/midi"
+    return ns or "/mmc"
+
+
+def _osc_addresses(namespace: str) -> tuple[str, str]:
+    """Build CC/note addresses from a base namespace.
+
+    Supports both base namespaces ("/mmc" -> "/mmc/midi/cc") and
+    already-midi namespaces ("/mmc/midi" -> "/mmc/midi/cc").
+    """
+    if namespace.endswith("/midi"):
+        base = namespace
+    else:
+        base = namespace + "/midi"
+    return f"{base}/cc", f"{base}/note"
 
 
 def _element_workspace_map(project) -> dict[str, str]:
@@ -57,7 +70,7 @@ def _chunk(items: list, chunk_size: int) -> list[list]:
     return [items[i:i + chunk_size] for i in range(0, len(items), chunk_size)]
 
 
-def export_touchosc_layout(project, file_path: str, osc_host: str = "127.0.0.1", osc_port: int = 9001, osc_namespace: str = "/mmc/midi") -> dict:
+def export_touchosc_layout(project, file_path: str, osc_host: str = "127.0.0.1", osc_port: int = 57121, osc_namespace: str = "/mmc") -> dict:
     """Export a TouchOSC-oriented multi-page layout blueprint as JSON.
 
     The resulting JSON is intended as an easy-to-build TouchOSC page guide:
@@ -67,8 +80,7 @@ def export_touchosc_layout(project, file_path: str, osc_host: str = "127.0.0.1",
         raise ValueError("No project is loaded.")
 
     namespace = _norm_namespace(osc_namespace)
-    cc_addr = f"{namespace}/cc"
-    note_addr = f"{namespace}/note"
+    cc_addr, note_addr = _osc_addresses(namespace)
     ws_map = _element_workspace_map(project)
 
     note_controls = []
