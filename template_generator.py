@@ -971,6 +971,7 @@ TEMPLATES = {
         p, arrangement="Triangle", spacing=12, origin=o, channel=1, base_note=0, max_note=127, label_prefix="Key"
     ),
 
+    "DEBUG: Calibrator Overlay": lambda p, o: generate_calibrator(p, o),
     "DEBUG: Everything Kitchen Sink": lambda p, o: generate_debug_everything(p, o),
 }
 
@@ -993,6 +994,61 @@ def generate_mixer(project: Project, origin: Vec3 = None) -> List:
     all_elements.extend(knobs)
 
     return all_elements
+
+
+def generate_calibrator(project: Project, origin: Vec3 = None) -> List:
+    """Create a mixed-reality calibration helper made from TextLabels."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    elements = []
+    member_ids = []
+
+    marker_color = Color(0.2, 0.95, 0.35, 1.0)
+    info_color = Color(1.0, 1.0, 1.0, 1.0)
+
+    def _label(text: str, x: float, y: float, z: float, scale: float, color: Color) -> None:
+        label_id = project.generate_id("TextLabel_C")
+        label = TextLabel(
+            unique_id=label_id,
+            display_name=text,
+            transform=Transform(
+                translation=Vec3(origin.x + x, origin.y + y, origin.z + z),
+                scale=Vec3(scale, scale, scale),
+            ),
+            color=color,
+        )
+        elements.append(label)
+        member_ids.append(label_id)
+
+    # Main center marker and axis indicators.
+    _label("+", 0, 0, 0, 0.8, marker_color)
+    _label("X+", 80, 0, 0, 0.3, marker_color)
+    _label("X-", -80, 0, 0, 0.3, marker_color)
+    _label("Y+", 0, 80, 0, 0.3, marker_color)
+    _label("Y-", 0, -80, 0, 0.3, marker_color)
+
+    # Corner references to align frame edges.
+    corner_offset = 140
+    _label("TL", -corner_offset, corner_offset, 0, 0.28, marker_color)
+    _label("TR", corner_offset, corner_offset, 0, 0.28, marker_color)
+    _label("BL", -corner_offset, -corner_offset, 0, 0.28, marker_color)
+    _label("BR", corner_offset, -corner_offset, 0, 0.28, marker_color)
+
+    # Scale ticks every 50cm in front of camera (Z+).
+    for i in range(1, 6):
+        z = i * 50.0
+        _label(f"{int(z)}cm", -55, 0, z, 0.2, info_color)
+        _label("|", -20, 0, z, 0.22, marker_color)
+
+    _label("HORIZON", 0, 105, 0, 0.22, info_color)
+    _label("CENTER", 0, 16, 0, 0.2, info_color)
+    _label("CALIBRATOR", 0, -112, 0, 0.3, info_color)
+
+    group = _make_group(project, "Calibrator Overlay", origin, member_ids, elements)
+    elements.append(group)
+
+    return elements
 
 
 def generate_debug_everything(project: Project, origin: Vec3 = None) -> List:

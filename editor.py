@@ -12,6 +12,7 @@ import hashlib
 import logging
 import math
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Optional
@@ -53,8 +54,10 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QAction, QActionGroup, QColor, QKeySequence, QShortcut, QUndoCommand, QUndoStack
 from PyQt6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox,
+    QDialog,
     QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QListWidget, QMainWindow, QMenu, QMessageBox, QPushButton,
+    QProgressDialog,
     QScrollArea, QSizePolicy, QSpinBox, QSplitter, QStatusBar,
     QTableWidget, QTableWidgetItem, QToolBar, QTreeWidget, QTreeWidgetItem,
     QVBoxLayout, QWidget, QInputDialog,
@@ -273,6 +276,46 @@ class GroupMembershipCommand(QUndoCommand):
     def undo(self):
         self.group.group_items = self.old_members[:]
         self.group.bounding_box = copy.deepcopy(self.old_bbox)
+
+
+class AddWorkspaceCommand(QUndoCommand):
+    """Add a new workspace to the project."""
+    def __init__(self, project: Project, workspace: Workspace, description: str = "Add Workspace"):
+        super().__init__(description)
+        self.project = project
+        self.workspace = workspace
+        self._old_active = project.active_workspace_index
+
+    def redo(self):
+        self.project.workspaces.append(self.workspace)
+        self.project.active_workspace_index = len(self.project.workspaces) - 1
+
+    def undo(self):
+        idx = self.project.workspaces.index(self.workspace)
+        self.project.workspaces.remove(self.workspace)
+        if self.project.workspaces:
+            self.project.active_workspace_index = max(0, min(self._old_active, len(self.project.workspaces) - 1))
+        else:
+            self.project.active_workspace_index = 0
+
+
+class DeleteWorkspaceCommand(QUndoCommand):
+    """Remove a workspace from the project (elements remain in project.elements)."""
+    def __init__(self, project: Project, workspace: Workspace, description: str = "Delete Workspace"):
+        super().__init__(description)
+        self.project = project
+        self.workspace = workspace
+        self._index = project.workspaces.index(workspace)
+        self._old_active = project.active_workspace_index
+
+    def redo(self):
+        self.project.workspaces.remove(self.workspace)
+        if self.project.active_workspace_index >= len(self.project.workspaces):
+            self.project.active_workspace_index = max(0, len(self.project.workspaces) - 1)
+
+    def undo(self):
+        self.project.workspaces.insert(self._index, self.workspace)
+        self.project.active_workspace_index = self._old_active
 
 
 class BatchMoveCommand(QUndoCommand):
@@ -700,11 +743,24 @@ class WorkspacePanel(QWidget):
         self.name_edit = QLineEdit()
         self.enabled_check = QCheckBox()
         self.elements_label = QLabel()
+        self.active_label = QLabel()
         layout.addRow("Display Name:", self.name_edit)
         layout.addRow("Enabled:", self.enabled_check)
         layout.addRow("Elements:", self.elements_label)
+        layout.addRow("Status:", self.active_label)
 
-    def load(self, ws: Workspace):
+        btn_row = QHBoxLayout()
+        self.set_active_btn = QPushButton("Set as Active Workspace")
+        self.add_ws_btn = QPushButton("Add Workspace")
+        self.delete_ws_btn = QPushButton("Delete Workspace")
+        btn_row.addWidget(self.set_active_btn)
+        btn_row.addWidget(self.add_ws_btn)
+        btn_row.addWidget(self.delete_ws_btn)
+        btn_widget = QWidget()
+        btn_widget.setLayout(btn_row)
+        layout.addRow(btn_widget)
+
+    def load(self, ws: Workspace, is_active: bool = False):
         self.name_edit.blockSignals(True)
         self.name_edit.setText(ws.display_name)
         self.name_edit.blockSignals(False)
@@ -712,6 +768,12 @@ class WorkspacePanel(QWidget):
         self.enabled_check.setChecked(ws.enabled)
         self.enabled_check.blockSignals(False)
         self.elements_label.setText(str(len(ws.element_ids)))
+        if is_active:
+            self.active_label.setText("Active (starting workspace)")
+            self.set_active_btn.setEnabled(False)
+        else:
+            self.active_label.setText("")
+            self.set_active_btn.setEnabled(True)
 
 
 class HitZonePanel(QWidget):
@@ -1419,8 +1481,13 @@ class MainWindow(QMainWindow):
         self.file_path: Optional[str] = None
         self.undo_stack = QUndoStack(self)
         self._modified = False
+        self._workspace_clipboard: Optional[dict] = None
         cfg = _load_config()
         self.debug_mode = bool(cfg.get("debug_mode", False))
+        self._label_font_size: int = int(cfg.get("label_font_size", 10))
+
+        self._settings_dialog: Optional[SettingsDialog] = None
+        self._midi_overview_dialog: Optional[MidiOverviewDialog] = None
 
         self._setup_ui()
         self._setup_toolbar()
@@ -1430,6 +1497,15 @@ class MainWindow(QMainWindow):
         self._setup_global_shortcuts()
 
         self.undo_stack.cleanChanged.connect(self._on_clean_changed)
+
+        # Restore saved window geometry
+        saved_geom = cfg.get("window_geometry")
+        if saved_geom:
+            try:
+                from PyQt6.QtCore import QByteArray
+                self.restoreGeometry(QByteArray.fromHex(bytes(saved_geom, "ascii")))
+            except Exception:
+                pass
 
     def _setup_global_shortcuts(self):
         """Editor-wide shortcuts for MIDI nudging regardless of focused widget."""
@@ -1448,6 +1524,15 @@ class MainWindow(QMainWindow):
         self._shortcut_note_down = QShortcut(QKeySequence("Alt+Shift+Down"), self)
         self._shortcut_note_down.setContext(Qt.ShortcutContext.WindowShortcut)
         self._shortcut_note_down.activated.connect(lambda: self._trigger_active_viewport_midi_note(-1))
+
+        # Fast workspace cycling while editing scenes.
+        self._shortcut_ws_prev = QShortcut(QKeySequence("Alt+PgUp"), self)
+        self._shortcut_ws_prev.setContext(Qt.ShortcutContext.WindowShortcut)
+        self._shortcut_ws_prev.activated.connect(lambda: self._cycle_active_workspace(-1))
+
+        self._shortcut_ws_next = QShortcut(QKeySequence("Alt+PgDown"), self)
+        self._shortcut_ws_next.setContext(Qt.ShortcutContext.WindowShortcut)
+        self._shortcut_ws_next.activated.connect(lambda: self._cycle_active_workspace(1))
 
     def _trigger_active_viewport_midi_cc(self, delta: int):
         vp = self._active_viewport()
@@ -1543,6 +1628,7 @@ class MainWindow(QMainWindow):
         toolbar = QToolBar("Main")
         toolbar.setMovable(False)
         self.addToolBar(toolbar)
+        self._toolbar = toolbar
 
         self.action_new = QAction("New", self)
         self.action_new.setShortcut("Ctrl+N")
@@ -1559,6 +1645,19 @@ class MainWindow(QMainWindow):
         self.action_save_as = QAction("Save As", self)
         self.action_save_as.setShortcut("Ctrl+Shift+S")
         toolbar.addAction(self.action_save_as)
+
+        toolbar.addSeparator()
+
+        # Top-row workspace switcher for fast scene context changes.
+        toolbar.addWidget(QLabel("Workspace:"))
+        self.workspace_switcher = QComboBox()
+        self.workspace_switcher.setMinimumWidth(220)
+        self.workspace_switcher.currentIndexChanged.connect(self._on_toolbar_workspace_changed)
+        toolbar.addWidget(self.workspace_switcher)
+
+        self.action_add_workspace_toolbar = QAction("+ Workspace", self)
+        self.action_add_workspace_toolbar.setShortcut("Ctrl+Shift+W")
+        toolbar.addAction(self.action_add_workspace_toolbar)
 
         toolbar.addSeparator()
 
@@ -1582,6 +1681,15 @@ class MainWindow(QMainWindow):
         self.action_delete = QAction("Delete", self)
         self.action_delete.setShortcut("Delete")
         toolbar.addAction(self.action_delete)
+
+        self.action_copy = QAction("Copy", self)
+        self.action_copy.setShortcut("Ctrl+C")
+
+        self.action_cut = QAction("Cut", self)
+        self.action_cut.setShortcut("Ctrl+X")
+
+        self.action_paste = QAction("Paste", self)
+        self.action_paste.setShortcut("Ctrl+V")
 
         toolbar.addSeparator()
 
@@ -1632,12 +1740,23 @@ class MainWindow(QMainWindow):
         edit_menu.addAction(self.action_add)
         edit_menu.addAction(self.action_duplicate)
         edit_menu.addAction(self.action_delete)
+        edit_menu.addSeparator()
+        edit_menu.addAction(self.action_copy)
+        edit_menu.addAction(self.action_cut)
+        edit_menu.addAction(self.action_paste)
 
         view_menu = menubar.addMenu("View")
         self.action_debug_mode = view_menu.addAction("Debug Mode")
         self.action_debug_mode.setCheckable(True)
         self.action_debug_mode.setChecked(self.debug_mode)
         self.action_debug_mode.triggered.connect(self._on_toggle_debug_mode)
+        view_menu.addSeparator()
+        self.action_midi_overview = view_menu.addAction("MIDI Overview Table...")
+        self.action_midi_overview.setShortcut("Ctrl+M")
+        self.action_midi_overview.triggered.connect(self._on_open_midi_overview)
+        view_menu.addSeparator()
+        self.action_settings = view_menu.addAction("Settings...")
+        self.action_settings.triggered.connect(self._on_open_settings)
 
         # Templates menu
         template_menu = menubar.addMenu("Templates")
@@ -1706,11 +1825,16 @@ class MainWindow(QMainWindow):
         self.action_export_glb = export_menu.addAction("glTF Binary (.glb)...")
         self.action_export_glb_orbit = export_menu.addAction("glTF with Orbit Camera...")
         export_menu.addSeparator()
+        self.action_export_blend_script = export_menu.addAction("Blender Python Script (.py)...")
+        export_menu.addSeparator()
         self.action_export_gif = export_menu.addAction("Orbit Animation GIF...")
+        self.action_export_mp4 = export_menu.addAction("Orbit Animation MP4...")
         self.action_export_obj.triggered.connect(self._on_export_obj)
         self.action_export_glb.triggered.connect(self._on_export_glb)
         self.action_export_glb_orbit.triggered.connect(lambda: self._on_export_glb(orbit=True))
+        self.action_export_blend_script.triggered.connect(self._on_export_blend_script)
         self.action_export_gif.triggered.connect(self._on_export_gif)
+        self.action_export_mp4.triggered.connect(self._on_export_mp4)
 
     def _setup_statusbar(self):
         self.statusbar = QStatusBar()
@@ -1730,6 +1854,10 @@ class MainWindow(QMainWindow):
         self.action_add.triggered.connect(self._on_add)
         self.action_duplicate.triggered.connect(self._on_duplicate)
         self.action_delete.triggered.connect(self._on_delete)
+        self.action_add_workspace_toolbar.triggered.connect(self._on_add_workspace)
+        self.action_copy.triggered.connect(self._on_copy_elements)
+        self.action_cut.triggered.connect(self._on_cut_elements)
+        self.action_paste.triggered.connect(self._on_paste_elements)
         self.tree.itemSelectionChanged.connect(self._on_selection_changed)
 
         # 3D viewport signals
@@ -1857,6 +1985,11 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         """Handle window close event - check for unsaved changes."""
         if self._check_unsaved_changes():
+            # Save window geometry
+            geom_hex = bytes(self.saveGeometry().toHex()).decode("ascii")
+            cfg = _load_config()
+            cfg["window_geometry"] = geom_hex
+            _save_config(cfg)
             event.accept()
         else:
             event.ignore()
@@ -1926,7 +2059,9 @@ class MainWindow(QMainWindow):
     def _rebuild_tree(self):
         self.tree.clear()
         self._sync_viewports()
+        self._workspace_items = {}
         if not self.project:
+            self._refresh_workspace_switcher()
             return
 
         # Project root
@@ -1940,13 +2075,16 @@ class MainWindow(QMainWindow):
         vi_item.setExpanded(True)
 
         # Workspaces
-        for ws in self.project.workspaces:
+        for i, ws in enumerate(self.project.workspaces):
             ws_label = f"{ws.display_name} ({len(ws.element_ids)} elements)"
-            if ws.enabled:
+            if i == self.project.active_workspace_index:
                 ws_label += " [active]"
+            if ws.enabled:
+                ws_label += " [enabled]"
             ws_item = QTreeWidgetItem(vi_item, [ws_label])
             ws_item.setData(0, Qt.ItemDataRole.UserRole, (ITEM_TYPE_WORKSPACE, ws))
             ws_item.setExpanded(True)
+            self._workspace_items[ws.unique_id] = ws_item
 
             for eid in ws.element_ids:
                 elem = self.project.find_element(eid)
@@ -1963,6 +2101,66 @@ class MainWindow(QMainWindow):
                 g = int(min(1.0, c.g) * 255)
                 b = int(min(1.0, c.b) * 255)
                 elem_item.setForeground(0, QColor(r, g, b))
+
+        self._refresh_workspace_switcher()
+
+    def _refresh_workspace_switcher(self):
+        self.workspace_switcher.blockSignals(True)
+        self.workspace_switcher.clear()
+        if not self.project or not self.project.workspaces:
+            self.workspace_switcher.setEnabled(False)
+            self.workspace_switcher.blockSignals(False)
+            return
+
+        self.workspace_switcher.setEnabled(True)
+        for i, ws in enumerate(self.project.workspaces):
+            label = ws.display_name or ws.unique_id
+            if i == self.project.active_workspace_index:
+                label += " [active]"
+            self.workspace_switcher.addItem(label, ws.unique_id)
+
+        idx = max(0, min(self.project.active_workspace_index, self.workspace_switcher.count() - 1))
+        self.workspace_switcher.setCurrentIndex(idx)
+        self.workspace_switcher.blockSignals(False)
+
+    def _on_toolbar_workspace_changed(self, idx: int):
+        if idx < 0 or not self.project:
+            return
+        ws_id = self.workspace_switcher.itemData(idx)
+        if not ws_id:
+            return
+        for i, ws in enumerate(self.project.workspaces):
+            if ws.unique_id == ws_id:
+                self._set_active_workspace_index(i)
+                return
+
+    def _set_active_workspace_index(self, new_idx: int):
+        if not self.project:
+            return
+        old_idx = self.project.active_workspace_index
+        if old_idx == new_idx or not (0 <= new_idx < len(self.project.workspaces)):
+            return
+
+        cmd = SetPropertyCommand(
+            self.project,
+            "active_workspace_index",
+            old_idx,
+            new_idx,
+            "Set active workspace",
+        )
+        self.undo_stack.push(cmd)
+        self._rebuild_tree()
+
+        # Select the workspace node so it's obvious what scene is active.
+        ws = self.project.workspaces[new_idx]
+        ws_item = self._workspace_items.get(ws.unique_id)
+        if ws_item is not None:
+            self.tree.blockSignals(True)
+            self.tree.clearSelection()
+            ws_item.setSelected(True)
+            self.tree.scrollToItem(ws_item)
+            self.tree.blockSignals(False)
+            self._on_selection_changed()
 
     def _on_selection_changed(self):
         items = self.tree.selectedItems()
@@ -1993,7 +2191,9 @@ class MainWindow(QMainWindow):
             self._set_panel(self.project_panel)
             self._sync_selection(None)
         elif item_type == ITEM_TYPE_WORKSPACE:
-            self.workspace_panel.load(obj)
+            is_active = (self.project.workspaces.index(obj) == self.project.active_workspace_index
+                         if obj in self.project.workspaces else False)
+            self.workspace_panel.load(obj, is_active=is_active)
             self._connect_workspace_panel(obj)
             self._set_panel(self.workspace_panel)
             self._sync_selection(None)
@@ -2063,6 +2263,12 @@ class MainWindow(QMainWindow):
         except: pass
         try: p.enabled_check.toggled.disconnect()
         except: pass
+        try: p.set_active_btn.clicked.disconnect()
+        except: pass
+        try: p.add_ws_btn.clicked.disconnect()
+        except: pass
+        try: p.delete_ws_btn.clicked.disconnect()
+        except: pass
         def on_name():
             old = ws.display_name
             new = p.name_edit.text()
@@ -2078,6 +2284,9 @@ class MainWindow(QMainWindow):
                 self._rebuild_tree()
         p.name_edit.editingFinished.connect(on_name)
         p.enabled_check.toggled.connect(on_enabled)
+        p.set_active_btn.clicked.connect(lambda: self._on_set_active_workspace(ws))
+        p.add_ws_btn.clicked.connect(self._on_add_workspace)
+        p.delete_ws_btn.clicked.connect(lambda: self._on_delete_workspace(ws))
 
     def _connect_hitzone_panel(self, hz):
         p = self.hitzone_panel
@@ -2367,6 +2576,159 @@ class MainWindow(QMainWindow):
 
     # -- Add / Duplicate / Delete --
 
+    def _active_workspace(self) -> Optional[Workspace]:
+        if not self.project or not self.project.workspaces:
+            return None
+        idx = max(0, min(self.project.active_workspace_index, len(self.project.workspaces) - 1))
+        return self.project.workspaces[idx]
+
+    def _selected_elements_and_workspace(self) -> tuple[list, Optional[Workspace]]:
+        """Return selected elements and inferred source workspace."""
+        if not self.project:
+            return [], None
+
+        items = self.tree.selectedItems()
+        if items:
+            elems = []
+            source_ws = None
+            seen = set()
+            for item in items:
+                data = item.data(0, Qt.ItemDataRole.UserRole)
+                if not data or data[0] != ITEM_TYPE_ELEMENT:
+                    continue
+                elem = data[1]
+                if id(elem) in seen:
+                    continue
+                seen.add(id(elem))
+                ws = self._get_workspace_for_item(item)
+                if source_ws is None:
+                    source_ws = ws
+                elif ws is not source_ws:
+                    QMessageBox.warning(self, "Mixed Workspace Selection",
+                                        "Select elements from one workspace at a time for cut/copy.")
+                    return [], None
+                elems.append(elem)
+            if elems:
+                return elems, source_ws
+
+        # Fallback: viewport selection uses active workspace context.
+        vp = self._active_viewport()
+        elems = list(getattr(vp, 'selected_elements', []) or [])
+        if not elems and getattr(vp, 'selected_element', None):
+            elems = [vp.selected_element]
+        return elems, self._active_workspace()
+
+    def _select_elements_in_tree(self, elements: list):
+        if not elements:
+            return
+        self.tree.blockSignals(True)
+        self.tree.clearSelection()
+        first_item = None
+        for elem in elements:
+            item = self._find_tree_item_for_element(elem)
+            if item is None:
+                continue
+            item.setSelected(True)
+            if first_item is None:
+                first_item = item
+        if first_item is not None:
+            self.tree.scrollToItem(first_item)
+        self.tree.blockSignals(False)
+        self._on_selection_changed()
+        self._sync_selection(elements if len(elements) > 1 else elements[0])
+
+    def _on_copy_elements(self):
+        if not self.project:
+            return
+        elements, source_ws = self._selected_elements_and_workspace()
+        if not elements or not source_ws:
+            QMessageBox.information(self, "Copy", "Select one or more elements to copy.")
+            return
+        self._workspace_clipboard = {
+            "mode": "copy",
+            "source_workspace_id": source_ws.unique_id,
+            "element_ids": [e.unique_id for e in elements],
+        }
+        self.statusbar.showMessage(
+            f"Copied {len(elements)} element(s). Switch workspace and press Ctrl+V to paste.",
+            4000,
+        )
+
+    def _on_cut_elements(self):
+        if not self.project:
+            return
+        elements, source_ws = self._selected_elements_and_workspace()
+        if not elements or not source_ws:
+            QMessageBox.information(self, "Cut", "Select one or more elements to cut.")
+            return
+        self._workspace_clipboard = {
+            "mode": "cut",
+            "source_workspace_id": source_ws.unique_id,
+            "element_ids": [e.unique_id for e in elements],
+        }
+        self.statusbar.showMessage(
+            f"Cut {len(elements)} element(s). Switch workspace and press Ctrl+V to move.",
+            4000,
+        )
+
+    def _on_paste_elements(self):
+        if not self.project:
+            return
+        if not self._workspace_clipboard:
+            QMessageBox.information(self, "Paste", "Clipboard is empty.")
+            return
+
+        target_ws = self._active_workspace()
+        if not target_ws:
+            QMessageBox.warning(self, "Paste", "No active workspace selected.")
+            return
+
+        data = self._workspace_clipboard
+        source_ws = next((w for w in self.project.workspaces
+                          if w.unique_id == data.get("source_workspace_id")), None)
+        element_ids = data.get("element_ids", [])
+        if not element_ids:
+            return
+
+        pasted_elements = []
+        if data.get("mode") == "copy":
+            for eid in element_ids:
+                elem = self.project.find_element(eid)
+                if not elem:
+                    continue
+                pasted_elements.append(duplicate_element(self.project, elem, target_ws))
+        else:  # cut: move element links between workspaces
+            if source_ws is None:
+                QMessageBox.warning(self, "Paste", "Source workspace no longer exists.")
+                self._workspace_clipboard = None
+                return
+            for eid in element_ids:
+                elem = self.project.find_element(eid)
+                if not elem:
+                    continue
+                if eid in source_ws.element_ids:
+                    source_ws.element_ids.remove(eid)
+                if eid not in target_ws.element_ids:
+                    target_ws.element_ids.append(eid)
+                pasted_elements.append(elem)
+            # Consume cut clipboard after move.
+            self._workspace_clipboard = None
+
+        self._rebuild_tree()
+        self._update_statusbar()
+        self._sync_viewports()
+        self._select_elements_in_tree(pasted_elements)
+        self.statusbar.showMessage(f"Pasted {len(pasted_elements)} element(s) to {target_ws.display_name}", 4000)
+
+    def _cycle_active_workspace(self, delta: int):
+        if not self.project or len(self.project.workspaces) < 2:
+            return
+        old_idx = self.project.active_workspace_index
+        new_idx = (old_idx + delta) % len(self.project.workspaces)
+        self._set_active_workspace_index(new_idx)
+        ws = self.project.workspaces[new_idx]
+        self.statusbar.showMessage(f"Active workspace: {ws.display_name}", 2500)
+
     def _get_selected_workspace(self) -> Optional[Workspace]:
         items = self.tree.selectedItems()
         if not items:
@@ -2491,6 +2853,61 @@ class MainWindow(QMainWindow):
                 return pdata[1]
         return None
 
+    # -- Workspace management --
+
+    def _on_add_workspace(self):
+        if not self.project:
+            return
+        name, ok = QInputDialog.getText(self, "Add Workspace", "Workspace name:", text="New Workspace")
+        if not ok or not name.strip():
+            return
+        ws = Workspace(
+            unique_id=self.project.generate_id("Workspace"),
+            display_name=name.strip(),
+            enabled=True,
+        )
+        cmd = AddWorkspaceCommand(self.project, ws)
+        self.undo_stack.push(cmd)
+        self._rebuild_tree()
+
+        ws_item = self._workspace_items.get(ws.unique_id)
+        if ws_item is not None:
+            self.tree.blockSignals(True)
+            self.tree.clearSelection()
+            ws_item.setSelected(True)
+            self.tree.scrollToItem(ws_item)
+            self.tree.blockSignals(False)
+            self._on_selection_changed()
+
+        self._update_statusbar()
+
+    def _on_delete_workspace(self, ws: Workspace):
+        if not self.project:
+            return
+        if len(self.project.workspaces) <= 1:
+            QMessageBox.warning(self, "Cannot Delete", "A project must have at least one workspace.")
+            return
+        if ws.element_ids:
+            reply = QMessageBox.question(
+                self, "Confirm Delete",
+                f"Workspace '{ws.display_name}' contains {len(ws.element_ids)} element(s).\n"
+                "The elements will remain in the project but be unlinked from this workspace.\n"
+                "Delete workspace anyway?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+        cmd = DeleteWorkspaceCommand(self.project, ws)
+        self.undo_stack.push(cmd)
+        self._rebuild_tree()
+        self._set_panel(self.empty_panel)
+        self._update_statusbar()
+
+    def _on_set_active_workspace(self, ws: Workspace):
+        if not self.project or ws not in self.project.workspaces:
+            return
+        self._set_active_workspace_index(self.project.workspaces.index(ws))
+
     # -- Viewport callbacks --
 
     def _on_viewport_select(self, elem):
@@ -2544,6 +2961,75 @@ class MainWindow(QMainWindow):
         )
         # Refresh panel for current selection so mode applies immediately.
         self._on_selection_changed()
+
+    def _on_open_settings(self):
+        if self._settings_dialog and not self._settings_dialog.isVisible():
+            self._settings_dialog = None
+        if self._settings_dialog is None:
+            cfg = _load_config()
+            self._settings_dialog = SettingsDialog(cfg, parent=self)
+            self._settings_dialog.settings_changed.connect(self._on_settings_changed)
+        self._settings_dialog.show()
+        self._settings_dialog.raise_()
+
+    def _on_settings_changed(self, new_cfg: dict):
+        cfg = _load_config()
+        cfg.update(new_cfg)
+        _save_config(cfg)
+        # Apply label font size to viewports
+        self._label_font_size = int(new_cfg.get("label_font_size", 10))
+        for vp in (self.viewport, self.quad_viewport):
+            if hasattr(vp, '_label_font_size'):
+                vp._label_font_size = self._label_font_size
+        # Apply grid coordinate visibility
+        show_coords = bool(new_cfg.get("show_grid_coords", True))
+        self.viewport._show_grid_coords = show_coords
+        self.quad_viewport._show_grid_coords = show_coords
+        self._sync_viewports()
+
+    def _on_open_midi_overview(self):
+        if not self.project:
+            QMessageBox.information(self, "MIDI Overview", "No project loaded.")
+            return
+        if self._midi_overview_dialog and not self._midi_overview_dialog.isVisible():
+            self._midi_overview_dialog = None
+        if self._midi_overview_dialog is None:
+            self._midi_overview_dialog = MidiOverviewDialog(
+                self.project,
+                on_select_element=self._select_element_from_midi_overview,
+                on_element_edited=self._on_midi_overview_element_edited,
+                parent=self,
+            )
+        else:
+            self._midi_overview_dialog._populate()
+        self._midi_overview_dialog.show()
+        self._midi_overview_dialog.raise_()
+
+    def _select_element_from_midi_overview(self, elem):
+        """Jump tree/viewport selection to the element chosen in MIDI overview."""
+        if not elem:
+            return
+        item = self._find_tree_item_for_element(elem)
+        if not item:
+            return
+        self.tree.blockSignals(True)
+        self.tree.clearSelection()
+        item.setSelected(True)
+        self.tree.scrollToItem(item)
+        self.tree.blockSignals(False)
+        self._on_selection_changed()
+        self._sync_selection(elem)
+        self._active_viewport()._focus_selected()
+
+    def _on_midi_overview_element_edited(self, elem):
+        """Refresh editor UI after quick MIDI overview edits."""
+        self._rebuild_tree()
+        self._sync_viewports()
+        self._update_statusbar()
+        # Keep details panel fresh if currently showing this element.
+        widget = self.scroll.widget()
+        if hasattr(widget, '_target') and widget._target is elem and hasattr(widget, 'load'):
+            widget.load(elem)
 
     def _on_viewport_move(self, elem, old_x, old_y, old_z):
         """Element was dragged in the viewport — create undo command."""
@@ -2707,6 +3193,45 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", str(e))
 
+    def _on_export_blend_script(self):
+        if not self.project:
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Blender Script", "",
+            "Blender Python Script (*.py);;All Files (*)"
+        )
+        if not path:
+            return
+        from export_blend import export_blend_script
+        try:
+            export_blend_script(self.project, path)
+        except Exception as e:
+            QMessageBox.critical(self, "Export Error", str(e))
+            return
+
+        # Show usage tip
+        tip = QMessageBox(self)
+        tip.setWindowTitle("Blender Script Exported")
+        tip.setIcon(QMessageBox.Icon.Information)
+        tip.setText(f"<b>Script saved to:</b><br>{path}")
+        tip.setInformativeText(
+            "<b>How to use in Blender:</b><br>"
+            "1. Open Blender → switch to the <b>Scripting</b> workspace (top tab).<br>"
+            "2. Click <b>Open</b> in the Text Editor and select the .py file.<br>"
+            "3. Click <b>Run Script</b> (▶ or <b>Alt+P</b>).<br><br>"
+            "<b>Camera tracking:</b><br>"
+            "A <i>VR_Camera</i> is placed at your saved MoveMusic head position "
+            "and pointed at the scene centre. Load your footage in the "
+            "Movie Clip Editor, run the Motion Tracker, then use "
+            "<b>Clip → Setup Tracking Scene</b> to bind the solved camera "
+            "to <i>VR_Camera</i> — the MoveMusic boxes serve as real-world "
+            "reference geometry.<br><br>"
+            "<b>Scale:</b> 1 unit = 1 cm → Blender metres (×0.01 applied automatically)."
+        )
+        tip.setStandardButtons(QMessageBox.StandardButton.Ok)
+        tip.exec()
+        self.statusbar.showMessage(f"Blender script exported to {path}", 5000)
+
     def _on_import_glb(self):
         """Import GLB/glTF file and add elements to current project."""
         if not self.project:
@@ -2776,56 +3301,97 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Import Error", f"Failed to import OBJ file: {str(e)}")
 
     def _on_export_gif(self):
-        """Export project as orbit animation GIF."""
+        self._on_export_orbit_media("gif")
+
+    def _on_export_mp4(self):
+        self._on_export_orbit_media("mp4")
+
+    def _on_export_orbit_media(self, initial_format: str = "gif"):
+        """Export orbit animation with configurable options (GIF/MP4)."""
         if not self.project:
             return
 
-        path, _ = QFileDialog.getSaveFileName(
-            self, "Export Orbit GIF", "",
-            "Animated GIF (*.gif);;All Files (*.*)"
-        )
-        if path:
-            try:
-                from gif_export import export_orbit_gif, GifExportError
+        opts_dlg = OrbitExportOptionsDialog(default_format=initial_format, parent=self)
+        if opts_dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        opts = opts_dlg.values()
 
-                # Show progress dialog since GIF export can take time
-                progress = QMessageBox(self)
-                progress.setWindowTitle("Exporting GIF")
-                progress.setText("Capturing orbit animation frames...")
-                progress.setStandardButtons(QMessageBox.StandardButton.NoButton)
-                progress.setModal(True)
-                progress.show()
+        fmt = opts["format"]
+        if fmt == "mp4":
+            title = "Export Orbit MP4"
+            file_filter = "MPEG-4 Video (*.mp4);;All Files (*.*)"
+            default_ext = ".mp4"
+        else:
+            title = "Export Orbit GIF"
+            file_filter = "Animated GIF (*.gif);;All Files (*.*)"
+            default_ext = ".gif"
 
-                # Process events to show dialog
-                from PyQt6.QtWidgets import QApplication
+        path, _ = QFileDialog.getSaveFileName(self, title, "", file_filter)
+        if not path:
+            return
+        if not path.lower().endswith(default_ext):
+            path += default_ext
+
+        try:
+            from gif_export import export_orbit_gif, export_orbit_mp4, GifExportError
+
+            progress = QProgressDialog(f"Preparing {fmt.upper()} export...", "Cancel", 0, 100, self)
+            progress.setWindowTitle(f"Exporting {fmt.upper()}")
+            progress.setWindowModality(Qt.WindowModality.ApplicationModal)
+            progress.setMinimumDuration(0)
+            progress.setValue(0)
+            progress.show()
+
+            def _on_progress(current: int, total: int, stage: str) -> bool:
+                total = max(total, 1)
+                pct = int((current / total) * 100)
+                progress.setLabelText(f"{stage}... ({current}/{total})")
+                progress.setValue(pct)
                 QApplication.processEvents()
+                return not progress.wasCanceled()
 
-                # Export GIF (4 second animation at 15fps)
+            common = dict(
+                duration=opts["duration"],
+                fps=opts["fps"],
+                size=opts["size"],
+                clockwise=opts["clockwise"],
+                turns=opts["turns"],
+                elevation_factor=opts["elevation_factor"],
+                progress_callback=_on_progress,
+            )
+
+            if fmt == "mp4":
+                success = export_orbit_mp4(self.project, path, self._active_viewport(), **common)
+            else:
                 success = export_orbit_gif(
-                    self.project, path, self._active_viewport(),
-                    duration=4.0, fps=15, size=(800, 600)
+                    self.project,
+                    path,
+                    self._active_viewport(),
+                    palette_colors=opts["palette_colors"],
+                    dither=opts["dither"],
+                    **common,
                 )
 
-                progress.close()
+            progress.setValue(100)
+            progress.close()
 
-                if success:
-                    self.statusbar.showMessage(f"GIF exported to {path}", 5000)
-                    # Ask user if they want to open the file
-                    reply = QMessageBox.question(
-                        self, "Export Complete",
-                        f"GIF exported successfully!\n\nWould you like to open the file?",
-                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-                    )
-                    if reply == QMessageBox.StandardButton.Yes:
-                        import os
-                        os.startfile(path)  # Windows
-                else:
-                    QMessageBox.warning(self, "Export Warning", "GIF export completed with warnings.")
+            if success:
+                self.statusbar.showMessage(f"{fmt.upper()} exported to {path}", 5000)
+                reply = QMessageBox.question(
+                    self,
+                    "Export Complete",
+                    f"{fmt.upper()} exported successfully!\n\nWould you like to open the file?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                )
+                if reply == QMessageBox.StandardButton.Yes:
+                    os.startfile(path)
+            else:
+                QMessageBox.warning(self, "Export Warning", f"{fmt.upper()} export completed with warnings.")
 
-            except GifExportError as e:
-                QMessageBox.critical(self, "Export Error", str(e))
-            except Exception as e:
-                QMessageBox.critical(self, "Export Error", f"Failed to export GIF: {str(e)}")
+        except GifExportError as e:
+            QMessageBox.critical(self, "Export Error", str(e))
+        except Exception as e:
+            QMessageBox.critical(self, "Export Error", f"Failed to export {fmt.upper()}: {str(e)}")
 
     def _on_fit_all(self):
         self._active_viewport()._fit_all()
@@ -3659,6 +4225,400 @@ class MainWindow(QMainWindow):
         self._sync_selection(elements)
         self.statusbar.showMessage(f"Added template '{template_name}' ({len(elements)} elements)", 4000)
         self._active_viewport()._focus_selected()
+
+
+# ---------------------------------------------------------------------------
+# Settings dialog
+# ---------------------------------------------------------------------------
+
+class SettingsDialog(QWidget):
+    """Persistent settings window (not modal)."""
+    settings_changed = pyqtSignal(dict)
+
+    def __init__(self, cfg: dict, parent=None):
+        super().__init__(parent, Qt.WindowType.Window)
+        self.setWindowTitle("MMC Editor — Settings")
+        self.setMinimumWidth(400)
+        self._cfg = dict(cfg)
+
+        layout = QVBoxLayout(self)
+
+        # ---- Viewport ----
+        vp_group = QGroupBox("Viewport")
+        vp_form = QFormLayout(vp_group)
+
+        self._label_font_spin = QSpinBox()
+        self._label_font_spin.setRange(6, 24)
+        self._label_font_spin.setValue(int(cfg.get("label_font_size", 10)))
+        vp_form.addRow("Element label font size:", self._label_font_spin)
+
+        self._grid_check = QCheckBox()
+        self._grid_check.setChecked(bool(cfg.get("show_grid_coords", True)))
+        vp_form.addRow("Show grid measurements:", self._grid_check)
+
+        layout.addWidget(vp_group)
+
+        # ---- Buttons ----
+        btn_row = QHBoxLayout()
+        apply_btn = QPushButton("Apply")
+        close_btn = QPushButton("Close")
+        apply_btn.clicked.connect(self._on_apply)
+        close_btn.clicked.connect(self.close)
+        btn_row.addStretch()
+        btn_row.addWidget(apply_btn)
+        btn_row.addWidget(close_btn)
+        button_w = QWidget()
+        button_w.setLayout(btn_row)
+        layout.addWidget(button_w)
+
+    def _on_apply(self):
+        self._cfg["label_font_size"] = self._label_font_spin.value()
+        self._cfg["show_grid_coords"] = self._grid_check.isChecked()
+        self.settings_changed.emit(dict(self._cfg))
+
+
+# ---------------------------------------------------------------------------
+# MIDI overview table dialog
+# ---------------------------------------------------------------------------
+
+class MidiOverviewDialog(QWidget):
+    """Non-modal window listing all elements with editable MIDI assignments."""
+
+    def __init__(self, project, on_select_element=None, on_element_edited=None, parent=None):
+        super().__init__(parent, Qt.WindowType.Window)
+        self.setWindowTitle("MIDI Overview — All Elements")
+        self.setMinimumSize(900, 500)
+        self.project = project
+        self._on_select_element = on_select_element
+        self._on_element_edited = on_element_edited
+        self._updating_table = False
+
+        layout = QVBoxLayout(self)
+
+        # Filter row
+        filter_row = QHBoxLayout()
+        self._search_edit = QLineEdit()
+        self._search_edit.setPlaceholderText("Filter by name, CC or note value...")
+        self._search_edit.textChanged.connect(self._apply_filter)
+        filter_row.addWidget(QLabel("Search:"))
+        filter_row.addWidget(self._search_edit)
+
+        refresh_btn = QPushButton("Refresh")
+        refresh_btn.clicked.connect(self._populate)
+        filter_row.addWidget(refresh_btn)
+
+        self._select_btn = QPushButton("Select In Editor")
+        self._select_btn.clicked.connect(self._select_current_row)
+        filter_row.addWidget(self._select_btn)
+
+        filter_w = QWidget()
+        filter_w.setLayout(filter_row)
+        layout.addWidget(filter_w)
+
+        hint = QLabel(
+            "Quick edit: Name, MIDI Notes, MIDI CCs, Message Type. "
+            "Example notes: Ch1 N60 V127; Ch1 N61 V100. "
+            "Example CCs: Ch1 CC10=64 or X:Ch1 CC70=10 | Y:Ch1 CC71=20"
+        )
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+
+        # Table
+        self._table = QTableWidget()
+        self._table.setColumnCount(6)
+        self._table.setHorizontalHeaderLabels([
+            "Element Name", "Type", "Workspace",
+            "MIDI Notes", "MIDI CCs", "Message Type"
+        ])
+        self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self._table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        self._table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+        self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self._table.setSortingEnabled(True)
+        self._table.setEditTriggers(
+            QTableWidget.EditTrigger.DoubleClicked
+            | QTableWidget.EditTrigger.EditKeyPressed
+            | QTableWidget.EditTrigger.SelectedClicked
+        )
+        self._table.itemChanged.connect(self._on_item_changed)
+        self._table.itemDoubleClicked.connect(lambda _item: self._select_current_row())
+        layout.addWidget(self._table)
+
+        self._populate()
+
+    def _element_workspace(self, elem) -> str:
+        for ws in self.project.workspaces:
+            if elem.unique_id in ws.element_ids:
+                return ws.display_name
+        return "(none)"
+
+    def _format_notes(self, elem) -> str:
+        notes = getattr(elem, 'midi_note_mappings', [])
+        if not notes:
+            return ""
+        return "  ".join(f"Ch{n.channel} N{n.note} V{int(n.velocity)}" for n in notes)
+
+    def _format_ccs(self, elem) -> str:
+        parts = []
+        for attr in ('midi_cc_mappings', 'x_axis_cc_mappings', 'y_axis_cc_mappings', 'z_axis_cc_mappings'):
+            ccs = getattr(elem, attr, [])
+            prefix = {"x_axis_cc_mappings": "X:", "y_axis_cc_mappings": "Y:",
+                      "z_axis_cc_mappings": "Z:"}.get(attr, "")
+            for cc in ccs:
+                parts.append(f"{prefix}Ch{cc.channel} CC{cc.control}={cc.value}")
+        return "  ".join(parts)
+
+    def _populate(self):
+        self._updating_table = True
+        self._table.setSortingEnabled(False)
+        self._table.setRowCount(0)
+        for elem in self.project.elements:
+            etype = type(elem).__name__
+            ws_name = self._element_workspace(elem)
+            notes_str = self._format_notes(elem)
+            ccs_str = self._format_ccs(elem)
+            msg_type = getattr(elem, 'midi_message_type', "")
+
+            row_data = [
+                elem.display_name or elem.unique_id,
+                etype, ws_name, notes_str, ccs_str, msg_type
+            ]
+            self._rows.append(row_data)
+
+            row = self._table.rowCount()
+            self._table.insertRow(row)
+            for col, val in enumerate(row_data):
+                item = QTableWidgetItem(val)
+                item.setData(Qt.ItemDataRole.UserRole, elem)
+                if col in (1, 2):
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                self._table.setItem(row, col, item)
+
+        self._table.setSortingEnabled(True)
+        self._updating_table = False
+        self._apply_filter(self._search_edit.text())
+
+    def _apply_filter(self, text: str):
+        text = text.strip().lower()
+        for row in range(self._table.rowCount()):
+            if not text:
+                self._table.setRowHidden(row, False)
+                continue
+            match = False
+            for col in range(self._table.columnCount()):
+                item = self._table.item(row, col)
+                if item and text in item.text().lower():
+                    match = True
+                    break
+            self._table.setRowHidden(row, not match)
+
+    def _current_element(self):
+        row = self._table.currentRow()
+        if row < 0:
+            return None, -1
+        item = self._table.item(row, 0)
+        if not item:
+            return None, row
+        return item.data(Qt.ItemDataRole.UserRole), row
+
+    def _select_current_row(self):
+        elem, _ = self._current_element()
+        if elem is not None and callable(self._on_select_element):
+            self._on_select_element(elem)
+
+    def _parse_notes_text(self, text: str):
+        mappings = []
+        text = (text or "").strip()
+        if not text:
+            return mappings
+        pattern = re.compile(r"(?:Ch\s*(\d+)\s*)?(?:N|Note)\s*(\d+)(?:\s*(?:V|Vel)\s*(\d+))?", re.IGNORECASE)
+        for m in pattern.finditer(text):
+            ch = int(m.group(1) or 1)
+            note = int(m.group(2))
+            vel = float(int(m.group(3) or 127))
+            mappings.append(MidiNoteMapping(channel=ch, note=note, velocity=vel))
+        if not mappings and text:
+            raise ValueError("Invalid note mappings. Use format like: Ch1 N60 V127")
+        return mappings
+
+    def _parse_ccs_text(self, text: str):
+        parsed = []
+        text = (text or "").strip()
+        if not text:
+            return parsed
+        pattern = re.compile(
+            r"(?:(X|Y|Z)\s*:\s*)?(?:Ch\s*(\d+)\s*)?CC\s*(\d+)\s*(?:=|->)?\s*(-?\d+)",
+            re.IGNORECASE,
+        )
+        for m in pattern.finditer(text):
+            axis = (m.group(1) or "").upper()
+            ch = int(m.group(2) or 1)
+            control = int(m.group(3))
+            value = int(m.group(4))
+            parsed.append((axis, MidiCCMapping(channel=ch, control=control, value=value)))
+        if not parsed and text:
+            raise ValueError("Invalid CC mappings. Use format like: Ch1 CC10=64 or X:Ch1 CC70=10")
+        return parsed
+
+    def _on_item_changed(self, item: QTableWidgetItem):
+        if self._updating_table:
+            return
+        elem = item.data(Qt.ItemDataRole.UserRole)
+        if elem is None:
+            return
+
+        col = item.column()
+        text = item.text().strip()
+        try:
+            if col == 0:
+                elem.display_name = text
+            elif col == 3:
+                if hasattr(elem, 'midi_note_mappings'):
+                    elem.midi_note_mappings = self._parse_notes_text(text)
+            elif col == 4:
+                parsed = self._parse_ccs_text(text)
+                if hasattr(elem, 'midi_cc_mappings'):
+                    elem.midi_cc_mappings = [cc for _, cc in parsed]
+                elif hasattr(elem, 'x_axis_cc_mappings'):
+                    x = [cc for axis, cc in parsed if axis in ("", "X")]
+                    y = [cc for axis, cc in parsed if axis == "Y"]
+                    z = [cc for axis, cc in parsed if axis == "Z"]
+                    elem.x_axis_cc_mappings = x
+                    elem.y_axis_cc_mappings = y
+                    elem.z_axis_cc_mappings = z
+            elif col == 5 and hasattr(elem, 'midi_message_type'):
+                elem.midi_message_type = text or "EMidiMessageType::Note"
+        except Exception as e:
+            QMessageBox.warning(self, "Invalid Value", str(e))
+            self._updating_table = True
+            # Restore this row to canonical model values.
+            self._table.item(item.row(), 0).setText(elem.display_name or elem.unique_id)
+            self._table.item(item.row(), 3).setText(self._format_notes(elem))
+            self._table.item(item.row(), 4).setText(self._format_ccs(elem))
+            self._table.item(item.row(), 5).setText(getattr(elem, 'midi_message_type', ""))
+            self._updating_table = False
+            return
+
+        self._updating_table = True
+        self._table.item(item.row(), 0).setText(elem.display_name or elem.unique_id)
+        self._table.item(item.row(), 3).setText(self._format_notes(elem))
+        self._table.item(item.row(), 4).setText(self._format_ccs(elem))
+        self._table.item(item.row(), 5).setText(getattr(elem, 'midi_message_type', ""))
+        self._updating_table = False
+        if callable(self._on_element_edited):
+            self._on_element_edited(elem)
+
+
+class OrbitExportOptionsDialog(QDialog):
+    """Dialog for orbit media export settings (GIF/MP4)."""
+
+    def __init__(self, default_format: str = "gif", parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Orbit Export Options")
+        self.setModal(True)
+        self.setMinimumWidth(420)
+
+        layout = QVBoxLayout(self)
+        form = QFormLayout()
+
+        self.format_combo = QComboBox()
+        self.format_combo.addItem("GIF", "gif")
+        self.format_combo.addItem("MP4", "mp4")
+        self.format_combo.setCurrentIndex(0 if default_format.lower() == "gif" else 1)
+        form.addRow("Format:", self.format_combo)
+
+        self.duration_spin = QDoubleSpinBox()
+        self.duration_spin.setRange(1.0, 60.0)
+        self.duration_spin.setDecimals(1)
+        self.duration_spin.setSingleStep(0.5)
+        self.duration_spin.setValue(4.0)
+        form.addRow("Duration (sec):", self.duration_spin)
+
+        self.fps_spin = QSpinBox()
+        self.fps_spin.setRange(5, 120)
+        self.fps_spin.setValue(15 if default_format.lower() == "gif" else 30)
+        form.addRow("FPS:", self.fps_spin)
+
+        self.width_spin = QSpinBox()
+        self.width_spin.setRange(320, 3840)
+        self.width_spin.setSingleStep(16)
+        self.width_spin.setValue(800 if default_format.lower() == "gif" else 1280)
+        form.addRow("Width:", self.width_spin)
+
+        self.height_spin = QSpinBox()
+        self.height_spin.setRange(240, 2160)
+        self.height_spin.setSingleStep(16)
+        self.height_spin.setValue(600 if default_format.lower() == "gif" else 720)
+        form.addRow("Height:", self.height_spin)
+
+        self.clockwise_check = QCheckBox()
+        self.clockwise_check.setChecked(True)
+        form.addRow("Clockwise orbit:", self.clockwise_check)
+
+        self.turns_spin = QDoubleSpinBox()
+        self.turns_spin.setRange(0.1, 8.0)
+        self.turns_spin.setDecimals(2)
+        self.turns_spin.setSingleStep(0.1)
+        self.turns_spin.setValue(1.0)
+        form.addRow("Orbit turns:", self.turns_spin)
+
+        self.elevation_spin = QDoubleSpinBox()
+        self.elevation_spin.setRange(-1.5, 1.5)
+        self.elevation_spin.setDecimals(2)
+        self.elevation_spin.setSingleStep(0.05)
+        self.elevation_spin.setValue(0.3)
+        form.addRow("Elevation factor:", self.elevation_spin)
+
+        self.palette_spin = QSpinBox()
+        self.palette_spin.setRange(2, 256)
+        self.palette_spin.setValue(256)
+        form.addRow("GIF colors:", self.palette_spin)
+
+        self.dither_check = QCheckBox()
+        self.dither_check.setChecked(True)
+        form.addRow("GIF dithering:", self.dither_check)
+
+        layout.addLayout(form)
+
+        self.tip = QLabel("Tip: GIF colors controls color richness. MP4 preserves full color.")
+        self.tip.setWordWrap(True)
+        layout.addWidget(self.tip)
+
+        btns = QHBoxLayout()
+        btns.addStretch()
+        ok_btn = QPushButton("Export")
+        cancel_btn = QPushButton("Cancel")
+        ok_btn.clicked.connect(self.accept)
+        cancel_btn.clicked.connect(self.reject)
+        btns.addWidget(ok_btn)
+        btns.addWidget(cancel_btn)
+        layout.addLayout(btns)
+
+        self.format_combo.currentIndexChanged.connect(self._on_format_changed)
+        self._on_format_changed(self.format_combo.currentIndex())
+
+    def _on_format_changed(self, _index: int):
+        is_gif = self.format_combo.currentData() == "gif"
+        self.palette_spin.setEnabled(is_gif)
+        self.dither_check.setEnabled(is_gif)
+        if is_gif and self.fps_spin.value() > 30:
+            self.fps_spin.setValue(20)
+        if (not is_gif) and self.fps_spin.value() < 24:
+            self.fps_spin.setValue(30)
+
+    def values(self) -> dict:
+        return {
+            "format": self.format_combo.currentData(),
+            "duration": self.duration_spin.value(),
+            "fps": self.fps_spin.value(),
+            "size": (self.width_spin.value(), self.height_spin.value()),
+            "clockwise": self.clockwise_check.isChecked(),
+            "turns": self.turns_spin.value(),
+            "elevation_factor": self.elevation_spin.value(),
+            "palette_colors": self.palette_spin.value(),
+            "dither": self.dither_check.isChecked(),
+        }
 
 
 def run_editor():

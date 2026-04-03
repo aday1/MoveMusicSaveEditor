@@ -115,43 +115,52 @@ def load_obj(filepath: str, project) -> List[object]:
     check_dependencies()
 
     try:
-        # Load OBJ (with materials if MTL exists)
-        scene = trimesh.load(filepath)
+        # Load OBJ (with materials if MTL exists).
+        # process=False avoids trimesh auto-merging vertices from separate objects.
+        scene = trimesh.load(filepath, process=False)
 
-        if isinstance(scene, trimesh.Scene):
-            # Multi-mesh OBJ file
-            elements = []
-            group_items = []
-
-            for name, mesh in scene.geometry.items():
-                if isinstance(mesh, trimesh.Trimesh):
-                    # Extract material color from MTL if available
-                    material_color = _extract_obj_material_color(mesh)
-
-                    # Convert mesh to element
-                    element = _mesh_to_element(
-                        mesh, material_color, project, name
-                    )
-                    elements.append(element)
-                    group_items.append(element.unique_id)
-
-            # Create group if multiple objects
-            if len(elements) > 1:
-                group = _create_group_for_elements(elements, project, filepath)
-                group.group_items = group_items
-                elements.append(group)
-
-            return elements
-
-        elif isinstance(scene, trimesh.Trimesh):
-            # Single mesh OBJ
-            material_color = _extract_obj_material_color(scene)
-            element = _mesh_to_element(scene, material_color, project, os.path.basename(filepath))
-            return [element]
-
+        # Collect all Trimesh geometries regardless of scene type
+        meshes: list = []
+        if isinstance(scene, trimesh.Trimesh):
+            meshes = [(os.path.basename(filepath), scene)]
+        elif isinstance(scene, trimesh.Scene):
+            for name, geom in scene.geometry.items():
+                if isinstance(geom, trimesh.Trimesh) and len(geom.vertices) > 0:
+                    meshes.append((name, geom))
         else:
-            raise Import3DError(f"Unsupported geometry type in {filepath}")
+            # Last resort: try forcing a mesh load
+            logger.warning(f"Unexpected trimesh type {type(scene)}, trying force='mesh'")
+            try:
+                forced = trimesh.load(filepath, force='mesh')
+                if isinstance(forced, trimesh.Trimesh) and len(forced.vertices) > 0:
+                    meshes = [(os.path.basename(filepath), forced)]
+            except Exception:
+                pass
 
+        if not meshes:
+            raise Import3DError(
+                f"No mesh data found in {filepath}.\n"
+                "Make sure the OBJ file contains polygon faces (not just points/lines)."
+            )
+
+        elements = []
+        group_items = []
+        for name, mesh in meshes:
+            material_color = _extract_obj_material_color(mesh)
+            element = _mesh_to_element(mesh, material_color, project, name)
+            elements.append(element)
+            group_items.append(element.unique_id)
+
+        # Create group if multiple objects
+        if len(elements) > 1:
+            group = _create_group_for_elements(elements, project, filepath)
+            group.group_items = group_items
+            elements.append(group)
+
+        return elements
+
+    except Import3DError:
+        raise
     except Exception as e:
         raise Import3DError(f"Failed to load OBJ file {filepath}: {str(e)}")
 

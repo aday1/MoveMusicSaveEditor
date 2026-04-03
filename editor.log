@@ -19853,3 +19853,623 @@ AttributeError: 'BatchScaleCommand' object has no attribute 'project'
     
 KeyboardInterrupt
 
+2026-04-03 12:20:59,792 INFO OpenGL initialized
+2026-04-03 12:21:18,883 INFO _on_viewport_select: None
+2026-04-03 12:21:18,916 INFO _on_viewport_select: None
+2026-04-03 12:21:19,949 INFO _on_viewport_select: MorphZone_2
+2026-04-03 12:21:19,952 INFO   tree item found: True
+2026-04-03 12:21:22,879 INFO _on_viewport_select: None
+2026-04-03 12:21:23,014 INFO _on_viewport_select: None
+2026-04-03 12:21:26,817 INFO _on_viewport_select: MorphZone_4
+2026-04-03 12:21:26,817 INFO   tree item found: True
+2026-04-03 12:21:40,045 INFO _on_viewport_select: MorphZone_2
+2026-04-03 12:21:40,045 INFO   tree item found: True
+2026-04-03 12:26:44,082 INFO _on_viewport_select: None
+2026-04-03 12:26:44,128 INFO _on_viewport_select: None
+2026-04-03 12:26:45,754 INFO _on_viewport_select: None
+2026-04-03 12:26:45,819 INFO _on_viewport_select: None
+2026-04-03 12:26:52,335 INFO _on_viewport_select: None
+2026-04-03 12:26:52,452 INFO _on_viewport_select: None
+2026-04-03 12:27:12,547 INFO _on_viewport_select: None
+2026-04-03 12:27:12,627 INFO _on_viewport_select: None
+2026-04-03 12:27:55,709 INFO _on_viewport_select: None
+2026-04-03 12:27:55,774 INFO _on_viewport_select: None
+2026-04-03 12:28:14,102 INFO _on_viewport_select: None
+2026-04-03 12:28:14,332 INFO _on_viewport_select: None
+2026-04-03 12:36:08,526 INFO _on_viewport_select: None
+2026-04-03 12:36:08,637 INFO _on_viewport_select: None
+2026-04-03 12:36:09,442 INFO _on_viewport_select: None
+2026-04-03 12:36:09,665 INFO _on_viewport_select: None
+2026-04-03 12:38:40,308 INFO _on_viewport_select: HitZone_10
+2026-04-03 12:38:40,309 INFO   tree item found: True
+2026-04-03 12:38:41,108 INFO _on_viewport_select: None
+2026-04-03 12:38:41,225 INFO _on_viewport_select: None
+2026-04-03 12:38:41,895 INFO _on_viewport_select: None
+2026-04-03 12:38:41,974 INFO _on_viewport_select: None
+2026-04-03 12:38:42,235 INFO _on_viewport_select: None
+2026-04-03 12:38:42,344 INFO _on_viewport_select: None
+2026-04-03 12:38:42,699 INFO _on_viewport_select: HitZone_13
+2026-04-03 12:38:42,700 INFO   tree item found: True
+2026-04-03 12:38:43,700 INFO _on_viewport_select: None
+2026-04-03 12:38:43,776 INFO _on_viewport_select: None
+2026-04-03 12:38:44,324 INFO _on_viewport_select: HitZone_13
+2026-04-03 12:38:44,324 INFO   tree item found: True
+2026-04-03 12:38:45,164 INFO _on_viewport_select: None
+2026-04-03 12:38:45,266 INFO _on_viewport_select: None
+2026-04-03 12:38:46,078 INFO _on_viewport_select: HitZone_14
+2026-04-03 12:38:46,079 INFO   tree item found: True
+2026-04-03 12:38:47,134 INFO _on_viewport_select: None
+2026-04-03 12:38:47,193 INFO _on_viewport_select: None
+2026-04-03 12:38:50,375 INFO _on_viewport_select: HitZone_8
+2026-04-03 12:38:50,375 INFO   tree item found: True
+2026-04-03 12:39:08,636 INFO _on_viewport_select: None
+2026-04-03 12:39:08,849 INFO _on_viewport_select: None
+2026-04-03 12:40:17,610 INFO Capturing 60 frames for GIF export...
+2026-04-03 12:40:17,621 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,628 WARNING Failed to capture frame 0
+2026-04-03 12:40:17,637 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,644 WARNING Failed to capture frame 1
+2026-04-03 12:40:17,653 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,662 WARNING Failed to capture frame 2
+2026-04-03 12:40:17,671 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,679 WARNING Failed to capture frame 3
+2026-04-03 12:40:17,689 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,697 WARNING Failed to capture frame 4
+2026-04-03 12:40:17,707 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,714 WARNING Failed to capture frame 5
+2026-04-03 12:40:17,724 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,731 WARNING Failed to capture frame 6
+2026-04-03 12:40:17,741 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,749 WARNING Failed to capture frame 7
+2026-04-03 12:40:17,759 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,766 WARNING Failed to capture frame 8
+2026-04-03 12:40:17,776 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,783 WARNING Failed to capture frame 9
+2026-04-03 12:40:17,794 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,802 WARNING Failed to capture frame 10
+2026-04-03 12:40:17,812 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,820 WARNING Failed to capture frame 11
+2026-04-03 12:40:17,829 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,837 WARNING Failed to capture frame 12
+2026-04-03 12:40:17,846 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,854 WARNING Failed to capture frame 13
+2026-04-03 12:40:17,864 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,872 WARNING Failed to capture frame 14
+2026-04-03 12:40:17,881 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,891 WARNING Failed to capture frame 15
+2026-04-03 12:40:17,901 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,909 WARNING Failed to capture frame 16
+2026-04-03 12:40:17,918 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,926 WARNING Failed to capture frame 17
+2026-04-03 12:40:17,935 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,943 WARNING Failed to capture frame 18
+2026-04-03 12:40:17,952 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,959 WARNING Failed to capture frame 19
+2026-04-03 12:40:17,968 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,976 WARNING Failed to capture frame 20
+2026-04-03 12:40:17,985 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:17,993 WARNING Failed to capture frame 21
+2026-04-03 12:40:18,002 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,010 WARNING Failed to capture frame 22
+2026-04-03 12:40:18,020 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,027 WARNING Failed to capture frame 23
+2026-04-03 12:40:18,036 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,043 WARNING Failed to capture frame 24
+2026-04-03 12:40:18,052 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,060 WARNING Failed to capture frame 25
+2026-04-03 12:40:18,070 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,078 WARNING Failed to capture frame 26
+2026-04-03 12:40:18,086 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,095 WARNING Failed to capture frame 27
+2026-04-03 12:40:18,103 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,111 WARNING Failed to capture frame 28
+2026-04-03 12:40:18,121 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,129 WARNING Failed to capture frame 29
+2026-04-03 12:40:18,139 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,147 WARNING Failed to capture frame 30
+2026-04-03 12:40:18,157 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,164 WARNING Failed to capture frame 31
+2026-04-03 12:40:18,174 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,182 WARNING Failed to capture frame 32
+2026-04-03 12:40:18,191 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,198 WARNING Failed to capture frame 33
+2026-04-03 12:40:18,207 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,215 WARNING Failed to capture frame 34
+2026-04-03 12:40:18,224 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,232 WARNING Failed to capture frame 35
+2026-04-03 12:40:18,241 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,248 WARNING Failed to capture frame 36
+2026-04-03 12:40:18,257 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,266 WARNING Failed to capture frame 37
+2026-04-03 12:40:18,277 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,284 WARNING Failed to capture frame 38
+2026-04-03 12:40:18,294 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,304 WARNING Failed to capture frame 39
+2026-04-03 12:40:18,313 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,321 WARNING Failed to capture frame 40
+2026-04-03 12:40:18,330 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,338 WARNING Failed to capture frame 41
+2026-04-03 12:40:18,346 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,353 WARNING Failed to capture frame 42
+2026-04-03 12:40:18,362 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,369 WARNING Failed to capture frame 43
+2026-04-03 12:40:18,378 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,385 WARNING Failed to capture frame 44
+2026-04-03 12:40:18,394 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,401 WARNING Failed to capture frame 45
+2026-04-03 12:40:18,409 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,417 WARNING Failed to capture frame 46
+2026-04-03 12:40:18,425 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,432 WARNING Failed to capture frame 47
+2026-04-03 12:40:18,440 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,447 WARNING Failed to capture frame 48
+2026-04-03 12:40:18,455 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,462 WARNING Failed to capture frame 49
+2026-04-03 12:40:18,470 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,477 WARNING Failed to capture frame 50
+2026-04-03 12:40:18,486 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,493 WARNING Failed to capture frame 51
+2026-04-03 12:40:18,502 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,508 WARNING Failed to capture frame 52
+2026-04-03 12:40:18,517 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,523 WARNING Failed to capture frame 53
+2026-04-03 12:40:18,532 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,538 WARNING Failed to capture frame 54
+2026-04-03 12:40:18,546 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,553 WARNING Failed to capture frame 55
+2026-04-03 12:40:18,561 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,568 WARNING Failed to capture frame 56
+2026-04-03 12:40:18,576 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,583 WARNING Failed to capture frame 57
+2026-04-03 12:40:18,591 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,597 WARNING Failed to capture frame 58
+2026-04-03 12:40:18,605 ERROR Failed to capture frame: GLError(
+	err = 1282,
+	description = b'invalid operation',
+	baseOperation = glReadBuffer,
+	cArguments = (GL_FRONT,)
+)
+2026-04-03 12:40:18,612 WARNING Failed to capture frame 59
+2026-04-03 12:40:18,612 ERROR GIF export failed: Failed to capture any frames
+2026-04-03 13:00:19,403 INFO OpenGL initialized
+2026-04-03 13:00:23,619 INFO _on_viewport_select: HitZone_101
+2026-04-03 13:00:23,619 INFO   tree item found: True
+2026-04-03 13:00:27,401 INFO _on_viewport_select: MorphZone_45
+2026-04-03 13:00:27,401 INFO   tree item found: True
+2026-04-03 13:00:29,203 INFO _on_viewport_select: MorphZone_79
+2026-04-03 13:00:29,203 INFO   tree item found: True
+2026-04-03 13:01:23,581 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 817, in paintEvent
+    def paintEvent(self, event):
+    
+KeyboardInterrupt
+
+2026-04-03 13:01:27,162 INFO _on_viewport_select: HitZone_26
+2026-04-03 13:01:27,162 INFO   tree item found: True
+2026-04-03 13:01:27,830 INFO _on_viewport_select: HitZone_17
+2026-04-03 13:01:27,830 INFO   tree item found: True
+2026-04-03 13:01:28,830 INFO _on_viewport_select: None
+2026-04-03 13:01:28,982 INFO _on_viewport_select: None
+2026-04-03 13:01:40,639 INFO Capturing 60 frames for GIF export...
+2026-04-03 13:01:46,085 DEBUG Importing AvifImagePlugin
+2026-04-03 13:01:46,121 DEBUG Importing BlpImagePlugin
+2026-04-03 13:01:46,123 DEBUG Importing BmpImagePlugin
+2026-04-03 13:01:46,123 DEBUG Importing BufrStubImagePlugin
+2026-04-03 13:01:46,125 DEBUG Importing CurImagePlugin
+2026-04-03 13:01:46,126 DEBUG Importing DcxImagePlugin
+2026-04-03 13:01:46,130 DEBUG Importing DdsImagePlugin
+2026-04-03 13:01:46,135 DEBUG Importing EpsImagePlugin
+2026-04-03 13:01:46,137 DEBUG Importing FitsImagePlugin
+2026-04-03 13:01:46,140 DEBUG Importing FliImagePlugin
+2026-04-03 13:01:46,142 DEBUG Importing FpxImagePlugin
+2026-04-03 13:01:46,144 DEBUG Image: failed to import FpxImagePlugin: No module named 'olefile'
+2026-04-03 13:01:46,144 DEBUG Importing FtexImagePlugin
+2026-04-03 13:01:46,146 DEBUG Importing GbrImagePlugin
+2026-04-03 13:01:46,147 DEBUG Importing GifImagePlugin
+2026-04-03 13:01:46,147 DEBUG Importing GribStubImagePlugin
+2026-04-03 13:01:46,148 DEBUG Importing Hdf5StubImagePlugin
+2026-04-03 13:01:46,150 DEBUG Importing IcnsImagePlugin
+2026-04-03 13:01:46,154 DEBUG Importing IcoImagePlugin
+2026-04-03 13:01:46,156 DEBUG Importing ImImagePlugin
+2026-04-03 13:01:46,158 DEBUG Importing ImtImagePlugin
+2026-04-03 13:01:46,159 DEBUG Importing IptcImagePlugin
+2026-04-03 13:01:46,160 DEBUG Importing JpegImagePlugin
+2026-04-03 13:01:46,160 DEBUG Importing Jpeg2KImagePlugin
+2026-04-03 13:01:46,160 DEBUG Importing McIdasImagePlugin
+2026-04-03 13:01:46,161 DEBUG Importing MicImagePlugin
+2026-04-03 13:01:46,163 DEBUG Image: failed to import MicImagePlugin: No module named 'olefile'
+2026-04-03 13:01:46,163 DEBUG Importing MpegImagePlugin
+2026-04-03 13:01:46,164 DEBUG Importing MpoImagePlugin
+2026-04-03 13:01:46,167 DEBUG Importing MspImagePlugin
+2026-04-03 13:01:46,169 DEBUG Importing PalmImagePlugin
+2026-04-03 13:01:46,171 DEBUG Importing PcdImagePlugin
+2026-04-03 13:01:46,172 DEBUG Importing PcxImagePlugin
+2026-04-03 13:01:46,172 DEBUG Importing PdfImagePlugin
+2026-04-03 13:01:46,178 DEBUG Importing PixarImagePlugin
+2026-04-03 13:01:46,179 DEBUG Importing PngImagePlugin
+2026-04-03 13:01:46,179 DEBUG Importing PpmImagePlugin
+2026-04-03 13:01:46,179 DEBUG Importing PsdImagePlugin
+2026-04-03 13:01:46,181 DEBUG Importing QoiImagePlugin
+2026-04-03 13:01:46,183 DEBUG Importing SgiImagePlugin
+2026-04-03 13:01:46,185 DEBUG Importing SpiderImagePlugin
+2026-04-03 13:01:46,186 DEBUG Importing SunImagePlugin
+2026-04-03 13:01:46,187 DEBUG Importing TgaImagePlugin
+2026-04-03 13:01:46,188 DEBUG Importing TiffImagePlugin
+2026-04-03 13:01:46,188 DEBUG Importing WebPImagePlugin
+2026-04-03 13:01:46,219 DEBUG Importing WmfImagePlugin
+2026-04-03 13:01:46,221 DEBUG Importing XbmImagePlugin
+2026-04-03 13:01:46,223 DEBUG Importing XpmImagePlugin
+2026-04-03 13:01:46,225 DEBUG Importing XVThumbImagePlugin
+2026-04-03 13:01:46,592 INFO GIF saved: 6,111,366 bytes (5.8 MB)
+2026-04-03 13:01:46,595 INFO Successfully exported 60 frame GIF to C:/aday.repo/MoveMusicSaveEditor/test.gif
+2026-04-03 13:13:18,142 INFO OpenGL initialized
+2026-04-03 13:13:51,688 INFO Capturing 120 frames for orbit export...
+2026-04-03 13:14:04,554 INFO MP4 saved: 14,784,674 bytes (14.1 MB)
+2026-04-03 13:14:04,554 INFO Successfully exported 120 frame MP4 to C:/aday.repo/MoveMusicSaveEditor/test.mp4
+2026-04-03 13:14:31,627 INFO Capturing 60 frames for orbit export...
+2026-04-03 13:14:37,211 DEBUG Importing AvifImagePlugin
+2026-04-03 13:14:37,213 DEBUG Importing BlpImagePlugin
+2026-04-03 13:14:37,214 DEBUG Importing BmpImagePlugin
+2026-04-03 13:14:37,214 DEBUG Importing BufrStubImagePlugin
+2026-04-03 13:14:37,215 DEBUG Importing CurImagePlugin
+2026-04-03 13:14:37,215 DEBUG Importing DcxImagePlugin
+2026-04-03 13:14:37,217 DEBUG Importing DdsImagePlugin
+2026-04-03 13:14:37,220 DEBUG Importing EpsImagePlugin
+2026-04-03 13:14:37,221 DEBUG Importing FitsImagePlugin
+2026-04-03 13:14:37,222 DEBUG Importing FliImagePlugin
+2026-04-03 13:14:37,223 DEBUG Importing FpxImagePlugin
+2026-04-03 13:14:37,224 DEBUG Image: failed to import FpxImagePlugin: No module named 'olefile'
+2026-04-03 13:14:37,224 DEBUG Importing FtexImagePlugin
+2026-04-03 13:14:37,225 DEBUG Importing GbrImagePlugin
+2026-04-03 13:14:37,226 DEBUG Importing GifImagePlugin
+2026-04-03 13:14:37,226 DEBUG Importing GribStubImagePlugin
+2026-04-03 13:14:37,226 DEBUG Importing Hdf5StubImagePlugin
+2026-04-03 13:14:37,227 DEBUG Importing IcnsImagePlugin
+2026-04-03 13:14:37,229 DEBUG Importing IcoImagePlugin
+2026-04-03 13:14:37,230 DEBUG Importing ImImagePlugin
+2026-04-03 13:14:37,231 DEBUG Importing ImtImagePlugin
+2026-04-03 13:14:37,231 DEBUG Importing IptcImagePlugin
+2026-04-03 13:14:37,232 DEBUG Importing JpegImagePlugin
+2026-04-03 13:14:37,232 DEBUG Importing Jpeg2KImagePlugin
+2026-04-03 13:14:37,232 DEBUG Importing McIdasImagePlugin
+2026-04-03 13:14:37,233 DEBUG Importing MicImagePlugin
+2026-04-03 13:14:37,233 DEBUG Image: failed to import MicImagePlugin: No module named 'olefile'
+2026-04-03 13:14:37,233 DEBUG Importing MpegImagePlugin
+2026-04-03 13:14:37,235 DEBUG Importing MpoImagePlugin
+2026-04-03 13:14:37,238 DEBUG Importing MspImagePlugin
+2026-04-03 13:14:37,239 DEBUG Importing PalmImagePlugin
+2026-04-03 13:14:37,240 DEBUG Importing PcdImagePlugin
+2026-04-03 13:14:37,241 DEBUG Importing PcxImagePlugin
+2026-04-03 13:14:37,241 DEBUG Importing PdfImagePlugin
+2026-04-03 13:14:37,246 DEBUG Importing PixarImagePlugin
+2026-04-03 13:14:37,247 DEBUG Importing PngImagePlugin
+2026-04-03 13:14:37,247 DEBUG Importing PpmImagePlugin
+2026-04-03 13:14:37,247 DEBUG Importing PsdImagePlugin
+2026-04-03 13:14:37,247 DEBUG Importing QoiImagePlugin
+2026-04-03 13:14:37,248 DEBUG Importing SgiImagePlugin
+2026-04-03 13:14:37,249 DEBUG Importing SpiderImagePlugin
+2026-04-03 13:14:37,249 DEBUG Importing SunImagePlugin
+2026-04-03 13:14:37,250 DEBUG Importing TgaImagePlugin
+2026-04-03 13:14:37,251 DEBUG Importing TiffImagePlugin
+2026-04-03 13:14:37,251 DEBUG Importing WebPImagePlugin
+2026-04-03 13:14:37,252 DEBUG Importing WmfImagePlugin
+2026-04-03 13:14:37,253 DEBUG Importing XbmImagePlugin
+2026-04-03 13:14:37,255 DEBUG Importing XpmImagePlugin
+2026-04-03 13:14:37,256 DEBUG Importing XVThumbImagePlugin
+2026-04-03 13:14:37,590 INFO GIF saved: 6,105,714 bytes (5.8 MB)
+2026-04-03 13:14:37,592 INFO Successfully exported 60 frame GIF to C:/aday.repo/MoveMusicSaveEditor/test.gif
+2026-04-03 13:18:06,721 INFO OpenGL initialized
+2026-04-03 13:18:55,005 INFO _on_viewport_select: None
+2026-04-03 13:18:55,111 INFO _on_viewport_select: None
+2026-04-03 13:18:55,809 INFO _on_viewport_select: None
+2026-04-03 13:18:55,886 INFO _on_viewport_select: None
+2026-04-03 13:19:06,390 INFO _on_viewport_select: None
+2026-04-03 13:19:06,910 INFO _on_viewport_select: None
+2026-04-03 13:20:08,521 INFO OpenGL initialized
+2026-04-03 13:20:40,218 INFO _on_viewport_select: None
+2026-04-03 13:20:40,272 INFO _on_viewport_select: None
+2026-04-03 13:20:43,213 INFO _on_viewport_select: None
+2026-04-03 13:20:43,728 INFO _on_viewport_select: TextLabel_C_241
+2026-04-03 13:20:43,729 INFO   tree item found: True
+2026-04-03 13:20:47,751 INFO _on_viewport_select: None
+2026-04-03 13:20:47,821 INFO _on_viewport_select: None
+2026-04-03 13:20:48,388 INFO _on_viewport_select: None
+2026-04-03 13:20:49,021 INFO _on_viewport_select: TextLabel_C_241
+2026-04-03 13:20:49,022 INFO   tree item found: True
+2026-04-03 13:20:51,538 INFO _on_viewport_select: None
+2026-04-03 13:20:51,665 INFO _on_viewport_select: None

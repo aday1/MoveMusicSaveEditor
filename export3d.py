@@ -74,13 +74,43 @@ def _element_box_scale(elem) -> Tuple[float, float, float]:
 def export_obj(project: Project, filepath: str):
     """Export scene as Wavefront OBJ + MTL files.
 
-    Each element becomes a colored box at its world position and scale.
+    Each element becomes a named, colored box at its world position and scale.
+    Compatible with Blender's OBJ importer (Z-up, correct CCW winding, per-face normals).
+    Units: 1 unit = 1 cm (scale by 0.01 in Blender to get metres).
     """
     mtl_path = filepath.rsplit('.', 1)[0] + '.mtl'
     mtl_name = mtl_path.replace('\\', '/').rsplit('/', 1)[-1]
 
-    vertex_offset = 1  # OBJ is 1-indexed
-    obj_lines = [f"mtllib {mtl_name}\n"]
+    # 6 outward-facing normals for each box face
+    _NORMALS = [
+        ( 0,  0, -1),  # -Z (bottom)
+        ( 0,  0,  1),  # +Z (top)
+        ( 0, -1,  0),  # -Y (front)
+        ( 0,  1,  0),  # +Y (back)
+        (-1,  0,  0),  # -X (left)
+        ( 1,  0,  0),  # +X (right)
+    ]
+
+    # Quads with CCW winding when viewed from outside (outward normals)
+    # Vertex indices into _BOX_VERTICES (0-based), listed CCW from outside
+    _FACE_QUADS = [
+        (3, 2, 1, 0),  # -Z face: CCW from -Z
+        (4, 5, 6, 7),  # +Z face: CCW from +Z
+        (0, 1, 5, 4),  # -Y face: CCW from -Y
+        (7, 6, 2, 3),  # +Y face: CCW from +Y
+        (4, 7, 3, 0),  # -X face: CCW from -X
+        (1, 2, 6, 5),  # +X face: CCW from +X
+    ]
+
+    vertex_offset = 1   # OBJ is 1-indexed
+    normal_offset = 1
+
+    obj_lines = [
+        "# MoveMusic Save Editor — OBJ export\n",
+        "# Units: 1 unit = 1 cm  (Blender import: set Scale to 0.01)\n",
+        f"mtllib {mtl_name}\n",
+        "\n",
+    ]
     mtl_lines = []
 
     for i, elem in enumerate(project.elements):
@@ -89,31 +119,46 @@ def export_obj(project: Project, filepath: str):
         c = elem.color
         mat_name = f"mat_{i}"
 
-        # Material
+        # Material (complete for Blender compatibility)
         mtl_lines.append(f"newmtl {mat_name}\n")
-        mtl_lines.append(f"Kd {c.r:.4f} {c.g:.4f} {c.b:.4f}\n")
-        mtl_lines.append(f"d {c.a:.2f}\n")
+        mtl_lines.append(f"Ka {c.r:.4f} {c.g:.4f} {c.b:.4f}\n")   # ambient
+        mtl_lines.append(f"Kd {c.r:.4f} {c.g:.4f} {c.b:.4f}\n")   # diffuse
+        mtl_lines.append(f"Ks 0.0500 0.0500 0.0500\n")              # specular
+        mtl_lines.append(f"Ns 10.0\n")                               # shininess
+        mtl_lines.append(f"d {c.a:.4f}\n")                          # alpha
+        mtl_lines.append(f"illum 1\n")                               # diffuse shading
         mtl_lines.append("\n")
 
-        # Object
+        # Object header
         name = (elem.display_name or elem.unique_id).replace(' ', '_')
         obj_lines.append(f"o {name}\n")
         obj_lines.append(f"usemtl {mat_name}\n")
 
-        # Vertices (scaled and translated)
+        # Vertices (8 per box, scaled and translated)
         for vx, vy, vz in _BOX_VERTICES:
-            obj_lines.append(f"v {p.x + vx * sx:.4f} {p.y + vy * sy:.4f} {p.z + vz * sz:.4f}\n")
+            obj_lines.append(
+                f"v {p.x + vx * sx:.4f} {p.y + vy * sy:.4f} {p.z + vz * sz:.4f}\n"
+            )
 
-        # Faces (quads, 6 faces)
-        face_quads = [
-            (1,2,3,4), (5,8,7,6), (1,5,6,2),
-            (3,7,8,4), (1,4,8,5), (2,6,7,3),
-        ]
-        for a, b, c_idx, d in face_quads:
-            obj_lines.append(f"f {vertex_offset+a-1} {vertex_offset+b-1} "
-                             f"{vertex_offset+c_idx-1} {vertex_offset+d-1}\n")
+        # Per-face normals (6 per box: one per face)
+        for nx, ny, nz in _NORMALS:
+            obj_lines.append(f"vn {nx:.4f} {ny:.4f} {nz:.4f}\n")
 
+        # Faces — quads written as two triangles with normals
+        for fi, quad in enumerate(_FACE_QUADS):
+            a, b, c_idx, d = quad
+            ni = normal_offset + fi  # normal index for this face
+            # Quad as two CCW triangles, each with the face normal
+            va = vertex_offset + a
+            vb = vertex_offset + b
+            vc = vertex_offset + c_idx
+            vd = vertex_offset + d
+            obj_lines.append(f"f {va}//{ni} {vb}//{ni} {vc}//{ni}\n")
+            obj_lines.append(f"f {va}//{ni} {vc}//{ni} {vd}//{ni}\n")
+
+        obj_lines.append("\n")
         vertex_offset += 8
+        normal_offset += 6  # 6 normals per box
 
     with open(filepath, 'w') as f:
         f.writelines(obj_lines)

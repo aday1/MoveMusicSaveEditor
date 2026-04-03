@@ -10,7 +10,7 @@ from __future__ import annotations
 import math
 import os
 import logging
-from typing import Optional
+from typing import Callable, Optional
 
 try:
     from PIL import Image
@@ -46,7 +46,10 @@ def check_dependencies():
 
 
 def export_orbit_gif(project: Project, filepath: str, viewport: SceneViewport,
-                    duration: float = 4.0, fps: int = 15, size: tuple = (800, 600)) -> bool:
+                    duration: float = 4.0, fps: int = 15, size: tuple = (800, 600),
+                    clockwise: bool = True, turns: float = 1.0, elevation_factor: float = 0.3,
+                    palette_colors: int = 256, dither: bool = True,
+                    progress_callback: Optional[Callable[[int, int, str], bool]] = None) -> bool:
     """
     Export project as orbit animation GIF.
 
@@ -70,58 +73,71 @@ def export_orbit_gif(project: Project, filepath: str, viewport: SceneViewport,
         raise GifExportError("Cannot export empty project")
 
     try:
-        # Calculate number of frames
-        num_frames = int(duration * fps)
-        if num_frames < 2:
-            num_frames = 2
+        frames = _capture_orbit_frames(
+            project,
+            viewport,
+            duration=duration,
+            fps=fps,
+            size=size,
+            clockwise=clockwise,
+            turns=turns,
+            elevation_factor=elevation_factor,
+            progress_callback=progress_callback,
+            progress_stage="Capturing GIF frames",
+        )
 
-        # Setup camera for orbit animation
-        original_camera = _backup_camera(viewport.camera)
-        orbit_params = _calculate_orbit_parameters(project)
-
-        # Create temporary camera for animation
-        anim_camera = _create_animation_camera(orbit_params)
-
-        # Capture frames
-        frames = []
-        logger.info(f"Capturing {num_frames} frames for GIF export...")
-
-        for frame_idx in range(num_frames):
-            # Calculate orbit position for this frame
-            progress = frame_idx / (num_frames - 1) if num_frames > 1 else 0.0
-            angle = 2 * math.pi * progress
-
-            # Position camera along orbit
-            _position_camera_for_frame(anim_camera, orbit_params, angle)
-
-            # Replace viewport camera temporarily
-            viewport.camera = anim_camera
-
-            # Capture frame
-            frame_data = _capture_frame(viewport, size)
-            if frame_data is not None:
-                frames.append(frame_data)
-            else:
-                logger.warning(f"Failed to capture frame {frame_idx}")
-
-        # Restore original camera
-        viewport.camera = original_camera
+        total_frames = max(2, int(duration * fps))
+        if progress_callback and not progress_callback(total_frames, total_frames, "Encoding GIF"):
+            raise GifExportError("Export canceled")
 
         if not frames:
             raise GifExportError("Failed to capture any frames")
 
         # Generate GIF
-        _save_gif(frames, filepath, fps)
+        _save_gif(frames, filepath, fps, palette_colors=palette_colors, dither=dither)
 
         logger.info(f"Successfully exported {len(frames)} frame GIF to {filepath}")
         return True
 
     except Exception as e:
-        # Restore camera on any error
-        if 'original_camera' in locals():
-            viewport.camera = original_camera
         logger.error(f"GIF export failed: {str(e)}")
         raise GifExportError(f"Failed to export GIF: {str(e)}")
+
+
+def export_orbit_mp4(project: Project, filepath: str, viewport: SceneViewport,
+                    duration: float = 4.0, fps: int = 30, size: tuple = (1280, 720),
+                    clockwise: bool = True, turns: float = 1.0, elevation_factor: float = 0.3,
+                    progress_callback: Optional[Callable[[int, int, str], bool]] = None) -> bool:
+    """Export project as orbit animation MP4 using imageio/ffmpeg."""
+    check_dependencies()
+
+    if not project.elements:
+        raise GifExportError("Cannot export empty project")
+
+    try:
+        frames = _capture_orbit_frames(
+            project,
+            viewport,
+            duration=duration,
+            fps=fps,
+            size=size,
+            clockwise=clockwise,
+            turns=turns,
+            elevation_factor=elevation_factor,
+            progress_callback=progress_callback,
+            progress_stage="Capturing MP4 frames",
+        )
+
+        total_frames = max(2, int(duration * fps))
+        if progress_callback and not progress_callback(total_frames, total_frames, "Encoding MP4"):
+            raise GifExportError("Export canceled")
+
+        _save_mp4(frames, filepath, fps)
+        logger.info(f"Successfully exported {len(frames)} frame MP4 to {filepath}")
+        return True
+    except Exception as e:
+        logger.error(f"MP4 export failed: {str(e)}")
+        raise GifExportError(f"Failed to export MP4: {str(e)}")
 
 
 def _backup_camera(camera: OrbitCamera) -> OrbitCamera:
@@ -178,6 +194,46 @@ def _create_animation_camera(orbit_params: dict) -> OrbitCamera:
     return camera
 
 
+def _capture_orbit_frames(project: Project, viewport: SceneViewport,
+                          duration: float, fps: int, size: tuple,
+                          clockwise: bool, turns: float, elevation_factor: float,
+                          progress_callback: Optional[Callable[[int, int, str], bool]],
+                          progress_stage: str) -> list:
+    """Capture orbit animation frames with configurable orbit behavior."""
+    num_frames = max(2, int(duration * fps))
+    turns = max(0.1, float(turns))
+
+    original_camera = _backup_camera(viewport.camera)
+    orbit_params = _calculate_orbit_parameters(project)
+    orbit_params['elevation_factor'] = max(-1.5, min(1.5, float(elevation_factor)))
+    anim_camera = _create_animation_camera(orbit_params)
+
+    frames = []
+    logger.info(f"Capturing {num_frames} frames for orbit export...")
+    try:
+        for frame_idx in range(num_frames):
+            if progress_callback and not progress_callback(frame_idx, num_frames, progress_stage):
+                raise GifExportError("Export canceled")
+
+            progress = frame_idx / (num_frames - 1) if num_frames > 1 else 0.0
+            angle = 2 * math.pi * turns * progress
+            if clockwise:
+                angle = -angle
+
+            _position_camera_for_frame(anim_camera, orbit_params, angle)
+            viewport.camera = anim_camera
+
+            frame_data = _capture_frame(viewport, size)
+            if frame_data is not None:
+                frames.append(frame_data)
+            else:
+                logger.warning(f"Failed to capture frame {frame_idx}")
+    finally:
+        viewport.camera = original_camera
+
+    return frames
+
+
 def _position_camera_for_frame(camera: OrbitCamera, orbit_params: dict, angle: float):
     """Position camera for specific frame in orbit animation."""
     cx, cy, cz = orbit_params['center']
@@ -187,7 +243,8 @@ def _position_camera_for_frame(camera: OrbitCamera, orbit_params: dict, angle: f
     # Camera orbits in XY plane around the centroid
     cam_x = cx + radius * math.cos(angle)
     cam_y = cy + radius * math.sin(angle)
-    cam_z = cz + radius * 0.3  # Slightly elevated
+    elev = orbit_params.get('elevation_factor', 0.3)
+    cam_z = cz + radius * elev  # configurable elevation
 
     # Update camera to look at centroid from orbit position
     camera.target = [cx, cy, cz]
@@ -203,54 +260,53 @@ def _position_camera_for_frame(camera: OrbitCamera, orbit_params: dict, angle: f
     camera.pitch = math.degrees(math.asin(dz / camera.distance)) if camera.distance > 0 else 0.0
 
 
-def _capture_frame(viewport: Viewport3D, size: tuple) -> Optional[np.ndarray]:
-    """Capture a single frame from the OpenGL viewport."""
+def _capture_frame(viewport, size: tuple) -> Optional['np.ndarray']:
+    """Capture a single frame from the OpenGL viewport using Qt's grabFramebuffer."""
     try:
+        from PyQt6.QtWidgets import QApplication
+        QApplication.processEvents()
+
         width, height = size
 
-        # Force viewport to render at desired size
-        original_size = (viewport.width(), viewport.height())
-        viewport.resize(width, height)
-
-        # Make sure OpenGL context is current
+        # Trigger a render pass with the animation camera already set
         viewport.makeCurrent()
-
-        # Force a repaint
         viewport.paintGL()
+        viewport.doneCurrent()
 
-        # Read framebuffer
-        glReadBuffer(GL_FRONT)
+        # grabFramebuffer reads from the back-buffer — safe on all platforms
+        qimage = viewport.grabFramebuffer()
+        if qimage.isNull():
+            logger.warning("grabFramebuffer returned null image")
+            return None
 
-        # Read pixels as RGB
-        pixel_data = glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE)
+        # Scale to desired output size
+        from PyQt6.QtCore import Qt as _Qt
+        qimage = qimage.scaled(width, height, _Qt.AspectRatioMode.IgnoreAspectRatio,
+                               _Qt.TransformationMode.SmoothTransformation)
 
-        # Convert to numpy array and flip vertically (OpenGL has origin at bottom-left)
-        image_array = np.frombuffer(pixel_data, dtype=np.uint8)
-        image_array = image_array.reshape((height, width, 3))
-        image_array = np.flipud(image_array)  # Flip Y axis
-
-        # Restore original viewport size
-        viewport.resize(*original_size)
-
+        # Convert QImage to numpy RGB array
+        qimage = qimage.convertToFormat(qimage.Format.Format_RGB888)
+        ptr = qimage.bits()
+        ptr.setsize(qimage.sizeInBytes())
+        image_array = np.frombuffer(ptr, dtype=np.uint8).reshape((qimage.height(), qimage.width(), 3)).copy()
         return image_array
 
     except Exception as e:
         logger.error(f"Failed to capture frame: {e}")
-        # Restore original size on error
-        if 'original_size' in locals():
-            viewport.resize(*original_size)
         return None
 
 
-def _save_gif(frames: list, filepath: str, fps: int):
+def _save_gif(frames: list, filepath: str, fps: int, palette_colors: int = 256, dither: bool = True):
     """Save captured frames as optimized GIF."""
     try:
+        palette_colors = max(2, min(256, int(palette_colors)))
         # Convert numpy arrays to PIL Images
         pil_images = []
         for frame in frames:
             img = Image.fromarray(frame, mode='RGB')
-            # Convert to P mode (palette) for smaller file size
-            img = img.convert('P', palette=Image.ADAPTIVE, colors=256)
+            # Convert to palette mode with user-defined color richness.
+            dither_mode = Image.Dither.FLOYDSTEINBERG if dither else Image.Dither.NONE
+            img = img.convert('P', palette=Image.ADAPTIVE, colors=palette_colors, dither=dither_mode)
             pil_images.append(img)
 
         # Calculate frame duration in milliseconds
@@ -262,8 +318,6 @@ def _save_gif(frames: list, filepath: str, fps: int):
             pil_images,
             duration=frame_duration / 1000.0,  # imageio expects seconds
             loop=0,  # Infinite loop
-            optimize=True,  # Optimize for smaller file size
-            quality=85  # Good quality/size balance
         )
 
         # Log file size
@@ -272,6 +326,31 @@ def _save_gif(frames: list, filepath: str, fps: int):
 
     except Exception as e:
         raise GifExportError(f"Failed to save GIF: {str(e)}")
+
+
+def _save_mp4(frames: list, filepath: str, fps: int):
+    """Save frames to MP4 using ffmpeg via imageio."""
+    try:
+        if not frames:
+            raise GifExportError("No frames captured for MP4 export")
+        # Ensure even dimensions for H.264 encoders.
+        h, w = frames[0].shape[:2]
+        if w % 2 != 0 or h % 2 != 0:
+            frames = [f[:h - (h % 2), :w - (w % 2)] for f in frames]
+
+        imageio.mimsave(
+            filepath,
+            frames,
+            fps=max(1, int(fps)),
+            codec="libx264",
+            quality=8,
+            pixelformat="yuv420p",
+        )
+
+        file_size = os.path.getsize(filepath)
+        logger.info(f"MP4 saved: {file_size:,} bytes ({file_size/1024/1024:.1f} MB)")
+    except Exception as e:
+        raise GifExportError(f"Failed to save MP4: {str(e)}")
 
 
 def export_still_image(project: Project, filepath: str, viewport: SceneViewport,

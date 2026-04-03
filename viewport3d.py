@@ -308,12 +308,29 @@ class SceneViewport(QOpenGLWidget):
             self.selected_elements = [elem_or_list]
         self.update()
 
+    def _active_workspace_elements(self) -> List:
+        """Return elements visible/editable in the current active workspace."""
+        if not self.project:
+            return []
+        if not self.project.workspaces:
+            return list(self.project.elements)
+
+        idx = self.project.active_workspace_index
+        if not (0 <= idx < len(self.project.workspaces)):
+            return []
+
+        active_ws = self.project.workspaces[idx]
+        return [e for e in self.project.elements if e.unique_id in active_ws.element_ids]
+
     def _fit_all(self):
-        if not self.project or not self.project.elements:
+        if not self.project:
+            return
+        visible = self._active_workspace_elements()
+        if not visible:
             return
         min_pt = [1e30, 1e30, 1e30]
         max_pt = [-1e30, -1e30, -1e30]
-        for e in self.project.elements:
+        for e in visible:
             p = e.transform.translation
             for i, v in enumerate([p.x, p.y, p.z]):
                 min_pt[i] = min(min_pt[i], v - 30)
@@ -437,21 +454,18 @@ class SceneViewport(QOpenGLWidget):
             self._draw_world_axes()
 
             if self.project:
-                active_ws = None
-                if self.project.workspaces:
-                    idx = self.project.active_workspace_index
-                    if 0 <= idx < len(self.project.workspaces):
-                        active_ws = self.project.workspaces[idx]
-
+                visible_elements = self._active_workspace_elements()
                 self._screen_positions.clear()
                 w, h = self.width(), self.height()
 
                 sel_set = set(id(e) for e in self.selected_elements)
 
-                for elem in self.project.elements:
+                # Keep viewport selection scoped to visible workspace content.
+                self.selected_elements = [e for e in self.selected_elements if e in visible_elements]
+
+                for elem in visible_elements:
                     is_selected = id(elem) in sel_set
-                    in_active = active_ws and elem.unique_id in active_ws.element_ids if active_ws else True
-                    self._draw_element(elem, is_selected, in_active)
+                    self._draw_element(elem, is_selected, True)
 
                     p = elem.transform.translation
                     sp = self.camera.world_to_screen(p.x, p.y, p.z, w, h)
@@ -504,26 +518,24 @@ class SceneViewport(QOpenGLWidget):
         for i in range(-half, half + 1, step):
             if snap_on and snap_sz > 0:
                 # Enhanced snap grid visual feedback
-                world_coord = i
                 if (i % int(snap_sz * 10)) == 0:
-                    a = 0.45  # Brighter snap lines
+                    a = 0.80  # Bright snap lines
+                    glColor4f(0.0, 1.0, 0.3, a)
                 elif (i % coord_interval) == 0:
-                    a = 0.4   # Enhanced major line opacity (was 0.25)
-                    # Store coordinates for labeling at dynamic interval
+                    a = 0.55   # Major grid lines — green
+                    glColor4f(0.0, 0.85, 0.25, a)
                     self._grid_coords.append((cx + i, cy + i))
                 else:
-                    a = 0.12  # Regular grid lines
+                    a = 0.18  # Minor grid lines — dark green
+                    glColor4f(0.0, 0.55, 0.15, a)
             else:
-                # Enhanced visibility without snap grid
                 is_major = (i % coord_interval) == 0
-                a = 0.4 if is_major else 0.15  # Enhanced major/minor contrast
-
-                # Store coordinates for labeling at dynamic interval
                 if is_major:
+                    glColor4f(0.0, 0.85, 0.25, 0.55)   # bright green major
                     self._grid_coords.append((cx + i, cy + i))
+                else:
+                    glColor4f(0.0, 0.45, 0.12, 0.22)   # dim green minor
 
-            # Slightly warmer grid color for better visibility
-            glColor4f(0.6, 0.6, 0.65, a)
             glVertex3f(cx + i, cy - half, 0)
             glVertex3f(cx + i, cy + half, 0)
             glVertex3f(cx - half, cy + i, 0)
@@ -844,25 +856,27 @@ class SceneViewport(QOpenGLWidget):
         if not self.project:
             return
 
-        font = QFont("Segoe UI", 8)
-        painter.setFont(font)
-        fm = QFontMetrics(font)
-
         sel_set = set(id(e) for e in self.selected_elements)
 
         for elem_id, (sx, sy, depth, elem) in self._screen_positions.items():
             if sx < 0 or sx > self.width() or sy < 0 or sy > self.height():
                 continue
 
+            is_text = isinstance(elem, TextLabel)
+            font_size = 13 if is_text else 10
+            font = QFont("Segoe UI", font_size, QFont.Weight.Bold if is_text else QFont.Weight.Normal)
+            painter.setFont(font)
+            fm = QFontMetrics(font)
+
             label = elem.display_name or elem.unique_id
-            if isinstance(elem, TextLabel) and elem.display_name:
+            if is_text and elem.display_name:
                 label = f'T: "{elem.display_name}"'
             is_sel = id(elem) in sel_set
             is_hover = elem is self._hover_element
 
             tw = fm.horizontalAdvance(label)
             rx = int(sx - tw / 2)
-            ry = int(sy - 20)
+            ry = int(sy - 22)
 
             if is_sel:
                 painter.setPen(Qt.PenStyle.NoPen)
@@ -878,60 +892,79 @@ class SceneViewport(QOpenGLWidget):
             painter.drawText(rx, ry, label)
 
             if is_sel or is_hover:
+                badge_font = QFont("Segoe UI", 8)
+                painter.setFont(badge_font)
+                bfm = QFontMetrics(badge_font)
                 midi_lines = self._midi_summary(elem, limit=3)
                 if midi_lines:
                     badge_text = " | ".join(midi_lines)
-                    badge_w = fm.horizontalAdvance(badge_text)
+                    badge_w = bfm.horizontalAdvance(badge_text)
                     badge_x = int(sx - badge_w / 2)
                     badge_y = ry + fm.height() + 6
                     painter.setPen(Qt.PenStyle.NoPen)
                     painter.setBrush(QColor(20, 24, 30, 210) if is_sel else QColor(32, 40, 48, 190))
                     painter.drawRoundedRect(
-                        badge_x - 5, badge_y - fm.ascent() - 2, badge_w + 10, fm.height() + 4, 4, 4
+                        badge_x - 5, badge_y - bfm.ascent() - 2, badge_w + 10, bfm.height() + 4, 4, 4
                     )
                     painter.setPen(QColor(255, 230, 140) if is_sel else QColor(190, 220, 255))
                     painter.drawText(badge_x, badge_y, badge_text)
 
     def _draw_grid_coordinates(self, painter: QPainter):
-        """Draw grid coordinate numbers at major intersections with enhanced info."""
+        """Draw grid coordinate numbers at major intersections with real-world measurements."""
         if not self._show_grid_coords or not hasattr(self, '_grid_coords'):
             return
 
-        font = QFont("Segoe UI", 8)
+        font = QFont("Consolas", 7)
         painter.setFont(font)
-        painter.setPen(QColor(140, 140, 160, 200))  # Slightly brighter text
 
-        # Draw coordinate labels
         for world_x, world_y in self._grid_coords:
-            # Convert world coordinates to screen
             screen_pos = self.camera.world_to_screen(world_x, world_y, 0, self.width(), self.height())
-            if screen_pos:
-                sx, sy = screen_pos[0], screen_pos[1]
+            if not screen_pos:
+                continue
+            sx, sy = screen_pos[0], screen_pos[1]
+            if not (20 < sx < self.width() - 100 and 20 < sy < self.height() - 30):
+                continue
 
-                # Only draw if on screen
-                if 20 < sx < self.width() - 80 and 20 < sy < self.height() - 30:
-                    # Show X,Y coordinates
-                    coord_text = f"({world_x:.0f},{world_y:.0f})"
-                    painter.drawText(int(sx + 5), int(sy - 5), coord_text)
+            # Convert units to real-world (1 unit = 1 cm)
+            dist = self.camera.distance
+            if dist < 50:
+                # Very close: show cm values
+                lx = f"X{world_x:.0f}cm"
+                ly = f"Y{world_y:.0f}cm"
+            elif world_x % 100 == 0 and world_y % 100 == 0:
+                # On-metre lines: show both units
+                lx = f"X{world_x/100:.1f}m"
+                ly = f"Y{world_y/100:.1f}m"
+            else:
+                lx = f"X{world_x:.0f}"
+                ly = f"Y{world_y:.0f}"
 
-        # Draw grid info overlay in top-right corner
+            coord_text = f"{lx} {ly}"
+            painter.setPen(QColor(0, 210, 80, 200))
+            painter.drawText(int(sx + 4), int(sy - 4), coord_text)
+
+        # Grid info in top-right
         if hasattr(self, '_grid_cell_count'):
             distance = self.camera.distance
-            grid_info = f"Grid: {self._grid_cell_count} cells | Scale: {distance:.0f}"
+            step_cm = (
+                5 if distance < 50
+                else 25 if distance < 200
+                else 25 if distance < 800
+                else 50
+            )
+            grid_info = f"Grid {step_cm}cm | Dist {distance:.0f}cm"
 
-            # Set font for grid info
             info_font = QFont("Segoe UI", 9, QFont.Weight.Bold)
             painter.setFont(info_font)
-            painter.setPen(QColor(160, 180, 200, 220))
+            painter.setPen(QColor(0, 200, 70, 220))
 
-            # Draw background rectangle
             metrics = painter.fontMetrics()
             text_rect = metrics.boundingRect(grid_info)
             bg_rect = text_rect.adjusted(-8, -4, 8, 4)
             top_right = self.rect().topRight()
             bg_rect.moveTopRight(QPoint(top_right.x() - 10, top_right.y() + 10))
 
-            painter.fillRect(bg_rect, QColor(40, 45, 55, 180))
+            painter.fillRect(bg_rect, QColor(0, 20, 5, 200))
             text_r = bg_rect.adjusted(8, 4, -8, -4)
             painter.drawText(text_r.x(), text_r.y() + metrics.ascent(), grid_info)
 
@@ -1706,9 +1739,14 @@ class SceneViewport(QOpenGLWidget):
         self.update()
 
     def _cycle_selection(self, direction: int):
-        if not self.project or not self.project.elements:
+        if not self.project:
             return
-        elems = self.project.elements
+        elems = self._active_workspace_elements()
+        if not elems:
+            self.selected_elements = []
+            self._emit_selection()
+            self.update()
+            return
         if self.selected_elements and self.selected_elements[-1] in elems:
             idx = elems.index(self.selected_elements[-1])
             idx = (idx + direction) % len(elems)
@@ -1723,7 +1761,7 @@ class SceneViewport(QOpenGLWidget):
         if not self.project:
             return positions
         w, h = self.width(), self.height()
-        for elem in self.project.elements:
+        for elem in self._active_workspace_elements():
             p = elem.transform.translation
             sp = self.camera.world_to_screen(p.x, p.y, p.z, w, h)
             if sp:
