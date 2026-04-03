@@ -8,6 +8,17 @@ MoveMusic is a VR music creation app by **Tim Arterbury** that lets you build MI
 
 ---
 
+## Screenshots & Demos
+
+| Media | What it shows |
+|---|---|
+| <img src="test.gif" alt="MMC Editor Animated Preview" width="640" /> | Quick look at viewport interaction and editor workflow. |
+| <video src="test.mp4" controls preload="metadata" width="640">Your viewer does not support embedded video. Open <a href="test.mp4">test.mp4</a> directly.</video> | Full demo clip with longer interaction flow. |
+
+Tip: If your markdown viewer does not render embedded video, open `test.mp4` directly.
+
+---
+
 ## Features
 
 - **Full .mmc round-trip** — Parse and re-serialize UE4 GVAS save files byte-perfectly
@@ -17,6 +28,7 @@ MoveMusic is a VR music creation app by **Tim Arterbury** that lets you build MI
 - **Property editing** — All HitZone, MorphZone, TextLabel, and GroupIE properties with undo/redo
 - **MIDI mapping** — Edit note mappings, CC mappings, channels, velocity curves
 - **MIDI overview test send** — Use the MIDI Overview table to pick constrained MIDI values from dropdowns and fire a test note/CC to a real MIDI output
+- **Performance Test tab** — Test HitZones and MorphZones directly from desktop with click/drag controls, transport override (OSC/MIDI/both), and live sent-message log
 - **TouchOSC export** — Generate a multi-page TouchOSC layout blueprint JSON for notes/drums, CC controls, and XY MorphZones with OSC address bindings
 - **MIDI nudge** — Alt+Up/Down to increment/decrement CC values on selected elements
 - **Auto-layout** — Arrange selected elements in Row, Grid, or Circle formations

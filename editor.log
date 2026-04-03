@@ -20851,3 +20851,25 @@ AttributeError: 'MainWindow' object has no attribute 'performance_panel'
 2026-04-03 17:34:33,034 INFO   tree item found: True
 2026-04-03 17:35:01,539 INFO _on_viewport_select: HitZone_171
 2026-04-03 17:35:01,540 INFO   tree item found: True
+2026-04-03 17:35:52,075 INFO _on_viewport_select: None
+2026-04-03 17:35:52,158 INFO _on_viewport_select: None
+2026-04-03 17:36:05,311 INFO _on_viewport_select: MorphZone_68
+2026-04-03 17:36:05,312 INFO   tree item found: True
+2026-04-03 17:36:14,656 INFO _on_viewport_select: HitZone_14
+2026-04-03 17:36:14,656 INFO   tree item found: True
+2026-04-03 17:36:27,511 INFO _on_viewport_select: MorphZone_2
+2026-04-03 17:36:27,511 INFO   tree item found: True
+2026-04-03 17:37:17,761 INFO _on_viewport_select: None
+2026-04-03 17:37:17,859 INFO _on_viewport_select: None
+2026-04-03 17:37:20,913 INFO _on_viewport_select: MorphZone_3
+2026-04-03 17:37:20,913 INFO   tree item found: True
+2026-04-03 17:37:23,520 INFO OpenGL initialized
+2026-04-03 17:37:23,564 INFO OpenGL initialized
+2026-04-03 17:37:23,616 INFO OpenGL initialized
+2026-04-03 17:37:23,658 INFO OpenGL initialized
+2026-04-03 17:37:30,003 INFO _on_viewport_select: MorphZone_2
+2026-04-03 17:37:30,003 INFO   tree item found: True
+2026-04-03 17:37:31,794 INFO _on_viewport_select: None
+2026-04-03 17:37:31,854 INFO _on_viewport_select: None
+2026-04-03 17:37:32,917 INFO _on_viewport_select: MorphZone_2
+2026-04-03 17:37:32,917 INFO   tree item found: True
