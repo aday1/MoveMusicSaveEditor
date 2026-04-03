@@ -226,6 +226,7 @@ class SceneViewport(QOpenGLWidget):
         # View configuration
         self.view_label = "Perspective"
         self.lock_orbit = False
+        self.lock_move = False  # Performance mode: allow select but block element drag/resize/rotate
 
         # Mouse state
         self._last_mouse = QPoint()
@@ -1170,6 +1171,10 @@ class SceneViewport(QOpenGLWidget):
 
         if len(self.selected_elements) == 0:
             shortcuts = [
+                "⚡ F5 — Performance Lock",
+                "Toggle to test MIDI/OSC without",
+                "accidentally moving elements!",
+                "",
                 "🔍 NO SELECTION",
                 "Click any element to select it",
                 "Shift+Click: Add to selection",
@@ -1255,8 +1260,14 @@ class SceneViewport(QOpenGLWidget):
                 "",
                 "⚙️ ACTIONS:",
                 "Ctrl+D: Duplicate element",
-                "Delete: Remove element",
+                "Ctrl+Delete: Remove element",
+                "  (Delete alone won't work here)",
                 "F: Focus camera on element",
+                "",
+                "⚡ PERFORMANCE TEST:",
+                "F5: Toggle Performance Lock",
+                "  Locks drag → click safely to",
+                "  select & test MIDI/OSC output",
             ])
         else:
             # Multiple selection
@@ -1282,19 +1293,26 @@ class SceneViewport(QOpenGLWidget):
                 "",
                 "⚙️ BULK ACTIONS:",
                 "Ctrl+D: Duplicate all selected",
-                "Delete: Remove all selected",
+                "Ctrl+Delete: Remove all selected",
+                "  (Delete alone won't work here)",
                 "Ctrl+L: Arrange in row layout",
                 "Esc: Deselect all",
+                "",
+                "⚡ PERFORMANCE TEST:",
+                "F5: Toggle Performance Lock",
+                "  Locks drag → click safely to",
+                "  select & test MIDI/OSC output",
             ]
 
         # Always show toggle option
         shortcuts.extend([
             "",
             "💡 DISPLAY CONTROLS:",
-            "Shortcut help is pinned visible",
             "N: Toggle grid coordinate numbers",
             "G: Toggle grid snap",
             "Right-click: Context menu",
+            "",
+            "⚡ F5: Performance Lock ON/OFF",
         ])
 
         font_sm = QFont("Segoe UI", 9)
@@ -1419,7 +1437,7 @@ class SceneViewport(QOpenGLWidget):
                     return
 
                 # Check resize handles (works for single and multi-selection)
-                if self.selected_elements and hasattr(self, '_handle_screen_pos'):
+                if self.selected_elements and hasattr(self, '_handle_screen_pos') and not self.lock_move:
                     for axis, (hx, hy) in self._handle_screen_pos.items():
                         if math.sqrt((mx - hx) ** 2 + (my - hy) ** 2) < 30:
                             self._resizing = True
@@ -1431,7 +1449,7 @@ class SceneViewport(QOpenGLWidget):
                             return
 
                 # Check rotation handles — test against ring sample points
-                if self.selected_elements and hasattr(self, '_rot_ring_screen_points'):
+                if self.selected_elements and hasattr(self, '_rot_ring_screen_points') and not self.lock_move:
                     for axis, pts in self._rot_ring_screen_points.items():
                         for (hx, hy) in pts:
                             if (mx - hx) ** 2 + (my - hy) ** 2 < 900:  # 30px radius
@@ -1817,8 +1835,8 @@ class SceneViewport(QOpenGLWidget):
                 self.selected_elements = []
                 self._show_status("Click and drag to marquee select")
 
-        # Set up drag if we have a selection
-        if self.selected_elements and best_elem is not None:
+        # Set up drag if we have a selection (unless move is locked)
+        if self.selected_elements and best_elem is not None and not self.lock_move:
             self._dragging_element = True
             self._drag_start_positions = {}
             for elem in self.selected_elements:

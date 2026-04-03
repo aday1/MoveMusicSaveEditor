@@ -530,6 +530,41 @@ QSplitter::handle:hover {{
 }}
 
 /* ═══════════════════════════════════════════════════════════════
+   TAB WIDGET
+   ═══════════════════════════════════════════════════════════════ */
+
+QTabWidget::pane {{
+    border: 1px solid {BORDER};
+    background-color: {BG_PANEL};
+    top: -1px;
+}}
+
+QTabBar::tab {{
+    background-color: {BG_MID};
+    color: {TEXT_SECONDARY};
+    border: 1px solid {BORDER};
+    border-bottom: none;
+    padding: 6px 14px;
+    margin-right: 2px;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}}
+
+QTabBar::tab:selected {{
+    background-color: {BG_PANEL};
+    color: {CYAN};
+    border-color: {CYAN_DIM};
+    border-bottom: 2px solid {CYAN};
+}}
+
+QTabBar::tab:hover:!selected {{
+    background-color: {BG_HOVER};
+    color: {TEXT_PRIMARY};
+    border-color: {BORDER_FOCUS};
+}}
+
+/* ═══════════════════════════════════════════════════════════════
    INPUT DIALOG / MESSAGE BOX
    ═══════════════════════════════════════════════════════════════ */
 

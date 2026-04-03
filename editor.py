@@ -1649,27 +1649,7 @@ class MainWindow(QMainWindow):
         self.tree.setMinimumWidth(280)
         inner_splitter.addWidget(self.tree)
 
-        # Property panel with tabs (Properties + Performance)
-        self._props_tabs = QTabWidget()
-        
-        self.scroll = QScrollArea()
-        self.scroll.setWidgetResizable(True)
-        self._props_tabs.addTab(self.scroll, "Properties")
-        
-        perf_scroll = QScrollArea()
-        perf_scroll.setWidgetResizable(True)
-        perf_scroll.setWidget(self.performance_panel)
-        self._props_tabs.addTab(perf_scroll, "Performance Test")
-        
-        inner_splitter.addWidget(self._props_tabs)
-
-        inner_splitter.setStretchFactor(0, 1)
-        inner_splitter.setStretchFactor(1, 3)
-
-        self.outer_splitter.setStretchFactor(0, 3)  # viewport gets more space
-        self.outer_splitter.setStretchFactor(1, 2)
-
-        # Create panels
+        # Create all panels first (before tabs)
         self.empty_panel = QLabel("// SELECT AN ELEMENT TO VIEW PROPERTIES")
         self.empty_panel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_panel.setStyleSheet("color: #607890; font-size: 12px; font-weight: 600; letter-spacing: 2px;")
@@ -1689,7 +1669,30 @@ class MainWindow(QMainWindow):
         
         # Performance/test panel for desktop MIDI testing
         self.performance_panel = PerformancePanel()
+        # Pre-populate transport bar from saved config
+        self.performance_panel.load_config(_load_config())
+        
+        # Property panel with tabs (Properties + Performance)
+        self._props_tabs = QTabWidget()
+        
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self._props_tabs.addTab(self.scroll, "Properties")
+        
+        perf_scroll = QScrollArea()
+        perf_scroll.setWidgetResizable(True)
+        perf_scroll.setWidget(self.performance_panel)
+        self._props_tabs.addTab(perf_scroll, "Performance Test")
+        
+        inner_splitter.addWidget(self._props_tabs)
 
+        inner_splitter.setStretchFactor(0, 1)
+        inner_splitter.setStretchFactor(1, 3)
+
+        self.outer_splitter.setStretchFactor(0, 3)  # viewport gets more space
+        self.outer_splitter.setStretchFactor(1, 2)
+        
+        # Set initial empty panel in Properties tab
         self.scroll.setWidget(self.empty_panel)
 
     def _set_panel(self, widget):
@@ -1812,6 +1815,19 @@ class MainWindow(QMainWindow):
 
         self.action_layout_circle = QAction("Layout: Circle", self)
         toolbar.addAction(self.action_layout_circle)
+
+        toolbar.addSeparator()
+
+        # Performance Lock — disables element drag/resize/rotate so clicks select-only
+        self.action_perf_lock = QAction("⚡ Perf Lock", self)
+        self.action_perf_lock.setCheckable(True)
+        self.action_perf_lock.setToolTip(
+            "Performance Lock: blocks element dragging so you can click/select freely.\n"
+            "Selecting an element auto-switches to the Performance Test tab."
+        )
+        self.action_perf_lock.setShortcut("F5")
+        self.action_perf_lock.toggled.connect(self._on_perf_lock_toggled)
+        toolbar.addAction(self.action_perf_lock)
 
     def _setup_menu(self):
         menubar = self.menuBar()
@@ -2321,7 +2337,7 @@ class MainWindow(QMainWindow):
             # Update performance panel for testing
             self.performance_panel.set_selected_elements(
                 elements_to_show, 
-                self._send_test_midi
+                self._perf_send
             )
             
             if isinstance(obj, HitZone):
@@ -3055,6 +3071,7 @@ class MainWindow(QMainWindow):
         if elem is None:
             self.tree.clearSelection()
             self._set_panel(self.empty_panel)
+            self.performance_panel.set_selected_elements([], self._perf_send)
             return
         # Find the tree item for this element
         item = self._find_tree_item_for_element(elem)
@@ -3088,6 +3105,39 @@ class MainWindow(QMainWindow):
                 self._set_panel(self.unknown_panel)
             else:
                 self._set_panel(self.unknown_normal_panel)
+        # Always update performance panel (bypassed by blockSignals on tree)
+        if isinstance(elem, (HitZone, MorphZone)):
+            self.performance_panel.set_selected_elements([elem], self._perf_send)
+            # If performance lock is active, jump straight to Performance Test tab
+            if getattr(self, '_performance_lock', False):
+                self._props_tabs.setCurrentIndex(1)
+
+    def _on_perf_lock_toggled(self, checked: bool):
+        """Toggle Performance Lock mode: disables viewport drag-to-move, auto-selects Performance Test tab."""
+        self._performance_lock = checked
+        # Apply to all viewports
+        for vp in self._all_viewports():
+            vp.lock_move = checked
+        if checked:
+            self._props_tabs.setCurrentIndex(1)  # jump to Performance Test tab
+            self.statusbar.showMessage(
+                "⚡ Performance Lock ON — click elements to test MIDI/OSC, drag is disabled", 4000
+            )
+        else:
+            self.statusbar.showMessage("Performance Lock OFF — editing enabled", 3000)
+
+    def _all_viewports(self):
+        """Return all active SceneViewport instances."""
+        viewports = []
+        if hasattr(self, 'viewport') and self.viewport:
+            viewports.append(self.viewport)
+        if hasattr(self, 'quad_viewport') and self.quad_viewport:
+            qv = self.quad_viewport
+            for attr in ('persp', 'top_view', 'front_view', 'side_view'):
+                vp = getattr(qv, attr, None)
+                if vp:
+                    viewports.append(vp)
+        return viewports
 
     def _on_toggle_debug_mode(self, checked: bool):
         self.debug_mode = bool(checked)
@@ -4428,6 +4478,84 @@ class MainWindow(QMainWindow):
         self.statusbar.showMessage(f"Added template '{template_name}' ({len(elements)} elements)", 4000)
         self._active_viewport()._focus_selected()
 
+    def _perf_send(self, element_id: str, payload: dict):
+        """Performance panel callback: send note/CC payload via OSC or MIDI.
+
+        Priority order for transport config:
+          1. Performance panel transport bar (user override, always wins)
+          2. Saved config file
+        Logs each sent message back to the panel's message log.
+        """
+        # 1. Get config from performance panel transport bar (live override)
+        bar_cfg = self.performance_panel.get_transport_config()
+        mode = bar_cfg.get("mode", "osc")
+        osc_host = bar_cfg.get("osc_host", "127.0.0.1")
+        osc_port = int(bar_cfg.get("osc_port", 9001))
+        osc_ns = bar_cfg.get("osc_ns", "/mmc")
+        midi_port_name = bar_cfg.get("midi_port")  # may be None
+
+        cc_addr = f"{osc_ns}/midi/cc"
+        note_addr = f"{osc_ns}/midi/note"
+
+        msg_type = payload.get("type", "cc")
+        channel_1 = int(payload.get("channel", 1))
+        channel_0 = max(0, channel_1 - 1)  # mido uses 0-based channels
+
+        def _log(transport: str, destination: str, detail: str):
+            self.performance_panel.log_sent(msg_type, detail, transport, destination)
+            self.statusbar.showMessage(f"[{transport.upper()}] {detail} → {destination}", 1200)
+
+        if msg_type in ("note_on", "note_off"):
+            note = int(payload.get("note", 60))
+            velocity = int(payload.get("velocity", 127)) if msg_type == "note_on" else 0
+            detail = f"note={note} ch={channel_1} vel={velocity}"
+            if mode in ("osc", "both") and SimpleUDPClient is not None:
+                try:
+                    SimpleUDPClient(osc_host, osc_port).send_message(
+                        note_addr, [channel_1, note, velocity]
+                    )
+                    _log("osc", f"{osc_host}:{osc_port}{note_addr}", detail)
+                except Exception as exc:
+                    self.statusbar.showMessage(f"OSC error: {exc}", 4000)
+            if mode in ("midi", "both") and mido is not None:
+                if midi_port_name:
+                    try:
+                        with mido.open_output(midi_port_name) as port:
+                            port.send(mido.Message(
+                                msg_type, channel=channel_0, note=note, velocity=velocity
+                            ))
+                        _log("midi", midi_port_name, detail)
+                    except Exception as exc:
+                        self.statusbar.showMessage(f"MIDI error: {exc}", 4000)
+                else:
+                    self.statusbar.showMessage("No MIDI port selected in Performance panel.", 3000)
+
+        elif msg_type == "cc":
+            cc = int(payload.get("cc", 1))
+            value = int(payload.get("value", 64))
+            axis = payload.get("axis", "")
+            detail = f"CC{cc}={value} ch={channel_1}{' [' + axis + ']' if axis else ''}"
+            if mode in ("osc", "both") and SimpleUDPClient is not None:
+                try:
+                    SimpleUDPClient(osc_host, osc_port).send_message(
+                        cc_addr, [channel_1, cc, value]
+                    )
+                    _log("osc", f"{osc_host}:{osc_port}{cc_addr}", detail)
+                except Exception as exc:
+                    self.statusbar.showMessage(f"OSC error: {exc}", 4000)
+            if mode in ("midi", "both") and mido is not None:
+                if midi_port_name:
+                    try:
+                        with mido.open_output(midi_port_name) as port:
+                            port.send(mido.Message(
+                                "control_change", channel=channel_0, control=cc, value=value
+                            ))
+                        _log("midi", midi_port_name, detail)
+                    except Exception as exc:
+                        self.statusbar.showMessage(f"MIDI error: {exc}", 4000)
+                else:
+                    self.statusbar.showMessage("No MIDI port selected in Performance panel.", 3000)
+
 
 # ---------------------------------------------------------------------------
 # Settings dialog
@@ -5125,6 +5253,85 @@ class MidiOverviewDialog(QWidget):
             QMessageBox.warning(self, "Test MIDI", "MIDI test send failed. Check output selection and MIDI device state.")
         elif mode == "both" and (not osc_ok or not midi_ok):
             QMessageBox.warning(self, "Test MIDI", "One or more transports failed. Check status text for details.")
+
+    def _perf_send(self, element_id: str, payload: dict):
+        """Performance panel callback: sends exact note/CC specified in payload dict.
+
+        Reads transport config from saved config (same source MidiOverviewDialog uses).
+        payload keys:
+          type: "note_on" | "note_off" | "cc"
+          note / cc: int
+          channel: int (1-based)
+          value: int (0-127, for cc)
+          velocity: int (0-127, for notes)
+        """
+        cfg = _load_config()
+        mode = str(cfg.get("midi_test_transport", "osc"))
+        osc_host = str(cfg.get("osc_bridge_host", "127.0.0.1"))
+        osc_port = int(cfg.get("osc_bridge_port", 9001))
+        osc_ns = str(cfg.get("osc_namespace", "/mmc"))
+        cc_addr = f"{osc_ns}/midi/cc"
+        note_addr = f"{osc_ns}/midi/note"
+
+        # Pull live values from dialog if it's open
+        if self._midi_overview_dialog and self._midi_overview_dialog.isVisible():
+            dlg = self._midi_overview_dialog
+            if hasattr(dlg, '_osc_host_edit'):
+                osc_host = dlg._osc_host_edit.text().strip() or osc_host
+            if hasattr(dlg, '_osc_port_spin'):
+                osc_port = int(dlg._osc_port_spin.value())
+            if hasattr(dlg, '_transport_combo'):
+                mode = dlg._transport_combo.currentData() or mode
+
+        msg_type = payload.get("type", "cc")
+        channel_1 = int(payload.get("channel", 1))
+        channel_0 = max(0, channel_1 - 1)  # mido is 0-based
+
+        if msg_type in ("note_on", "note_off"):
+            note = int(payload.get("note", 60))
+            velocity = int(payload.get("velocity", 127)) if msg_type == "note_on" else 0
+            if mode in ("osc", "both") and SimpleUDPClient is not None:
+                try:
+                    SimpleUDPClient(osc_host, osc_port).send_message(note_addr, [channel_1, note, velocity])
+                    self._mark_status(f"Perf OSC -> {note_addr} [{channel_1},{note},{velocity}]")
+                except Exception as exc:
+                    self._mark_status(f"OSC send error: {exc}")
+            if mode in ("midi", "both") and mido is not None:
+                port_name = None
+                if self._midi_overview_dialog and hasattr(self._midi_overview_dialog, '_port_combo'):
+                    port_name = self._midi_overview_dialog._port_combo.currentData()
+                if port_name:
+                    try:
+                        with mido.open_output(port_name) as port:
+                            port.send(mido.Message(msg_type, channel=channel_0, note=note, velocity=velocity))
+                        self._mark_status(f"Perf MIDI {msg_type} note={note} ch={channel_1}")
+                    except Exception as exc:
+                        self._mark_status(f"MIDI send error: {exc}")
+                else:
+                    self._mark_status("No MIDI port selected — open MIDI Overview to configure.")
+        elif msg_type == "cc":
+            cc = int(payload.get("cc", 1))
+            value = int(payload.get("value", 64))
+            axis = payload.get("axis", "")
+            if mode in ("osc", "both") and SimpleUDPClient is not None:
+                try:
+                    SimpleUDPClient(osc_host, osc_port).send_message(cc_addr, [channel_1, cc, value])
+                    self._mark_status(f"Perf OSC -> {cc_addr} [{channel_1},{cc},{value}] {axis}")
+                except Exception as exc:
+                    self._mark_status(f"OSC send error: {exc}")
+            if mode in ("midi", "both") and mido is not None:
+                port_name = None
+                if self._midi_overview_dialog and hasattr(self._midi_overview_dialog, '_port_combo'):
+                    port_name = self._midi_overview_dialog._port_combo.currentData()
+                if port_name:
+                    try:
+                        with mido.open_output(port_name) as port:
+                            port.send(mido.Message("control_change", channel=channel_0, control=cc, value=value))
+                        self._mark_status(f"Perf MIDI CC{cc}={value} ch={channel_1} {axis}")
+                    except Exception as exc:
+                        self._mark_status(f"MIDI send error: {exc}")
+                else:
+                    self._mark_status("No MIDI port selected — open MIDI Overview to configure.")
 
     def _insert_row(self, row: int, elem):
         row_data = [
