@@ -16,6 +16,8 @@ MoveMusic is a VR music creation app by **Tim Arterbury** that lets you build MI
 - **Batch delete** — Select All (Ctrl+A) or multi-select then Delete removes all selected in one undo step
 - **Property editing** — All HitZone, MorphZone, TextLabel, and GroupIE properties with undo/redo
 - **MIDI mapping** — Edit note mappings, CC mappings, channels, velocity curves
+- **MIDI overview test send** — Use the MIDI Overview table to pick constrained MIDI values from dropdowns and fire a test note/CC to a real MIDI output
+- **TouchOSC export** — Generate a multi-page TouchOSC layout blueprint JSON for notes/drums, CC controls, and XY MorphZones with OSC address bindings
 - **MIDI nudge** — Alt+Up/Down to increment/decrement CC values on selected elements
 - **Auto-layout** — Arrange selected elements in Row, Grid, or Circle formations
 - **Templates** — 100+ preset templates across Faders, Knobs, XY Pads, Buttons, Drum Pads, Keyboards, Mixer, and Fun Shapes
@@ -60,6 +62,16 @@ If you use a desktop shortcut, point it to `launch_editor.bat` in this folder.
 - **Drum Pads** — 8/16 drum pad layouts
 - **Keyboards** — 1, 2, 3, 5, and 10 octave keyboards in Row, Circle, and Triangle
 - **Mixer** — 8-channel mixer strip (Faders + Knobs)
+- **Bitwig** — Performance grid with macros, scenes, and XY pads
+- **Reaper** — Mixer + transport layout for desktop DAW control
+- **Resolume** — Clip/layer performance layout for VJ triggering
+- **Grooveboxes** — MC-303 and MC-505 inspired drum/synth control banks
+- **Sugarbytes** — DrumComputer style drum lanes + macro controls
+- **iOS / AUM** — Mixer, send, and XY-style controls for TouchOSC/AUM setups
+- **Ruismaker** — Noir-inspired drum pad + macro control layout
+- **Renoise** — Pattern and transport-oriented tracker mappings
+- **Reaktor** — Ensemble macro + XY style control layout
+- **Hardware Controllers** — M-Audio CODE49, Behringer X-Touch, and Novation X-Station style presets
 - **Fun Shapes** — Pixel-art overlays built from TextLabels
   - Letters A-Z, Digits 0-9
   - Symbols: &, @, #, !, ?
@@ -101,6 +113,7 @@ MoveMusicSaveEditor/
 ├── viewport3d.py          # OpenGL 3D viewport with gizmos, multi-select & overlays
 ├── template_generator.py  # 100+ preset layout generators with geometry & pixel art
 ├── export3d.py            # OBJ + glTF/GLB export
+├── export_touchosc.py     # TouchOSC layout blueprint export
 └── theme.py               # Cyberpunk UI stylesheet
 ```
 

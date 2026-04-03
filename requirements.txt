@@ -4,3 +4,6 @@ trimesh>=3.21.0          # Robust 3D file import with GLB/OBJ support
 pillow>=10.0.0           # Image capture and processing
 imageio[ffmpeg]>=2.31.0  # High-quality GIF generation
 numpy>=1.24.0            # Mesh data manipulation (required by trimesh)
+mido>=1.3.2              # MIDI output discovery and message sending for Test MIDI
+python-rtmidi>=1.5.8     # Cross-platform MIDI backend used by mido
+python-osc>=1.10.2       # OSC bridge test-message sending (/mmc/midi/*)

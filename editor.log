@@ -20510,3 +20510,223 @@ AttributeError: 'QuadViewport' object has no attribute '_focus_selected'
 AttributeError: 'QuadViewport' object has no attribute '_focus_selected'
 
 2026-04-03 13:29:34,091 INFO OpenGL initialized
+2026-04-03 15:06:09,564 INFO OpenGL initialized
+2026-04-03 15:06:17,330 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 2997, in _on_open_midi_overview
+    self._midi_overview_dialog = MidiOverviewDialog(
+                                 ^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4356, in __init__
+    self._populate()
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4395, in _populate
+    self._rows.append(row_data)
+    ^^^^^^^^^^
+AttributeError: 'MidiOverviewDialog' object has no attribute '_rows'
+
+2026-04-03 15:21:16,733 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 831, in paintEvent
+    def paintEvent(self, event):
+    
+KeyboardInterrupt
+
+2026-04-03 15:21:20,497 INFO OpenGL initialized
+2026-04-03 15:21:59,357 INFO OpenGL initialized
+2026-04-03 15:37:26,839 INFO OpenGL initialized
+2026-04-03 15:38:53,691 INFO OpenGL initialized
+2026-04-03 15:39:32,518 INFO OpenGL initialized
+2026-04-03 15:45:16,925 INFO OpenGL initialized
+2026-04-03 15:49:40,013 INFO OpenGL initialized
+2026-04-03 15:53:13,485 INFO _on_viewport_select: None
+2026-04-03 15:53:16,089 INFO _on_viewport_select: None
+2026-04-03 15:53:16,508 INFO _on_viewport_select: HitZone_172
+2026-04-03 15:53:16,508 INFO   tree item found: True
+2026-04-03 15:53:18,240 INFO _on_viewport_select: None
+2026-04-03 15:53:18,985 INFO _on_viewport_select: HitZone_188
+2026-04-03 15:53:18,986 INFO   tree item found: True
+2026-04-03 15:53:37,882 INFO _on_viewport_select: None
+2026-04-03 15:53:38,401 INFO _on_viewport_select: HitZone_175
+2026-04-03 15:53:38,402 INFO   tree item found: True
+2026-04-03 15:54:35,040 INFO OpenGL initialized
+2026-04-03 15:54:36,319 INFO _on_viewport_select: None
+2026-04-03 15:54:37,345 INFO _on_viewport_select: HitZone_186
+2026-04-03 15:54:37,345 INFO   tree item found: True
+2026-04-03 15:54:39,500 INFO _on_viewport_select: None
+2026-04-03 15:54:40,029 INFO _on_viewport_select: HitZone_195
+2026-04-03 15:54:40,029 INFO   tree item found: True
+2026-04-03 15:54:42,004 INFO _on_viewport_select: None
+2026-04-03 15:54:42,907 INFO _on_viewport_select: HitZone_191
+2026-04-03 15:54:42,908 INFO   tree item found: True
+2026-04-03 15:56:04,336 INFO OpenGL initialized
+2026-04-03 15:56:05,589 INFO _on_viewport_select: HitZone_154
+2026-04-03 15:56:05,589 INFO   tree item found: True
+2026-04-03 15:56:06,109 INFO _on_viewport_select: None
+2026-04-03 15:56:06,309 INFO _on_viewport_select: None
+2026-04-03 15:56:06,545 INFO _on_viewport_select: None
+2026-04-03 15:56:07,116 INFO _on_viewport_select: HitZone_195
+2026-04-03 15:56:07,116 INFO   tree item found: True
+2026-04-03 15:56:18,537 INFO _on_viewport_select: None
+2026-04-03 15:56:19,071 INFO _on_viewport_select: None
+2026-04-03 15:56:19,690 INFO _on_viewport_select: None
+2026-04-03 15:56:20,300 INFO _on_viewport_select: TextLabel_C_224
+2026-04-03 15:56:20,300 INFO   tree item found: True
+2026-04-03 15:56:25,069 INFO _on_viewport_select: None
+2026-04-03 15:56:25,481 INFO _on_viewport_select: HitZone_191
+2026-04-03 15:56:25,481 INFO   tree item found: True
+2026-04-03 15:56:39,872 INFO _on_viewport_select: None
+2026-04-03 15:56:40,453 INFO _on_viewport_select: HitZone_133
+2026-04-03 15:56:40,453 INFO   tree item found: True
+2026-04-03 15:56:42,597 INFO _on_viewport_select: MorphZone_45
+2026-04-03 15:56:42,597 INFO   tree item found: True
+2026-04-03 15:56:43,505 INFO _on_viewport_select: None
+2026-04-03 15:56:43,913 INFO _on_viewport_select: HitZone_223
+2026-04-03 15:56:43,913 INFO   tree item found: True
+2026-04-03 15:58:22,908 INFO OpenGL initialized
+2026-04-03 15:58:24,047 INFO _on_viewport_select: None
+2026-04-03 15:58:24,401 INFO _on_viewport_select: HitZone_201
+2026-04-03 15:58:24,402 INFO   tree item found: True
+2026-04-03 15:58:28,484 INFO _on_viewport_select: None
+2026-04-03 15:58:28,867 INFO _on_viewport_select: HitZone_199
+2026-04-03 15:58:28,868 INFO   tree item found: True
+2026-04-03 15:58:33,593 INFO _on_viewport_select: None
+2026-04-03 15:58:34,103 INFO _on_viewport_select: HitZone_187
+2026-04-03 15:58:34,103 INFO   tree item found: True
+2026-04-03 15:58:36,786 INFO _on_viewport_select: None
+2026-04-03 15:58:37,203 INFO _on_viewport_select: HitZone_205
+2026-04-03 15:58:37,203 INFO   tree item found: True
+2026-04-03 15:58:57,835 INFO _on_viewport_select: HitZone_35
+2026-04-03 15:58:57,835 INFO   tree item found: True
+2026-04-03 15:58:58,950 INFO _on_viewport_select: HitZone_117
+2026-04-03 15:58:58,950 INFO   tree item found: True
+2026-04-03 15:59:02,704 INFO _on_viewport_select: None
+2026-04-03 15:59:03,190 INFO _on_viewport_select: HitZone_206
+2026-04-03 15:59:03,191 INFO   tree item found: True
+2026-04-03 16:00:16,450 INFO OpenGL initialized
+2026-04-03 16:01:02,570 ERROR MIDI output open failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4865, in _send_test_midi_only
+    )
+      
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\backend.py", line 117, in open_output
+    return self.module.Output(name, **self._add_api(kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 269, in __init__
+    BasePort.__init__(self, name, **kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 90, in __init__
+    self._open(**kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 204, in _open
+    self.name = _open_port(self._rt, self.name, client_name=client_name,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 105, in _open_port
+    rt.open_port(port_id)
+  File "_rtmidi.pyx", line 581, in _rtmidi.MidiBase.open_port
+  File "_rtmidi.pyx", line 218, in _rtmidi._cb_error_func
+  File "_rtmidi.pyx", line 403, in _rtmidi._default_error_handler
+_rtmidi.SystemError: MidiOutWinMM::openPort: error creating Windows MM MIDI output port.
+2026-04-03 16:19:25,502 INFO _on_viewport_select: None
+2026-04-03 16:19:26,076 INFO _on_viewport_select: TextLabel_C_28
+2026-04-03 16:19:26,077 INFO   tree item found: True
+2026-04-03 16:19:34,974 INFO OpenGL initialized
+2026-04-03 16:19:36,330 INFO _on_viewport_select: None
+2026-04-03 16:19:36,862 INFO _on_viewport_select: HitZone_207
+2026-04-03 16:19:36,863 INFO   tree item found: True
+2026-04-03 16:19:39,762 INFO _on_viewport_select: None
+2026-04-03 16:19:40,460 INFO _on_viewport_select: HitZone_221
+2026-04-03 16:19:40,461 INFO   tree item found: True
+2026-04-03 16:19:56,975 INFO _on_viewport_select: None
+2026-04-03 16:19:57,084 INFO _on_viewport_select: None
+2026-04-03 16:19:57,460 INFO _on_viewport_select: None
+2026-04-03 16:19:57,527 INFO _on_viewport_select: None
+2026-04-03 16:28:43,156 INFO OpenGL initialized
+2026-04-03 16:28:44,983 INFO _on_viewport_select: None
+2026-04-03 16:28:45,661 INFO _on_viewport_select: HitZone_220
+2026-04-03 16:28:45,661 INFO   tree item found: True
+2026-04-03 16:28:47,202 INFO _on_viewport_select: None
+2026-04-03 16:28:47,638 INFO _on_viewport_select: TextLabel_C_224
+2026-04-03 16:28:47,639 INFO   tree item found: True
+2026-04-03 16:28:50,073 INFO _on_viewport_select: HitZone_171
+2026-04-03 16:28:50,073 INFO   tree item found: True
+2026-04-03 16:28:51,025 INFO _on_viewport_select: None
+2026-04-03 16:28:51,582 INFO _on_viewport_select: HitZone_200
+2026-04-03 16:28:51,582 INFO   tree item found: True
+2026-04-03 16:28:59,124 INFO _on_viewport_select: None
+2026-04-03 16:28:59,768 INFO _on_viewport_select: HitZone_214
+2026-04-03 16:28:59,769 INFO   tree item found: True
+2026-04-03 16:29:23,955 INFO _on_viewport_select: None
+2026-04-03 16:29:24,431 INFO _on_viewport_select: HitZone_223
+2026-04-03 16:29:24,431 INFO   tree item found: True
+2026-04-03 16:29:26,036 INFO _on_viewport_select: None
+2026-04-03 16:29:26,387 INFO _on_viewport_select: HitZone_195
+2026-04-03 16:29:26,387 INFO   tree item found: True
+2026-04-03 16:29:29,458 INFO _on_viewport_select: None
+2026-04-03 16:29:29,757 INFO _on_viewport_select: TextLabel_C_216
+2026-04-03 16:29:29,757 INFO   tree item found: True
+2026-04-03 16:38:41,395 INFO OpenGL initialized
+2026-04-03 16:38:44,256 INFO _on_viewport_select: None
+2026-04-03 16:38:44,741 INFO _on_viewport_select: HitZone_197
+2026-04-03 16:38:44,742 INFO   tree item found: True
+2026-04-03 16:38:47,744 INFO _on_viewport_select: None
+2026-04-03 16:38:48,146 INFO _on_viewport_select: HitZone_196
+2026-04-03 16:38:48,147 INFO   tree item found: True
+2026-04-03 16:38:50,640 INFO _on_viewport_select: None
+2026-04-03 16:38:51,118 INFO _on_viewport_select: HitZone_195
+2026-04-03 16:38:51,119 INFO   tree item found: True
+2026-04-03 16:38:53,896 INFO _on_viewport_select: None
+2026-04-03 16:38:54,374 INFO _on_viewport_select: HitZone_194
+2026-04-03 16:38:54,374 INFO   tree item found: True
+2026-04-03 16:39:08,206 INFO _on_viewport_select: None
+2026-04-03 16:39:08,245 INFO _on_viewport_select: None
+2026-04-03 16:39:09,621 INFO _on_viewport_select: TextLabel_C_238
+2026-04-03 16:39:09,624 INFO   tree item found: True
+2026-04-03 16:39:11,231 INFO _on_viewport_select: HitZone_279
+2026-04-03 16:39:11,231 INFO   tree item found: True
+2026-04-03 16:39:11,947 INFO _on_viewport_select: MorphZone_261
+2026-04-03 16:39:11,947 INFO   tree item found: True
+2026-04-03 16:40:01,412 INFO _on_viewport_select: TextLabel_C_101
+2026-04-03 16:40:01,412 INFO   tree item found: True
+2026-04-03 16:40:32,736 INFO _on_viewport_select: None
+2026-04-03 16:40:32,862 INFO _on_viewport_select: None
+2026-04-03 16:40:53,877 INFO _on_viewport_select: TextLabel_C_173
+2026-04-03 16:40:53,878 INFO   tree item found: True
+2026-04-03 16:40:55,550 INFO _on_viewport_select: TextLabel_C_193
+2026-04-03 16:40:55,551 INFO   tree item found: True
+2026-04-03 16:41:02,290 INFO _on_viewport_select: None
+2026-04-03 16:41:02,393 INFO _on_viewport_select: None
+2026-04-03 16:41:16,930 INFO _on_viewport_select: None
+2026-04-03 16:41:17,063 INFO _on_viewport_select: None
+2026-04-03 16:41:18,693 INFO _on_viewport_select: TextLabel_C_249
+2026-04-03 16:41:18,693 INFO   tree item found: True
+2026-04-03 16:42:03,217 INFO _on_viewport_select: HitZone_250
+2026-04-03 16:42:03,217 INFO   tree item found: True
+2026-04-03 16:42:04,798 INFO _on_viewport_select: None
+2026-04-03 16:42:05,208 INFO _on_viewport_select: None
+2026-04-03 16:42:05,432 INFO _on_viewport_select: None
+2026-04-03 16:42:05,526 INFO _on_viewport_select: None
+2026-04-03 16:42:06,200 INFO _on_viewport_select: HitZone_250
+2026-04-03 16:42:06,200 INFO   tree item found: True
+2026-04-03 16:42:11,806 INFO _on_viewport_select: None
+2026-04-03 16:42:11,875 INFO _on_viewport_select: None
+2026-04-03 16:42:12,454 INFO _on_viewport_select: HitZone_250
+2026-04-03 16:42:12,454 INFO   tree item found: True
+2026-04-03 16:42:18,756 INFO _on_viewport_select: None
+2026-04-03 16:42:19,165 INFO _on_viewport_select: None
+2026-04-03 16:42:19,560 INFO _on_viewport_select: None
+2026-04-03 16:42:19,637 INFO _on_viewport_select: None
+2026-04-03 16:42:19,999 INFO _on_viewport_select: HitZone_250
+2026-04-03 16:42:19,999 INFO   tree item found: True
+2026-04-03 16:42:29,516 INFO _on_viewport_select: None
+2026-04-03 16:42:29,592 INFO _on_viewport_select: None
+2026-04-03 16:42:29,966 INFO _on_viewport_select: None
+2026-04-03 16:42:30,039 INFO _on_viewport_select: None
+2026-04-03 16:42:31,000 INFO _on_viewport_select: HitZone_250
+2026-04-03 16:42:31,000 INFO   tree item found: True
+2026-04-03 16:43:00,998 INFO _on_viewport_select: None
+2026-04-03 16:43:01,418 INFO _on_viewport_select: None
+2026-04-03 16:43:03,337 INFO _on_viewport_select: None
+2026-04-03 16:43:03,387 INFO _on_viewport_select: None
+2026-04-03 16:43:03,991 INFO _on_viewport_select: None
+2026-04-03 16:43:06,016 INFO _on_viewport_select: None
+2026-04-03 16:43:06,131 INFO _on_viewport_select: None
+2026-04-03 16:43:07,470 INFO _on_viewport_select: None
+2026-04-03 16:43:07,534 INFO _on_viewport_select: None
+2026-04-03 16:48:45,975 INFO _on_viewport_select: None
+2026-04-03 16:48:46,588 INFO _on_viewport_select: HitZone_250
+2026-04-03 16:48:46,588 INFO   tree item found: True

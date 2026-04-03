@@ -17,6 +17,16 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+try:
+    import mido
+except Exception:
+    mido = None
+
+try:
+    from pythonosc.udp_client import SimpleUDPClient
+except Exception:
+    SimpleUDPClient = None
+
 CONFIG_DIR = Path(os.environ.get("APPDATA", Path.home())) / "MMCEditor"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
@@ -50,11 +60,58 @@ def _format_note_mapping_summary(mappings: list, prefix: str = "") -> str:
         parts.append("...")
     return prefix + " | ".join(parts)
 
-from PyQt6.QtCore import Qt, pyqtSignal
+
+MIDI_MESSAGE_TYPES = ["EMidiMessageType::Note", "EMidiMessageType::CC"]
+MIDI_NOTE_NAMES = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
+MIDI_CHANNEL_OPTIONS = [(f"Ch {channel}", channel) for channel in range(1, 17)]
+MIDI_CC_OPTIONS = [(str(value), value) for value in range(128)]
+MIDI_VELOCITY_OPTIONS = [(f"{step / 100.0:.2f}", step / 100.0) for step in range(101)]
+
+
+def _midi_note_label(note: int) -> str:
+    octave = (note // 12) - 1
+    return f"{MIDI_NOTE_NAMES[note % 12]}{octave}"
+
+
+MIDI_NOTE_OPTIONS = [(f"{note} ({_midi_note_label(note)})", note) for note in range(128)]
+
+
+def _pick_loopback_midi_port(port_names: list[str]) -> Optional[str]:
+    """Prefer virtual loopback ports when available."""
+    if not port_names:
+        return None
+
+    strong_tokens = [
+        "loopback midi",
+        "loopmidi",
+        "loopbe",
+        "loop be",
+        "virtual midi",
+        "rtp-midi",
+        "rtpmidi",
+    ]
+    weak_tokens = [
+        "loopback",
+        "virtual",
+        "midi loop",
+    ]
+
+    lowered = [(name, name.lower()) for name in port_names]
+    for token in strong_tokens:
+        for original, lowered_name in lowered:
+            if token in lowered_name:
+                return original
+    for token in weak_tokens:
+        for original, lowered_name in lowered:
+            if token in lowered_name:
+                return original
+    return None
+
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QAction, QActionGroup, QColor, QKeySequence, QShortcut, QUndoCommand, QUndoStack
 from PyQt6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox,
-    QDialog,
+    QDialog, QTabWidget,
     QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QListWidget, QMainWindow, QMenu, QMessageBox, QPushButton,
     QProgressDialog,
@@ -71,6 +128,7 @@ from model import (
 )
 from viewport3d import SceneViewport, QuadViewport
 from template_generator import TEMPLATES, _row_positions, _grid_positions, _circle_positions, _make_group
+from performance_panel import PerformancePanel
 from theme import STYLESHEET
 
 
@@ -1509,6 +1567,14 @@ class MainWindow(QMainWindow):
 
     def _setup_global_shortcuts(self):
         """Editor-wide shortcuts for MIDI nudging regardless of focused widget."""
+        self._shortcut_delete = QShortcut(QKeySequence("Delete"), self)
+        self._shortcut_delete.setContext(Qt.ShortcutContext.ApplicationShortcut)
+        self._shortcut_delete.activated.connect(self._on_global_delete_shortcut)
+
+        self._shortcut_shift_delete = QShortcut(QKeySequence("Shift+Delete"), self)
+        self._shortcut_shift_delete.setContext(Qt.ShortcutContext.ApplicationShortcut)
+        self._shortcut_shift_delete.activated.connect(self._on_global_delete_shortcut)
+
         self._shortcut_cc_up = QShortcut(QKeySequence("Alt+Up"), self)
         self._shortcut_cc_up.setContext(Qt.ShortcutContext.WindowShortcut)
         self._shortcut_cc_up.activated.connect(lambda: self._trigger_active_viewport_midi_cc(1))
@@ -1533,6 +1599,17 @@ class MainWindow(QMainWindow):
         self._shortcut_ws_next = QShortcut(QKeySequence("Alt+PgDown"), self)
         self._shortcut_ws_next.setContext(Qt.ShortcutContext.WindowShortcut)
         self._shortcut_ws_next.activated.connect(lambda: self._cycle_active_workspace(1))
+
+    def _on_global_delete_shortcut(self):
+        """Delete selected elements even when focus is on non-viewport widgets."""
+        if not self.project:
+            return
+
+        focus = QApplication.focusWidget()
+        if isinstance(focus, (QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QTableWidget)):
+            return
+
+        self._on_delete()
 
     def _trigger_active_viewport_midi_cc(self, delta: int):
         vp = self._active_viewport()
@@ -1572,10 +1649,19 @@ class MainWindow(QMainWindow):
         self.tree.setMinimumWidth(280)
         inner_splitter.addWidget(self.tree)
 
-        # Property panel (in scroll area)
+        # Property panel with tabs (Properties + Performance)
+        self._props_tabs = QTabWidget()
+        
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
-        inner_splitter.addWidget(self.scroll)
+        self._props_tabs.addTab(self.scroll, "Properties")
+        
+        perf_scroll = QScrollArea()
+        perf_scroll.setWidgetResizable(True)
+        perf_scroll.setWidget(self.performance_panel)
+        self._props_tabs.addTab(perf_scroll, "Performance Test")
+        
+        inner_splitter.addWidget(self._props_tabs)
 
         inner_splitter.setStretchFactor(0, 1)
         inner_splitter.setStretchFactor(1, 3)
@@ -1600,6 +1686,9 @@ class MainWindow(QMainWindow):
         self.textlabel_panel = TextLabelPanel()
         self.groupie_panel = GroupIEPanel()
         self.unknown_panel = UnknownElementPanel()
+        
+        # Performance/test panel for desktop MIDI testing
+        self.performance_panel = PerformancePanel()
 
         self.scroll.setWidget(self.empty_panel)
 
@@ -1765,6 +1854,26 @@ class MainWindow(QMainWindow):
             n = name.lower()
             if n.startswith("shape:"):
                 return "Fun Shapes"
+            if "aum" in n or "ios" in n:
+                return "iOS / AUM"
+            if "ruismaker" in n:
+                return "Ruismaker"
+            if "renoise" in n:
+                return "Renoise"
+            if "reaktor" in n:
+                return "Reaktor"
+            if "code49" in n or "x-touch" in n or "behringer" in n or "m-audio" in n or "x-station" in n or "novation" in n:
+                return "Hardware Controllers"
+            if "bitwig" in n:
+                return "Bitwig"
+            if "reaper" in n:
+                return "Reaper"
+            if "resolume" in n:
+                return "Resolume"
+            if "mc-303" in n or "mc-505" in n or "groovebox" in n:
+                return "Grooveboxes"
+            if "sugarbytes" in n or "drumcomputer" in n:
+                return "Sugarbytes"
             if "keyboard" in n:
                 return "Keyboards"
             if "drum" in n:
@@ -1783,7 +1892,12 @@ class MainWindow(QMainWindow):
                 return "Debug"
             return "Other"
 
-        category_order = ["Faders", "Knobs", "XY Pads", "Buttons", "Drum Pads", "Keyboards", "Mixer", "Fun Shapes", "Debug", "Other"]
+        category_order = [
+            "Faders", "Knobs", "XY Pads", "Buttons", "Drum Pads", "Keyboards", "Mixer",
+            "iOS / AUM", "Ruismaker", "Renoise", "Reaktor", "Hardware Controllers",
+            "Bitwig", "Reaper", "Resolume", "Grooveboxes", "Sugarbytes",
+            "Fun Shapes", "Debug", "Other"
+        ]
         categorized = {k: [] for k in category_order}
         for tpl_name in TEMPLATES:
             categorized[_template_category(tpl_name)].append(tpl_name)
@@ -1829,12 +1943,15 @@ class MainWindow(QMainWindow):
         export_menu.addSeparator()
         self.action_export_gif = export_menu.addAction("Orbit Animation GIF...")
         self.action_export_mp4 = export_menu.addAction("Orbit Animation MP4...")
+        export_menu.addSeparator()
+        self.action_export_touchosc = export_menu.addAction("TouchOSC Layout Blueprint (.json)...")
         self.action_export_obj.triggered.connect(self._on_export_obj)
         self.action_export_glb.triggered.connect(self._on_export_glb)
         self.action_export_glb_orbit.triggered.connect(lambda: self._on_export_glb(orbit=True))
         self.action_export_blend_script.triggered.connect(self._on_export_blend_script)
         self.action_export_gif.triggered.connect(self._on_export_gif)
         self.action_export_mp4.triggered.connect(self._on_export_mp4)
+        self.action_export_touchosc.triggered.connect(self._on_export_touchosc)
 
     def _setup_statusbar(self):
         self.statusbar = QStatusBar()
@@ -2198,7 +2315,15 @@ class MainWindow(QMainWindow):
             self._set_panel(self.workspace_panel)
             self._sync_selection(None)
         elif item_type == ITEM_TYPE_ELEMENT:
+            elements_to_show = [obj]
             self._sync_selection(obj)
+            
+            # Update performance panel for testing
+            self.performance_panel.set_selected_elements(
+                elements_to_show, 
+                self._send_test_midi
+            )
+            
             if isinstance(obj, HitZone):
                 self.hitzone_panel.load(obj)
                 self._connect_hitzone_panel(obj)
@@ -2582,8 +2707,12 @@ class MainWindow(QMainWindow):
         idx = max(0, min(self.project.active_workspace_index, len(self.project.workspaces) - 1))
         return self.project.workspaces[idx]
 
-    def _selected_elements_and_workspace(self) -> tuple[list, Optional[Workspace]]:
-        """Return selected elements and inferred source workspace."""
+    def _selected_elements_and_workspace(self, require_single_workspace: bool = False) -> tuple[list, Optional[Workspace]]:
+        """Return selected elements and inferred source workspace.
+
+        When require_single_workspace=True (used by copy/cut), mixed-workspace
+        tree selections are rejected so clipboard semantics stay predictable.
+        """
         if not self.project:
             return [], None
 
@@ -2603,9 +2732,12 @@ class MainWindow(QMainWindow):
                 ws = self._get_workspace_for_item(item)
                 if source_ws is None:
                     source_ws = ws
-                elif ws is not source_ws:
-                    QMessageBox.warning(self, "Mixed Workspace Selection",
-                                        "Select elements from one workspace at a time for cut/copy.")
+                elif require_single_workspace and ws is not source_ws:
+                    QMessageBox.warning(
+                        self,
+                        "Mixed Workspace Selection",
+                        "Select elements from one workspace at a time for copy/cut.",
+                    )
                     return [], None
                 elems.append(elem)
             if elems:
@@ -2616,6 +2748,15 @@ class MainWindow(QMainWindow):
         elems = list(getattr(vp, 'selected_elements', []) or [])
         if not elems and getattr(vp, 'selected_element', None):
             elems = [vp.selected_element]
+        if not elems:
+            # If focus/active viewport differs from where the selection was made,
+            # fall back to whichever viewport actually has selected elements.
+            for other_vp in (self.viewport, self.quad_viewport):
+                elems = list(getattr(other_vp, 'selected_elements', []) or [])
+                if not elems and getattr(other_vp, 'selected_element', None):
+                    elems = [other_vp.selected_element]
+                if elems:
+                    break
         return elems, self._active_workspace()
 
     def _select_elements_in_tree(self, elements: list):
@@ -2640,7 +2781,7 @@ class MainWindow(QMainWindow):
     def _on_copy_elements(self):
         if not self.project:
             return
-        elements, source_ws = self._selected_elements_and_workspace()
+        elements, source_ws = self._selected_elements_and_workspace(require_single_workspace=True)
         if not elements or not source_ws:
             QMessageBox.information(self, "Copy", "Select one or more elements to copy.")
             return
@@ -2657,7 +2798,7 @@ class MainWindow(QMainWindow):
     def _on_cut_elements(self):
         if not self.project:
             return
-        elements, source_ws = self._selected_elements_and_workspace()
+        elements, source_ws = self._selected_elements_and_workspace(require_single_workspace=True)
         if not elements or not source_ws:
             QMessageBox.information(self, "Cut", "Select one or more elements to cut.")
             return
@@ -2812,12 +2953,7 @@ class MainWindow(QMainWindow):
     def _on_delete(self):
         if not self.project:
             return
-        items = self.tree.selectedItems()
-        elems_to_delete = []
-        for item in items:
-            data = item.data(0, Qt.ItemDataRole.UserRole)
-            if data and data[0] == ITEM_TYPE_ELEMENT:
-                elems_to_delete.append(data[1])
+        elems_to_delete, _ = self._selected_elements_and_workspace()
 
         if not elems_to_delete:
             return
@@ -2842,8 +2978,11 @@ class MainWindow(QMainWindow):
             cmd = DeleteElementCommand(self.project, elem, ws_refs, f"Delete {elem.unique_id}")
             self.undo_stack.push(cmd)
 
+        # Keep tree + viewport selection in sync after keyboard delete.
+        self._sync_selection(None)
         self._rebuild_tree()
         self._update_statusbar()
+        self._sync_viewports()
 
     def _get_workspace_for_item(self, item) -> Optional[Workspace]:
         parent = item.parent()
@@ -2991,19 +3130,26 @@ class MainWindow(QMainWindow):
         if not self.project:
             QMessageBox.information(self, "MIDI Overview", "No project loaded.")
             return
-        if self._midi_overview_dialog and not self._midi_overview_dialog.isVisible():
+        try:
+            if self._midi_overview_dialog and not self._midi_overview_dialog.isVisible():
+                self._midi_overview_dialog = None
+            if self._midi_overview_dialog is None:
+                self._midi_overview_dialog = MidiOverviewDialog(
+                    self.project,
+                    on_select_element=self._select_element_from_midi_overview,
+                    on_element_edited=self._on_midi_overview_element_edited,
+                    parent=self,
+                )
+            self._midi_overview_dialog.show()
+            self._midi_overview_dialog.raise_()
+        except Exception:
             self._midi_overview_dialog = None
-        if self._midi_overview_dialog is None:
-            self._midi_overview_dialog = MidiOverviewDialog(
-                self.project,
-                on_select_element=self._select_element_from_midi_overview,
-                on_element_edited=self._on_midi_overview_element_edited,
-                parent=self,
+            logging.exception("Failed to open MIDI overview dialog")
+            QMessageBox.critical(
+                self,
+                "MIDI Overview",
+                "MIDI overview failed to open. See editor.log for details.",
             )
-        else:
-            self._midi_overview_dialog._populate()
-        self._midi_overview_dialog.show()
-        self._midi_overview_dialog.raise_()
 
     def _select_element_from_midi_overview(self, elem):
         """Jump tree/viewport selection to the element chosen in MIDI overview."""
@@ -3019,7 +3165,9 @@ class MainWindow(QMainWindow):
         self.tree.blockSignals(False)
         self._on_selection_changed()
         self._sync_selection(elem)
-        self._active_viewport()._focus_selected()
+        vp = self._active_viewport()
+        if hasattr(vp, '_focus_selected'):
+            vp._focus_selected()
 
     def _on_midi_overview_element_edited(self, elem):
         """Refresh editor UI after quick MIDI overview edits."""
@@ -3305,6 +3453,48 @@ class MainWindow(QMainWindow):
 
     def _on_export_mp4(self):
         self._on_export_orbit_media("mp4")
+
+    def _on_export_touchosc(self):
+        if not self.project:
+            return
+
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export TouchOSC Layout Blueprint",
+            "touchosc_layout_blueprint.json",
+            "JSON Files (*.json);;All Files (*)",
+        )
+        if not file_path:
+            return
+
+        cfg = _load_config()
+        host = str(cfg.get("osc_bridge_host", "127.0.0.1"))
+        port = int(cfg.get("osc_bridge_port", 9001))
+        namespace = str(cfg.get("osc_bridge_namespace", "/mmc/midi"))
+
+        try:
+            from export_touchosc import export_touchosc_layout
+
+            summary = export_touchosc_layout(
+                self.project,
+                file_path,
+                osc_host=host,
+                osc_port=port,
+                osc_namespace=namespace,
+            )
+            self.statusbar.showMessage(f"TouchOSC layout blueprint exported to {file_path}", 5000)
+            QMessageBox.information(
+                self,
+                "TouchOSC Export",
+                "TouchOSC layout blueprint exported successfully.\n\n"
+                f"Pages: {summary['page_count']}\n"
+                f"Pads/Notes: {summary['note_controls']}\n"
+                f"CC Controls: {summary['cc_controls']}\n"
+                f"XY Controls: {summary['morph_controls']}",
+            )
+        except Exception as exc:
+            logging.exception("TouchOSC export failed")
+            QMessageBox.critical(self, "Export Error", f"Failed to export TouchOSC layout: {exc}")
 
     def _on_export_orbit_media(self, initial_format: str = "gif"):
         """Export orbit animation with configurable options (GIF/MP4)."""
@@ -4212,8 +4402,12 @@ class MainWindow(QMainWindow):
                 p.y = origin.y + dx
 
         # Keep generated content on/above the floor plane by default.
+        # Account for element scale extent: z_center - (scale.z / 2) should not go below 0
         if elements:
-            min_z = min(elem.transform.translation.z for elem in elements)
+            min_z = min(
+                elem.transform.translation.z - (elem.transform.scale.z / 2)
+                for elem in elements
+            )
             if min_z < 0.0:
                 lift = -min_z
                 for elem in elements:
@@ -4290,26 +4484,77 @@ class SettingsDialog(QWidget):
 # ---------------------------------------------------------------------------
 
 class MidiOverviewDialog(QWidget):
-    """Non-modal window listing all elements with editable MIDI assignments."""
+    """Non-modal window listing all elements with constrained MIDI editors."""
 
     def __init__(self, project, on_select_element=None, on_element_edited=None, parent=None):
         super().__init__(parent, Qt.WindowType.Window)
         self.setWindowTitle("MIDI Overview — All Elements")
-        self.setMinimumSize(900, 500)
+        self.setMinimumSize(1280, 560)
         self.project = project
         self._on_select_element = on_select_element
         self._on_element_edited = on_element_edited
         self._updating_table = False
+        cfg = _load_config()
+        self._osc_host = str(cfg.get("osc_bridge_host", "127.0.0.1"))
+        self._osc_port = int(cfg.get("osc_bridge_port", 9001))
+        self._test_transport = str(cfg.get("midi_test_transport", "osc"))
+        self._osc_namespace = str(cfg.get("osc_bridge_namespace", "/mmc/midi"))
+        self._preferred_midi_output = str(cfg.get("preferred_midi_output", "Loopback Midi"))
 
         layout = QVBoxLayout(self)
 
-        # Filter row
         filter_row = QHBoxLayout()
         self._search_edit = QLineEdit()
-        self._search_edit.setPlaceholderText("Filter by name, CC or note value...")
+        self._search_edit.setPlaceholderText("Filter by name, workspace, note, CC, or message type...")
         self._search_edit.textChanged.connect(self._apply_filter)
         filter_row.addWidget(QLabel("Search:"))
         filter_row.addWidget(self._search_edit)
+
+        filter_row.addWidget(QLabel("Test Transport:"))
+        self._transport_combo = QComboBox()
+        self._transport_combo.addItem("OSC Bridge", "osc")
+        self._transport_combo.addItem("MIDI Output", "midi")
+        self._transport_combo.addItem("OSC + MIDI", "both")
+        self._set_combo_value(self._transport_combo, self._test_transport)
+        self._transport_combo.currentIndexChanged.connect(self._on_transport_changed)
+        filter_row.addWidget(self._transport_combo)
+
+        filter_row.addWidget(QLabel("OSC Namespace:"))
+        self._osc_ns_edit = QLineEdit(self._osc_namespace)
+        self._osc_ns_edit.setMinimumWidth(130)
+        self._osc_ns_edit.editingFinished.connect(self._persist_osc_settings)
+        filter_row.addWidget(self._osc_ns_edit)
+
+        filter_row.addWidget(QLabel("OSC Host:"))
+        self._osc_host_edit = QLineEdit(self._osc_host)
+        self._osc_host_edit.setMinimumWidth(120)
+        self._osc_host_edit.editingFinished.connect(self._persist_osc_settings)
+        filter_row.addWidget(self._osc_host_edit)
+
+        filter_row.addWidget(QLabel("OSC Port:"))
+        self._osc_port_spin = QSpinBox()
+        self._osc_port_spin.setRange(1, 65535)
+        self._osc_port_spin.setValue(self._osc_port)
+        self._osc_port_spin.valueChanged.connect(self._persist_osc_settings)
+        filter_row.addWidget(self._osc_port_spin)
+
+        filter_row.addWidget(QLabel("MIDI Output:"))
+        self._port_combo = QComboBox()
+        self._port_combo.setMinimumWidth(260)
+        self._port_combo.currentIndexChanged.connect(self._on_midi_output_changed)
+        filter_row.addWidget(self._port_combo)
+
+        self._refresh_ports_btn = QPushButton("Refresh Ports")
+        self._refresh_ports_btn.clicked.connect(self._refresh_midi_ports)
+        filter_row.addWidget(self._refresh_ports_btn)
+
+        self._export_btn = QPushButton("Export Mappings")
+        self._export_btn.clicked.connect(self._export_mappings_text)
+        filter_row.addWidget(self._export_btn)
+
+        self._export_touchosc_btn = QPushButton("Export TouchOSC")
+        self._export_touchosc_btn.clicked.connect(self._export_touchosc_layout)
+        filter_row.addWidget(self._export_touchosc_btn)
 
         refresh_btn = QPushButton("Refresh")
         refresh_btn.clicked.connect(self._populate)
@@ -4324,36 +4569,101 @@ class MidiOverviewDialog(QWidget):
         layout.addWidget(filter_w)
 
         hint = QLabel(
-            "Quick edit: Name, MIDI Notes, MIDI CCs, Message Type. "
-            "Example notes: Ch1 N60 V127; Ch1 N61 V100. "
-            "Example CCs: Ch1 CC10=64 or X:Ch1 CC70=10 | Y:Ch1 CC71=20"
+            "Each row uses locked dropdowns instead of free-text parsing. "
+            "The note and CC editors update the first mapping shown for that element; any additional mappings are preserved. "
+            "Test sends either OSC bridge messages (/mmc/midi/cc or /mmc/midi/note) or direct MIDI output. "
+            "Use Export TouchOSC to generate a multi-page OSC control layout blueprint from this project."
         )
         hint.setWordWrap(True)
         layout.addWidget(hint)
 
-        # Table
         self._table = QTableWidget()
-        self._table.setColumnCount(6)
+        self._table.setColumnCount(9)
         self._table.setHorizontalHeaderLabels([
             "Element Name", "Type", "Workspace",
-            "MIDI Notes", "MIDI CCs", "Message Type"
+            "Note Summary", "CC Summary", "Message Type",
+            "Note Mapping", "CC Mapping", "Test MIDI",
         ])
         self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self._table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self._table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         self._table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        self._table.setSortingEnabled(True)
-        self._table.setEditTriggers(
-            QTableWidget.EditTrigger.DoubleClicked
-            | QTableWidget.EditTrigger.EditKeyPressed
-            | QTableWidget.EditTrigger.SelectedClicked
-        )
-        self._table.itemChanged.connect(self._on_item_changed)
+        self._table.setSortingEnabled(False)
+        self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self._table.itemDoubleClicked.connect(lambda _item: self._select_current_row())
+        self._table.itemSelectionChanged.connect(self._update_select_button_state)
         layout.addWidget(self._table)
 
+        self._loading_label = QLabel("Loading MIDI mappings...")
+        self._loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._loading_label.setStyleSheet(
+            "background-color: rgba(20, 24, 36, 220); "
+            "color: #E6EEF7; font-weight: 600; padding: 14px; "
+            "border: 1px solid rgba(120, 150, 190, 180); border-radius: 6px;"
+        )
+        self._loading_label.hide()
+        layout.addWidget(self._loading_label)
+
+        self._status_label = QLabel()
+        self._status_label.setWordWrap(True)
+        layout.addWidget(self._status_label)
+
+        self._port_combo.addItem("Click Refresh Ports", None)
+        self._on_transport_changed()
         self._populate()
+        self._update_select_button_state()
+
+    def _set_loading(self, active: bool, message: str = "Loading MIDI mappings..."):
+        self._loading_label.setText(message)
+        self._loading_label.setVisible(active)
+        self._table.setVisible(not active)
+        QApplication.processEvents()
+
+    def _on_midi_output_changed(self):
+        port_name = self._port_combo.currentData() or self._port_combo.currentText()
+        if not port_name or port_name in ("Click Refresh Ports", "No MIDI outputs found", "MIDI output discovery failed", "Install mido + python-rtmidi"):
+            return
+        cfg = _load_config()
+        cfg["preferred_midi_output"] = port_name
+        _save_config(cfg)
+
+    def _persist_osc_settings(self):
+        host = self._osc_host_edit.text().strip() or "127.0.0.1"
+        port = int(self._osc_port_spin.value())
+        namespace = self._osc_ns_edit.text().strip() or "/mmc/midi"
+        if not namespace.startswith("/"):
+            namespace = "/" + namespace
+        namespace = namespace.rstrip("/") or "/mmc/midi"
+        self._osc_ns_edit.setText(namespace)
+        cfg = _load_config()
+        cfg["osc_bridge_host"] = host
+        cfg["osc_bridge_port"] = port
+        cfg["osc_bridge_namespace"] = namespace
+        _save_config(cfg)
+
+    def _on_transport_changed(self):
+        mode = self._transport_combo.currentData() or "osc"
+        cfg = _load_config()
+        cfg["midi_test_transport"] = mode
+        _save_config(cfg)
+
+        using_osc = mode in ("osc", "both")
+        using_midi = mode in ("midi", "both")
+        self._osc_host_edit.setEnabled(using_osc)
+        self._osc_port_spin.setEnabled(using_osc)
+        self._osc_ns_edit.setEnabled(using_osc)
+        self._port_combo.setEnabled(using_midi)
+        self._refresh_ports_btn.setEnabled(using_midi)
+        if mode == "osc":
+            self._mark_status("OSC bridge mode active. Test sends to configured OSC namespace.")
+        elif mode == "midi":
+            self._mark_status("MIDI output mode active. Click Refresh Ports to scan outputs.")
+        else:
+            self._mark_status("OSC + MIDI mode active. Test sends to both transports.")
+
+        if using_midi and self._port_combo.count() <= 1:
+            self._refresh_midi_ports()
 
     def _element_workspace(self, elem) -> str:
         for ws in self.project.workspaces:
@@ -4361,51 +4671,604 @@ class MidiOverviewDialog(QWidget):
                 return ws.display_name
         return "(none)"
 
+    def _note_velocity_label(self, value: float) -> str:
+        if value <= 1.0:
+            return f"{value:.2f}"
+        return str(int(round(value)))
+
     def _format_notes(self, elem) -> str:
         notes = getattr(elem, 'midi_note_mappings', [])
         if not notes:
             return ""
-        return "  ".join(f"Ch{n.channel} N{n.note} V{int(n.velocity)}" for n in notes)
+        return "  ".join(
+            f"Ch{mapping.channel} N{mapping.note} ({_midi_note_label(mapping.note)}) V{self._note_velocity_label(mapping.velocity)}"
+            for mapping in notes
+        )
 
     def _format_ccs(self, elem) -> str:
         parts = []
         for attr in ('midi_cc_mappings', 'x_axis_cc_mappings', 'y_axis_cc_mappings', 'z_axis_cc_mappings'):
             ccs = getattr(elem, attr, [])
-            prefix = {"x_axis_cc_mappings": "X:", "y_axis_cc_mappings": "Y:",
-                      "z_axis_cc_mappings": "Z:"}.get(attr, "")
-            for cc in ccs:
-                parts.append(f"{prefix}Ch{cc.channel} CC{cc.control}={cc.value}")
+            prefix = {"x_axis_cc_mappings": "X:", "y_axis_cc_mappings": "Y:", "z_axis_cc_mappings": "Z:"}.get(attr, "")
+            for mapping in ccs:
+                parts.append(f"{prefix}Ch{mapping.channel} CC{mapping.control}={mapping.value}")
         return "  ".join(parts)
 
-    def _populate(self):
-        self._updating_table = True
-        self._table.setSortingEnabled(False)
-        self._table.setRowCount(0)
+    def _make_read_only_item(self, text: str, elem) -> QTableWidgetItem:
+        item = QTableWidgetItem(text)
+        item.setData(Qt.ItemDataRole.UserRole, elem)
+        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        return item
+
+    def _set_combo_value(self, combo: QComboBox, value):
+        for index in range(combo.count()):
+            data = combo.itemData(index)
+            if isinstance(data, float) or isinstance(value, float):
+                if abs(float(data) - float(value)) < 1e-9:
+                    combo.setCurrentIndex(index)
+                    return
+            elif data == value:
+                combo.setCurrentIndex(index)
+                return
+
+    def _build_combo(self, options: list, current_value, *, enabled: bool = True, min_width: int = 0) -> QComboBox:
+        combo = QComboBox()
+        if min_width:
+            combo.setMinimumWidth(min_width)
+        for label, value in options:
+            combo.addItem(label, value)
+        self._set_combo_value(combo, current_value)
+        combo.setEnabled(enabled)
+        return combo
+
+    def _default_note_mapping(self) -> MidiNoteMapping:
+        return MidiNoteMapping(channel=1, note=60, velocity=1.0)
+
+    def _default_cc_mapping(self, axis: str = "") -> MidiCCMapping:
+        control_defaults = {"": 69, "X": 70, "Y": 71, "Z": 72}
+        value_defaults = {"": 127, "X": 0, "Y": 0, "Z": 0}
+        return MidiCCMapping(channel=1, control=control_defaults.get(axis, 0), value=value_defaults.get(axis, 0))
+
+    def _find_row_for_element(self, elem) -> int:
+        for row in range(self._table.rowCount()):
+            item = self._table.item(row, 0)
+            if item and item.data(Qt.ItemDataRole.UserRole) is elem:
+                return row
+        return -1
+
+    def _refresh_row_summary(self, elem):
+        row = self._find_row_for_element(elem)
+        if row < 0:
+            return
+        self._table.item(row, 3).setText(self._format_notes(elem))
+        self._table.item(row, 4).setText(self._format_ccs(elem))
+
+    def _mark_status(self, message: str):
+        self._status_label.setText(message)
+
+    def _notify_element_edited(self, elem):
+        self._refresh_row_summary(elem)
+        if callable(self._on_element_edited):
+            self._on_element_edited(elem)
+
+    def _morph_axis_options(self, elem) -> list:
+        if hasattr(elem, 'x_axis_cc_mappings'):
+            return [("X Axis", "X"), ("Y Axis", "Y"), ("Z Axis", "Z")]
+        if hasattr(elem, 'midi_cc_mappings'):
+            return [("Main", "")]
+        return []
+
+    def _get_cc_mapping_list(self, elem, axis: str) -> list:
+        attr = {
+            "": "midi_cc_mappings",
+            "X": "x_axis_cc_mappings",
+            "Y": "y_axis_cc_mappings",
+            "Z": "z_axis_cc_mappings",
+        }.get(axis, "midi_cc_mappings")
+        return copy.deepcopy(getattr(elem, attr, []))
+
+    def _set_cc_mapping_list(self, elem, axis: str, mappings: list):
+        attr = {
+            "": "midi_cc_mappings",
+            "X": "x_axis_cc_mappings",
+            "Y": "y_axis_cc_mappings",
+            "Z": "z_axis_cc_mappings",
+        }.get(axis, "midi_cc_mappings")
+        setattr(elem, attr, mappings)
+
+    def _first_cc_mapping(self, elem, axis: str) -> MidiCCMapping:
+        attr = {
+            "": "midi_cc_mappings",
+            "X": "x_axis_cc_mappings",
+            "Y": "y_axis_cc_mappings",
+            "Z": "z_axis_cc_mappings",
+        }.get(axis, "midi_cc_mappings")
+        mappings = getattr(elem, attr, [])
+        if mappings:
+            return mappings[0]
+        return self._default_cc_mapping(axis)
+
+    def _first_note_mapping(self, elem) -> MidiNoteMapping:
+        mappings = getattr(elem, 'midi_note_mappings', [])
+        if mappings:
+            return mappings[0]
+        return self._default_note_mapping()
+
+    def _selected_morph_axis(self, elem) -> str:
+        for axis in ("X", "Y", "Z"):
+            if self._get_cc_mapping_list(elem, axis):
+                return axis
+        return "X"
+
+    def _apply_message_type_change(self, elem, combo: QComboBox):
+        if self._updating_table or not hasattr(elem, 'midi_message_type'):
+            return
+        elem.midi_message_type = combo.currentData() or MIDI_MESSAGE_TYPES[0]
+        self._notify_element_edited(elem)
+
+    def _apply_note_mapping_change(self, elem, channel_combo: QComboBox, note_combo: QComboBox, velocity_combo: QComboBox):
+        if self._updating_table or not hasattr(elem, 'midi_note_mappings'):
+            return
+        mappings = copy.deepcopy(getattr(elem, 'midi_note_mappings', []))
+        if mappings:
+            mapping = mappings[0]
+        else:
+            mapping = self._default_note_mapping()
+            mappings = [mapping]
+        mapping.channel = int(channel_combo.currentData())
+        mapping.note = int(note_combo.currentData())
+        mapping.velocity = float(velocity_combo.currentData())
+        elem.midi_note_mappings = mappings
+        self._notify_element_edited(elem)
+
+    def _load_cc_editor_values(self, elem, axis_combo: QComboBox, channel_combo: QComboBox, control_combo: QComboBox, value_combo: QComboBox):
+        axis = axis_combo.currentData() or ""
+        mapping = self._first_cc_mapping(elem, axis)
+        for combo, value in ((channel_combo, mapping.channel), (control_combo, mapping.control), (value_combo, mapping.value)):
+            combo.blockSignals(True)
+            self._set_combo_value(combo, value)
+            combo.blockSignals(False)
+
+    def _apply_cc_mapping_change(self, elem, axis_combo: QComboBox, channel_combo: QComboBox, control_combo: QComboBox, value_combo: QComboBox):
+        if self._updating_table:
+            return
+        axis = axis_combo.currentData() or ""
+        if not self._morph_axis_options(elem):
+            return
+        mappings = self._get_cc_mapping_list(elem, axis)
+        if mappings:
+            mapping = mappings[0]
+        else:
+            mapping = self._default_cc_mapping(axis)
+            mappings = [mapping]
+        mapping.channel = int(channel_combo.currentData())
+        mapping.control = int(control_combo.currentData())
+        mapping.value = int(value_combo.currentData())
+        self._set_cc_mapping_list(elem, axis, mappings)
+        self._notify_element_edited(elem)
+
+    def _note_editor_widget(self, elem) -> QWidget:
+        wrapper = QWidget()
+        row = QHBoxLayout(wrapper)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(4)
+        if not hasattr(elem, 'midi_note_mappings'):
+            label = QLabel("n/a")
+            label.setEnabled(False)
+            row.addWidget(label)
+            return wrapper
+
+        mapping = self._first_note_mapping(elem)
+        channel_combo = self._build_combo(MIDI_CHANNEL_OPTIONS, mapping.channel, min_width=72)
+        note_combo = self._build_combo(MIDI_NOTE_OPTIONS, mapping.note, min_width=118)
+        velocity_combo = self._build_combo(MIDI_VELOCITY_OPTIONS, float(mapping.velocity), min_width=70)
+        channel_combo.setToolTip("Note mapping channel")
+        note_combo.setToolTip("Note mapping note value")
+        velocity_combo.setToolTip("Note mapping velocity")
+        for combo in (channel_combo, note_combo, velocity_combo):
+            combo.currentIndexChanged.connect(
+                lambda _index, e=elem, ch=channel_combo, nt=note_combo, vel=velocity_combo:
+                self._apply_note_mapping_change(e, ch, nt, vel)
+            )
+            row.addWidget(combo)
+        if len(getattr(elem, 'midi_note_mappings', [])) > 1:
+            wrapper.setToolTip("Editing the first note mapping only. Additional note mappings are preserved.")
+        return wrapper
+
+    def _cc_editor_widget(self, elem) -> tuple[QWidget, Optional[QComboBox]]:
+        wrapper = QWidget()
+        row = QHBoxLayout(wrapper)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(4)
+        axis_options = self._morph_axis_options(elem)
+        if not axis_options:
+            label = QLabel("n/a")
+            label.setEnabled(False)
+            row.addWidget(label)
+            return wrapper, None
+
+        current_axis = self._selected_morph_axis(elem) if hasattr(elem, 'x_axis_cc_mappings') else ""
+        axis_combo = self._build_combo(axis_options, current_axis, min_width=78)
+        axis_combo.setEnabled(len(axis_options) > 1)
+        channel_combo = self._build_combo(MIDI_CHANNEL_OPTIONS, 1, min_width=72)
+        control_combo = self._build_combo(MIDI_CC_OPTIONS, 0, min_width=64)
+        value_combo = self._build_combo(MIDI_CC_OPTIONS, 0, min_width=64)
+
+        axis_combo.currentIndexChanged.connect(
+            lambda _index, e=elem, a=axis_combo, ch=channel_combo, ctrl=control_combo, val=value_combo:
+            self._load_cc_editor_values(e, a, ch, ctrl, val)
+        )
+        for combo in (channel_combo, control_combo, value_combo):
+            combo.currentIndexChanged.connect(
+                lambda _index, e=elem, a=axis_combo, ch=channel_combo, ctrl=control_combo, val=value_combo:
+                self._apply_cc_mapping_change(e, a, ch, ctrl, val)
+            )
+
+        row.addWidget(axis_combo)
+        row.addWidget(channel_combo)
+        row.addWidget(control_combo)
+        row.addWidget(value_combo)
+        self._load_cc_editor_values(elem, axis_combo, channel_combo, control_combo, value_combo)
+
+        axis_counts = [len(self._get_cc_mapping_list(elem, axis_value)) for _, axis_value in axis_options]
+        if any(count > 1 for count in axis_counts):
+            wrapper.setToolTip("Editing the first CC mapping for the selected group only. Additional CC mappings are preserved.")
+        return wrapper, axis_combo
+
+    def _message_type_widget(self, elem) -> QWidget:
+        combo = self._build_combo([(item, item) for item in MIDI_MESSAGE_TYPES], getattr(elem, 'midi_message_type', MIDI_MESSAGE_TYPES[0]), min_width=146)
+        if not hasattr(elem, 'midi_message_type'):
+            combo.clear()
+            combo.addItem("n/a", "")
+            combo.setEnabled(False)
+            return combo
+        combo.currentIndexChanged.connect(lambda _index, e=elem, c=combo: self._apply_message_type_change(e, c))
+        return combo
+
+    def _velocity_to_midi(self, value: float) -> int:
+        if value <= 1.0:
+            return max(0, min(127, int(round(value * 127))))
+        return max(0, min(127, int(round(value))))
+
+    def _refresh_midi_ports(self):
+        current_port = self._port_combo.currentData()
+        current_text = self._port_combo.currentText()
+        self._port_combo.blockSignals(True)
+        self._port_combo.clear()
+        self._port_combo.setEnabled(False)
+        self._mark_status("Scanning MIDI outputs...")
+        QApplication.processEvents()
+        if mido is None:
+            self._port_combo.addItem("Install mido + python-rtmidi", None)
+            self._port_combo.blockSignals(False)
+            self._mark_status("MIDI testing is unavailable until mido and python-rtmidi are installed.")
+            return
+        try:
+            port_names = mido.get_output_names()
+        except Exception as exc:
+            self._port_combo.addItem("MIDI output discovery failed", None)
+            self._port_combo.blockSignals(False)
+            self._mark_status(f"MIDI output discovery failed: {exc}")
+            return
+        if not port_names:
+            self._port_combo.addItem("No MIDI outputs found", None)
+            self._port_combo.blockSignals(False)
+            self._mark_status("No MIDI output ports are currently available.")
+            return
+        for port_name in port_names:
+            self._port_combo.addItem(port_name, port_name)
+
+        preferred = _load_config().get("preferred_midi_output", "Loopback Midi")
+        selected = None
+        if current_port in port_names:
+            selected = current_port
+        elif current_text in port_names:
+            selected = current_text
+        elif preferred in port_names:
+            selected = preferred
+        else:
+            loopback = _pick_loopback_midi_port(port_names)
+            selected = loopback or port_names[0]
+        self._set_combo_value(self._port_combo, selected)
+
+        if (self._transport_combo.currentData() or "osc") in ("midi", "both"):
+            self._port_combo.setEnabled(True)
+        self._port_combo.blockSignals(False)
+        self._on_midi_output_changed()
+        self._mark_status(f"Ready to send test MIDI to {self._port_combo.currentText()}.")
+
+    def _osc_addresses(self) -> tuple[str, str]:
+        namespace = self._osc_ns_edit.text().strip() or "/mmc/midi"
+        if not namespace.startswith("/"):
+            namespace = "/" + namespace
+        namespace = namespace.rstrip("/")
+        return f"{namespace}/cc", f"{namespace}/note"
+
+    def _send_test_osc(self, elem, axis_combo: Optional[QComboBox] = None) -> bool:
+        host = self._osc_host_edit.text().strip() or "127.0.0.1"
+        port = int(self._osc_port_spin.value())
+        if SimpleUDPClient is None:
+            return False
+
+        try:
+            client = SimpleUDPClient(host, port)
+            cc_addr, note_addr = self._osc_addresses()
+            if hasattr(elem, 'x_axis_cc_mappings'):
+                sent = 0
+                for axis_attr in ("x_axis_cc_mappings", "y_axis_cc_mappings", "z_axis_cc_mappings"):
+                    for mapping in getattr(elem, axis_attr, [])[:1]:
+                        client.send_message(cc_addr, [int(mapping.channel), int(mapping.control), int(mapping.value)])
+                        sent += 1
+                if sent:
+                    self._mark_status(f"OSC -> {cc_addr} sent {sent} MorphZone CC message(s) to {host}:{port}")
+                    return True
+            if hasattr(elem, 'midi_message_type') and getattr(elem, 'midi_message_type', MIDI_MESSAGE_TYPES[0]) == "EMidiMessageType::CC":
+                mapping = self._first_cc_mapping(elem, "")
+                client.send_message(cc_addr, [int(mapping.channel), int(mapping.control), int(mapping.value)])
+                self._mark_status(
+                    f"OSC -> {cc_addr} [{mapping.channel}, {mapping.control}, {mapping.value}] to {host}:{port}"
+                )
+                return True
+
+            if hasattr(elem, 'midi_note_mappings') and getattr(elem, 'midi_note_mappings', []):
+                mapping = self._first_note_mapping(elem)
+                velocity = self._velocity_to_midi(float(mapping.velocity))
+                client.send_message(note_addr, [int(mapping.channel), int(mapping.note), int(velocity)])
+                QTimer.singleShot(
+                    250,
+                    lambda h=host, p=port, ch=int(mapping.channel), nt=int(mapping.note):
+                    SimpleUDPClient(h, p).send_message(note_addr, [ch, nt, 0]),
+                )
+                self._mark_status(
+                    f"OSC -> {note_addr} [{mapping.channel}, {mapping.note}, {velocity}] to {host}:{port}"
+                )
+                return True
+
+            axis = axis_combo.currentData() if axis_combo is not None else "X"
+            mapping = self._first_cc_mapping(elem, axis or "X")
+            client.send_message(cc_addr, [int(mapping.channel), int(mapping.control), int(mapping.value)])
+            self._mark_status(
+                f"OSC -> {cc_addr} [{mapping.channel}, {mapping.control}, {mapping.value}] to {host}:{port}"
+            )
+            return True
+        except Exception as exc:
+            logging.exception("OSC test send failed")
+            self._mark_status(f"OSC send failed: {exc}")
+            return False
+
+    def _send_test_midi_only(self, elem, axis_combo: Optional[QComboBox] = None) -> bool:
+        if mido is None:
+            return False
+
+        port_name = self._port_combo.currentData() or self._port_combo.currentText()
+        if port_name in ("Click Refresh Ports", "No MIDI outputs found", "MIDI output discovery failed", "Install mido + python-rtmidi"):
+            port_name = None
+        if not port_name:
+            self._mark_status("No valid MIDI output selected.")
+            return False
+
+        try:
+            port = mido.open_output(port_name)
+        except Exception as exc:
+            logging.exception("MIDI output open failed")
+            self._mark_status(f"MIDI output open failed: {exc}")
+            return False
+
+        try:
+            if hasattr(elem, 'x_axis_cc_mappings'):
+                sent = 0
+                for axis_attr in ("x_axis_cc_mappings", "y_axis_cc_mappings", "z_axis_cc_mappings"):
+                    for mapping in getattr(elem, axis_attr, [])[:1]:
+                        message = mido.Message(
+                            'control_change',
+                            channel=max(0, int(mapping.channel) - 1),
+                            control=int(mapping.control),
+                            value=int(mapping.value),
+                        )
+                        port.send(message)
+                        sent += 1
+                if sent:
+                    port.close()
+                    self._mark_status(f"Sent {sent} MorphZone CC message(s) to {port_name}.")
+                    return True
+
+            if hasattr(elem, 'midi_message_type') and getattr(elem, 'midi_message_type', MIDI_MESSAGE_TYPES[0]) == "EMidiMessageType::CC":
+                mapping = self._first_cc_mapping(elem, "")
+                message = mido.Message('control_change', channel=max(0, int(mapping.channel) - 1), control=int(mapping.control), value=int(mapping.value))
+                port.send(message)
+                port.close()
+                self._mark_status(f"Sent CC{mapping.control}={mapping.value} on channel {mapping.channel} to {port_name}.")
+                return True
+
+            if hasattr(elem, 'midi_note_mappings') and getattr(elem, 'midi_note_mappings', []):
+                mapping = self._first_note_mapping(elem)
+                note_on = mido.Message(
+                    'note_on',
+                    channel=max(0, int(mapping.channel) - 1),
+                    note=int(mapping.note),
+                    velocity=self._velocity_to_midi(float(mapping.velocity)),
+                )
+                note_off = mido.Message('note_off', channel=max(0, int(mapping.channel) - 1), note=int(mapping.note), velocity=0)
+                port.send(note_on)
+                QTimer.singleShot(250, lambda p=port, msg=note_off: (p.send(msg), p.close()))
+                self._mark_status(f"Sent note {_midi_note_label(mapping.note)} ({mapping.note}) on channel {mapping.channel} to {port_name}.")
+                return True
+
+            axis = axis_combo.currentData() if axis_combo is not None else "X"
+            mapping = self._first_cc_mapping(elem, axis or "X")
+            message = mido.Message('control_change', channel=max(0, int(mapping.channel) - 1), control=int(mapping.control), value=int(mapping.value))
+            port.send(message)
+            port.close()
+            axis_label = axis or "Main"
+            self._mark_status(f"Sent {axis_label} CC{mapping.control}={mapping.value} on channel {mapping.channel} to {port_name}.")
+            return True
+        except Exception as exc:
+            port.close()
+            logging.exception("MIDI test send failed")
+            self._mark_status(f"MIDI send failed: {exc}")
+            return False
+
+    def _send_test_midi(self, elem, axis_combo: Optional[QComboBox] = None):
+        mode = self._transport_combo.currentData() or "osc"
+        osc_ok = False
+        midi_ok = False
+
+        if mode in ("osc", "both"):
+            osc_ok = self._send_test_osc(elem, axis_combo)
+
+        if mode in ("midi", "both"):
+            midi_ok = self._send_test_midi_only(elem, axis_combo)
+
+        if mode == "osc" and not osc_ok:
+            QMessageBox.warning(self, "Test MIDI", "OSC test send failed. Check host/port, namespace, and bridge status.")
+        elif mode == "midi" and not midi_ok:
+            QMessageBox.warning(self, "Test MIDI", "MIDI test send failed. Check output selection and MIDI device state.")
+        elif mode == "both" and (not osc_ok or not midi_ok):
+            QMessageBox.warning(self, "Test MIDI", "One or more transports failed. Check status text for details.")
+
+    def _insert_row(self, row: int, elem):
+        row_data = [
+            elem.display_name or elem.unique_id,
+            type(elem).__name__,
+            self._element_workspace(elem),
+            self._format_notes(elem),
+            self._format_ccs(elem),
+        ]
+        for column, value in enumerate(row_data):
+            self._table.setItem(row, column, self._make_read_only_item(value, elem))
+
+        msg_widget = self._message_type_widget(elem)
+        note_widget = self._note_editor_widget(elem)
+        cc_widget, axis_combo = self._cc_editor_widget(elem)
+        test_btn = QPushButton("Test")
+        test_btn.clicked.connect(lambda _checked=False, e=elem, a=axis_combo: self._send_test_midi(e, a))
+
+        self._table.setCellWidget(row, 5, msg_widget)
+        self._table.setCellWidget(row, 6, note_widget)
+        self._table.setCellWidget(row, 7, cc_widget)
+        self._table.setCellWidget(row, 8, test_btn)
+
+    def _export_mappings_text(self):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export MIDI/OSC Mappings",
+            "midi_osc_mappings.txt",
+            "Text Files (*.txt);;All Files (*)",
+        )
+        if not file_path:
+            return
+
+        cc_addr, note_addr = self._osc_addresses()
+        lines = [
+            "MoveMusic MIDI/OSC Mapping Export",
+            "",
+            f"OSC Host: {self._osc_host_edit.text().strip() or '127.0.0.1'}",
+            f"OSC Port: {int(self._osc_port_spin.value())}",
+            f"OSC CC Address: {cc_addr}",
+            f"OSC Note Address: {note_addr}",
+            "",
+        ]
+
         for elem in self.project.elements:
-            etype = type(elem).__name__
-            ws_name = self._element_workspace(elem)
-            notes_str = self._format_notes(elem)
-            ccs_str = self._format_ccs(elem)
-            msg_type = getattr(elem, 'midi_message_type', "")
+            lines.append(f"Element: {elem.display_name or elem.unique_id}")
+            lines.append(f"Type: {type(elem).__name__}")
+            lines.append(f"Workspace: {self._element_workspace(elem)}")
+            msg_type = getattr(elem, 'midi_message_type', 'N/A')
+            lines.append(f"Message Type: {msg_type}")
 
-            row_data = [
-                elem.display_name or elem.unique_id,
-                etype, ws_name, notes_str, ccs_str, msg_type
-            ]
-            self._rows.append(row_data)
+            note_mappings = getattr(elem, 'midi_note_mappings', [])
+            if note_mappings:
+                lines.append("Note Mappings:")
+                for mapping in note_mappings:
+                    velocity = self._velocity_to_midi(float(mapping.velocity))
+                    lines.append(
+                        f"  Ch {mapping.channel} Note {mapping.note} Vel {velocity} | OSC: {note_addr} [{mapping.channel}, {mapping.note}, {velocity}]"
+                    )
 
-            row = self._table.rowCount()
-            self._table.insertRow(row)
-            for col, val in enumerate(row_data):
-                item = QTableWidgetItem(val)
-                item.setData(Qt.ItemDataRole.UserRole, elem)
-                if col in (1, 2):
-                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                self._table.setItem(row, col, item)
+            has_cc = False
+            for label, attr in (
+                ("Main CC", "midi_cc_mappings"),
+                ("X Axis CC", "x_axis_cc_mappings"),
+                ("Y Axis CC", "y_axis_cc_mappings"),
+                ("Z Axis CC", "z_axis_cc_mappings"),
+            ):
+                cc_mappings = getattr(elem, attr, [])
+                if not cc_mappings:
+                    continue
+                has_cc = True
+                lines.append(f"{label}:")
+                for mapping in cc_mappings:
+                    lines.append(
+                        f"  Ch {mapping.channel} CC {mapping.control} Value {mapping.value} | OSC: {cc_addr} [{mapping.channel}, {mapping.control}, {mapping.value}]"
+                    )
 
-        self._table.setSortingEnabled(True)
+            if not note_mappings and not has_cc:
+                lines.append("No MIDI mappings")
+
+            lines.append("")
+
+        try:
+            with open(file_path, "w", encoding="utf-8") as handle:
+                handle.write("\n".join(lines))
+            self._mark_status(f"Exported mappings to {file_path}")
+        except Exception as exc:
+            QMessageBox.warning(self, "Export Mappings", f"Failed to export mappings: {exc}")
+
+    def _export_touchosc_layout(self):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export TouchOSC Layout Blueprint",
+            "touchosc_layout_blueprint.json",
+            "JSON Files (*.json);;All Files (*)",
+        )
+        if not file_path:
+            return
+
+        try:
+            from export_touchosc import export_touchosc_layout
+
+            summary = export_touchosc_layout(
+                self.project,
+                file_path,
+                osc_host=self._osc_host_edit.text().strip() or "127.0.0.1",
+                osc_port=int(self._osc_port_spin.value()),
+                osc_namespace=self._osc_ns_edit.text().strip() or "/mmc/midi",
+            )
+            self._mark_status(
+                f"TouchOSC export complete: {summary['page_count']} page(s), "
+                f"{summary['note_controls']} pads, {summary['cc_controls']} CC controls, "
+                f"{summary['morph_controls']} XY controls."
+            )
+            QMessageBox.information(
+                self,
+                "TouchOSC Export",
+                "TouchOSC layout blueprint exported successfully.\n\n"
+                f"Pages: {summary['page_count']}\n"
+                f"Pads/Notes: {summary['note_controls']}\n"
+                f"CC Controls: {summary['cc_controls']}\n"
+                f"XY Controls: {summary['morph_controls']}",
+            )
+        except Exception as exc:
+            logging.exception("TouchOSC export failed")
+            QMessageBox.warning(self, "TouchOSC Export", f"Failed to export TouchOSC layout: {exc}")
+
+    def _populate(self):
+        self._set_loading(True, "Loading MIDI mappings... 0/0")
+        self._updating_table = True
+        self._table.setUpdatesEnabled(False)
+        self._table.setRowCount(0)
+        elements = list(self.project.elements)
+        total = len(elements)
+        self._set_loading(True, f"Loading MIDI mappings... 0/{total}")
+        self._table.setRowCount(len(elements))
+        for row, elem in enumerate(elements):
+            self._insert_row(row, elem)
+            if (row + 1) % 25 == 0 or (row + 1) == total:
+                self._set_loading(True, f"Loading MIDI mappings... {row + 1}/{total}")
+        self._table.setUpdatesEnabled(True)
         self._updating_table = False
         self._apply_filter(self._search_edit.text())
+        self._set_loading(False)
 
     def _apply_filter(self, text: str):
         text = text.strip().lower()
@@ -4413,13 +5276,17 @@ class MidiOverviewDialog(QWidget):
             if not text:
                 self._table.setRowHidden(row, False)
                 continue
-            match = False
-            for col in range(self._table.columnCount()):
+            row_parts = []
+            for col in range(5):
                 item = self._table.item(row, col)
-                if item and text in item.text().lower():
-                    match = True
-                    break
-            self._table.setRowHidden(row, not match)
+                if item:
+                    row_parts.append(item.text())
+            for col in (5, 6, 7):
+                widget = self._table.cellWidget(row, col)
+                if widget:
+                    row_parts.extend(combo.currentText() for combo in widget.findChildren(QComboBox))
+            row_text = " ".join(row_parts).lower()
+            self._table.setRowHidden(row, text not in row_text)
 
     def _current_element(self):
         row = self._table.currentRow()
@@ -4435,87 +5302,9 @@ class MidiOverviewDialog(QWidget):
         if elem is not None and callable(self._on_select_element):
             self._on_select_element(elem)
 
-    def _parse_notes_text(self, text: str):
-        mappings = []
-        text = (text or "").strip()
-        if not text:
-            return mappings
-        pattern = re.compile(r"(?:Ch\s*(\d+)\s*)?(?:N|Note)\s*(\d+)(?:\s*(?:V|Vel)\s*(\d+))?", re.IGNORECASE)
-        for m in pattern.finditer(text):
-            ch = int(m.group(1) or 1)
-            note = int(m.group(2))
-            vel = float(int(m.group(3) or 127))
-            mappings.append(MidiNoteMapping(channel=ch, note=note, velocity=vel))
-        if not mappings and text:
-            raise ValueError("Invalid note mappings. Use format like: Ch1 N60 V127")
-        return mappings
-
-    def _parse_ccs_text(self, text: str):
-        parsed = []
-        text = (text or "").strip()
-        if not text:
-            return parsed
-        pattern = re.compile(
-            r"(?:(X|Y|Z)\s*:\s*)?(?:Ch\s*(\d+)\s*)?CC\s*(\d+)\s*(?:=|->)?\s*(-?\d+)",
-            re.IGNORECASE,
-        )
-        for m in pattern.finditer(text):
-            axis = (m.group(1) or "").upper()
-            ch = int(m.group(2) or 1)
-            control = int(m.group(3))
-            value = int(m.group(4))
-            parsed.append((axis, MidiCCMapping(channel=ch, control=control, value=value)))
-        if not parsed and text:
-            raise ValueError("Invalid CC mappings. Use format like: Ch1 CC10=64 or X:Ch1 CC70=10")
-        return parsed
-
-    def _on_item_changed(self, item: QTableWidgetItem):
-        if self._updating_table:
-            return
-        elem = item.data(Qt.ItemDataRole.UserRole)
-        if elem is None:
-            return
-
-        col = item.column()
-        text = item.text().strip()
-        try:
-            if col == 0:
-                elem.display_name = text
-            elif col == 3:
-                if hasattr(elem, 'midi_note_mappings'):
-                    elem.midi_note_mappings = self._parse_notes_text(text)
-            elif col == 4:
-                parsed = self._parse_ccs_text(text)
-                if hasattr(elem, 'midi_cc_mappings'):
-                    elem.midi_cc_mappings = [cc for _, cc in parsed]
-                elif hasattr(elem, 'x_axis_cc_mappings'):
-                    x = [cc for axis, cc in parsed if axis in ("", "X")]
-                    y = [cc for axis, cc in parsed if axis == "Y"]
-                    z = [cc for axis, cc in parsed if axis == "Z"]
-                    elem.x_axis_cc_mappings = x
-                    elem.y_axis_cc_mappings = y
-                    elem.z_axis_cc_mappings = z
-            elif col == 5 and hasattr(elem, 'midi_message_type'):
-                elem.midi_message_type = text or "EMidiMessageType::Note"
-        except Exception as e:
-            QMessageBox.warning(self, "Invalid Value", str(e))
-            self._updating_table = True
-            # Restore this row to canonical model values.
-            self._table.item(item.row(), 0).setText(elem.display_name or elem.unique_id)
-            self._table.item(item.row(), 3).setText(self._format_notes(elem))
-            self._table.item(item.row(), 4).setText(self._format_ccs(elem))
-            self._table.item(item.row(), 5).setText(getattr(elem, 'midi_message_type', ""))
-            self._updating_table = False
-            return
-
-        self._updating_table = True
-        self._table.item(item.row(), 0).setText(elem.display_name or elem.unique_id)
-        self._table.item(item.row(), 3).setText(self._format_notes(elem))
-        self._table.item(item.row(), 4).setText(self._format_ccs(elem))
-        self._table.item(item.row(), 5).setText(getattr(elem, 'midi_message_type', ""))
-        self._updating_table = False
-        if callable(self._on_element_edited):
-            self._on_element_edited(elem)
+    def _update_select_button_state(self):
+        elem, _ = self._current_element()
+        self._select_btn.setEnabled(elem is not None)
 
 
 class OrbitExportOptionsDialog(QDialog):

@@ -996,6 +996,312 @@ def generate_mixer(project: Project, origin: Vec3 = None) -> List:
     return all_elements
 
 
+def generate_bitwig_performance(project: Project, origin: Vec3 = None) -> List:
+    """Bitwig-style performance layout: XY pads, macro knobs, scene selectors, layer mixers."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    # Row 1: Foundation XY touch pads
+    all_elements.extend(generate_xy_pads(
+        project, count=2, arrangement="Row", spacing=80, origin=Vec3(origin.x, origin.y, origin.z),
+        base_cc_x=20, base_cc_y=28, channel=1, label_prefix="Bitwig XY"
+    ))
+    # Row 2: Layer mixer faders
+    all_elements.extend(generate_faders(
+        project, count=8, arrangement="Row", spacing=28, origin=Vec3(origin.x, origin.y + 35, origin.z),
+        base_cc=1, channel=1, label_prefix="Layer Mix", color_mode="Gradient"
+    ))
+    # Row 3: Macro knobs (macro control)
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=28, origin=Vec3(origin.x, origin.y + 65, origin.z),
+        base_cc=40, channel=1, label_prefix="Macro", color_mode="Cool"
+    ))
+    # Row 4: Macro knobs (second bank)
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=28, origin=Vec3(origin.x, origin.y + 90, origin.z),
+        base_cc=48, channel=1, label_prefix="Macro 2", color_mode="Neon"
+    ))
+    # Row 5: Scene selectors (first bank)
+    all_elements.extend(generate_buttons(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 115, origin.z),
+        base_cc=80, channel=1, label_prefix="Scene 1"
+    ))
+    # Row 6: Scene selectors (second bank)
+    all_elements.extend(generate_buttons(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 140, origin.z),
+        base_cc=88, channel=1, label_prefix="Scene 2"
+    ))
+    return all_elements
+
+
+def generate_reaper_mix_transport(project: Project, origin: Vec3 = None) -> List:
+    """Reaper-oriented mixer + transport controls."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    all_elements.extend(generate_faders(
+        project, count=8, arrangement="Row", spacing=28, origin=Vec3(origin.x, origin.y, origin.z),
+        base_cc=1, channel=1, label_prefix="Track", color_mode="Gradient"
+    ))
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=28, origin=Vec3(origin.x, origin.y + 50, origin.z),
+        base_cc=21, channel=1, label_prefix="Pan", color_mode="Monochrome"
+    ))
+    all_elements.extend(generate_buttons(
+        project, count=8, arrangement="Row", spacing=22, origin=Vec3(origin.x, origin.y + 35, origin.z),
+        base_cc=90, channel=1, label_prefix="Transport"
+    ))
+    return all_elements
+
+
+def generate_resolume_performance(project: Project, origin: Vec3 = None) -> List:
+    """Resolume-style VJ surface: clip grid, layer mixer, scene selector, video effects."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    # Row 1: Video effect faders (top control row)
+    all_elements.extend(generate_faders(
+        project, count=8, arrangement="Row", spacing=28, origin=Vec3(origin.x, origin.y, origin.z),
+        base_cc=70, channel=1, label_prefix="FX", color_mode="Warm"
+    ))
+    # Row 2: Clip triggering grid (4x4 pads - main performance area)
+    all_elements.extend(generate_drum_pads(
+        project, count=16, arrangement="Grid", spacing=24, origin=Vec3(origin.x, origin.y + 40, origin.z),
+        base_note=36, channel=1, label_prefix="Clip"
+    ))
+    # Row 3: Layer mixer faders
+    all_elements.extend(generate_faders(
+        project, count=8, arrangement="Row", spacing=28, origin=Vec3(origin.x, origin.y + 95, origin.z),
+        base_cc=1, channel=1, label_prefix="Layer Mix", color_mode="Gradient"
+    ))
+    # Row 4: Layer knobs (layer effect parameters)
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=28, origin=Vec3(origin.x, origin.y + 120, origin.z),
+        base_cc=48, channel=1, label_prefix="Layer Fx", color_mode="Neon"
+    ))
+    # Row 5: Layer selection buttons
+    all_elements.extend(generate_buttons(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 145, origin.z),
+        base_cc=88, channel=1, label_prefix="Layer Select"
+    ))
+    # Row 6: Scene selection buttons
+    all_elements.extend(generate_buttons(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 170, origin.z),
+        base_cc=96, channel=1, label_prefix="Scene"
+    ))
+    return all_elements
+
+
+def generate_mc303_groovebox(project: Project, origin: Vec3 = None) -> List:
+    """MC-303-inspired groovebox bank."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    all_elements.extend(generate_drum_pads(
+        project, count=16, arrangement="Grid", spacing=26, origin=Vec3(origin.x, origin.y, origin.z),
+        base_note=36, channel=10, label_prefix="303 Pad"
+    ))
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 55, origin.z),
+        base_cc=14, channel=1, label_prefix="303 Tone", color_mode="Warm"
+    ))
+    all_elements.extend(generate_buttons(
+        project, count=8, arrangement="Row", spacing=22, origin=Vec3(origin.x, origin.y + 30, origin.z),
+        base_cc=100, channel=1, label_prefix="303 Seq"
+    ))
+    return all_elements
+
+
+def generate_mc505_groovebox(project: Project, origin: Vec3 = None) -> List:
+    """MC-505-inspired expanded groovebox bank."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    all_elements.extend(generate_drum_pads(
+        project, count=16, arrangement="Grid", spacing=24, origin=Vec3(origin.x, origin.y, origin.z),
+        base_note=36, channel=10, label_prefix="505 Pad"
+    ))
+    all_elements.extend(generate_knobs(
+        project, count=16, arrangement="Grid", spacing=24, origin=Vec3(origin.x, origin.y + 65, origin.z),
+        base_cc=24, channel=1, label_prefix="505 Knob", color_mode="Neon"
+    ))
+    all_elements.extend(generate_faders(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 25, origin.z),
+        base_cc=80, channel=1, label_prefix="505 Fader", color_mode="Cool"
+    ))
+    return all_elements
+
+
+def generate_sugarbytes_drumcomputer(project: Project, origin: Vec3 = None) -> List:
+    """Sugarbytes DrumComputer-style drum lanes and macro controls."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    all_elements.extend(generate_drum_pads(
+        project, count=16, arrangement="Grid", spacing=22, origin=Vec3(origin.x, origin.y, origin.z),
+        base_note=36, channel=10, label_prefix="DrComp"
+    ))
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 50, origin.z),
+        base_cc=52, channel=1, label_prefix="Macro", color_mode="Cool"
+    ))
+    all_elements.extend(generate_faders(
+        project, count=4, arrangement="Row", spacing=30, origin=Vec3(origin.x, origin.y + 20, origin.z),
+        base_cc=12, channel=1, label_prefix="Lane", color_mode="Gradient"
+    ))
+    return all_elements
+
+
+def generate_aum_ios_performance(project: Project, origin: Vec3 = None) -> List:
+    """AUM for iOS style performance control surface."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    all_elements.extend(generate_faders(
+        project, count=8, arrangement="Row", spacing=26, origin=Vec3(origin.x, origin.y, origin.z),
+        base_cc=1, channel=1, label_prefix="AUM Ch", color_mode="Cool"
+    ))
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=26, origin=Vec3(origin.x, origin.y + 45, origin.z),
+        base_cc=16, channel=1, label_prefix="AUM Send", color_mode="Neon"
+    ))
+    all_elements.extend(generate_xy_pads(
+        project, count=2, arrangement="Row", spacing=85, origin=Vec3(origin.x, origin.y + 15, origin.z),
+        base_cc_x=48, base_cc_y=56, channel=1, label_prefix="AUM XY"
+    ))
+    return all_elements
+
+
+def generate_ruismaker_noir(project: Project, origin: Vec3 = None) -> List:
+    """Ruismaker Noir inspired drum performance layout."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    all_elements.extend(generate_drum_pads(
+        project, count=16, arrangement="Grid", spacing=23, origin=Vec3(origin.x, origin.y, origin.z),
+        base_note=36, channel=10, label_prefix="Noir"
+    ))
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 55, origin.z),
+        base_cc=24, channel=1, label_prefix="Noir Macro", color_mode="Warm"
+    ))
+    return all_elements
+
+
+def generate_renoise_mappings(project: Project, origin: Vec3 = None) -> List:
+    """Renoise tracker-focused mapping surface with transport and pattern controls."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    all_elements.extend(generate_buttons(
+        project, count=16, arrangement="Grid", spacing=22, origin=Vec3(origin.x, origin.y, origin.z),
+        base_cc=64, channel=1, label_prefix="Pattern"
+    ))
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 50, origin.z),
+        base_cc=20, channel=1, label_prefix="Track", color_mode="Monochrome"
+    ))
+    all_elements.extend(generate_buttons(
+        project, count=8, arrangement="Row", spacing=22, origin=Vec3(origin.x, origin.y + 25, origin.z),
+        base_cc=96, channel=1, label_prefix="Transport"
+    ))
+    return all_elements
+
+
+def generate_reaktor_performance(project: Project, origin: Vec3 = None) -> List:
+    """Reaktor ensemble-style generic macro and XY control surface."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    all_elements.extend(generate_xy_pads(
+        project, count=4, arrangement="Grid", spacing=44, origin=Vec3(origin.x, origin.y, origin.z),
+        base_cc_x=32, base_cc_y=40, channel=1, label_prefix="Reaktor XY"
+    ))
+    all_elements.extend(generate_knobs(
+        project, count=16, arrangement="Grid", spacing=22, origin=Vec3(origin.x, origin.y + 70, origin.z),
+        base_cc=72, channel=1, label_prefix="Macro", color_mode="Cool"
+    ))
+    return all_elements
+
+
+def generate_m_audio_code49(project: Project, origin: Vec3 = None) -> List:
+    """M-Audio CODE49 style preset surface."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    all_elements.extend(generate_faders(
+        project, count=9, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y, origin.z),
+        base_cc=1, channel=1, label_prefix="CODE49 Fader", color_mode="Gradient"
+    ))
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 45, origin.z),
+        base_cc=16, channel=1, label_prefix="CODE49 Knob", color_mode="Warm"
+    ))
+    all_elements.extend(generate_drum_pads(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 20, origin.z),
+        base_note=36, channel=10, label_prefix="CODE49 Pad"
+    ))
+    return all_elements
+
+
+def generate_behringer_x_touch(project: Project, origin: Vec3 = None) -> List:
+    """Behringer X-Touch style mixer/controller surface."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    all_elements.extend(generate_faders(
+        project, count=8, arrangement="Row", spacing=26, origin=Vec3(origin.x, origin.y, origin.z),
+        base_cc=1, channel=1, label_prefix="XTouch Fader", color_mode="Monochrome"
+    ))
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=26, origin=Vec3(origin.x, origin.y + 45, origin.z),
+        base_cc=16, channel=1, label_prefix="XTouch Enc", color_mode="Cool"
+    ))
+    all_elements.extend(generate_buttons(
+        project, count=8, arrangement="Row", spacing=22, origin=Vec3(origin.x, origin.y + 20, origin.z),
+        base_cc=80, channel=1, label_prefix="XTouch Tr"
+    ))
+    return all_elements
+
+
+def generate_novation_x_station(project: Project, origin: Vec3 = None) -> List:
+    """Novation X-Station style controller surface for remote VR control."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    all_elements = []
+    # Typical X-Station style banking: 8 knobs + 8 faders + transport buttons + pads.
+    all_elements.extend(generate_knobs(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 50, origin.z),
+        base_cc=16, channel=1, label_prefix="XStation Knob", color_mode="Cool"
+    ))
+    all_elements.extend(generate_faders(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y, origin.z),
+        base_cc=1, channel=1, label_prefix="XStation Fader", color_mode="Monochrome"
+    ))
+    all_elements.extend(generate_buttons(
+        project, count=8, arrangement="Row", spacing=22, origin=Vec3(origin.x, origin.y + 30, origin.z),
+        base_cc=80, channel=1, label_prefix="XStation Tr"
+    ))
+    all_elements.extend(generate_drum_pads(
+        project, count=8, arrangement="Row", spacing=24, origin=Vec3(origin.x, origin.y + 80, origin.z),
+        base_note=36, channel=10, label_prefix="XStation Pad"
+    ))
+    return all_elements
+
+
 def generate_calibrator(project: Project, origin: Vec3 = None) -> List:
     """Create a mixed-reality calibration helper made from TextLabels."""
     if origin is None:
@@ -1364,6 +1670,21 @@ def generate_debug_everything(project: Project, origin: Vec3 = None) -> List:
 
 # Replace the sentinel with the actual function
 TEMPLATES["Mixer (8 Faders + 8 Knobs)"] = lambda p, o: generate_mixer(p, o)
+
+# DAW / Performance packs
+TEMPLATES["Bitwig: Performance Grid"] = lambda p, o: generate_bitwig_performance(p, o)
+TEMPLATES["Reaper: Mixer + Transport"] = lambda p, o: generate_reaper_mix_transport(p, o)
+TEMPLATES["Resolume: Clip + Layer Performance"] = lambda p, o: generate_resolume_performance(p, o)
+TEMPLATES["MC-303 Groovebox"] = lambda p, o: generate_mc303_groovebox(p, o)
+TEMPLATES["MC-505 Groovebox"] = lambda p, o: generate_mc505_groovebox(p, o)
+TEMPLATES["Sugarbytes DrumComputer"] = lambda p, o: generate_sugarbytes_drumcomputer(p, o)
+TEMPLATES["AUM iOS: Mixer + XY"] = lambda p, o: generate_aum_ios_performance(p, o)
+TEMPLATES["Ruismaker Noir"] = lambda p, o: generate_ruismaker_noir(p, o)
+TEMPLATES["Renoise: Pattern + Transport"] = lambda p, o: generate_renoise_mappings(p, o)
+TEMPLATES["Reaktor: Ensemble Macros"] = lambda p, o: generate_reaktor_performance(p, o)
+TEMPLATES["M-Audio CODE49 Preset"] = lambda p, o: generate_m_audio_code49(p, o)
+TEMPLATES["Behringer X-Touch"] = lambda p, o: generate_behringer_x_touch(p, o)
+TEMPLATES["Novation X-Station"] = lambda p, o: generate_novation_x_station(p, o)
 
 
 # ---------------------------------------------------------------------------
