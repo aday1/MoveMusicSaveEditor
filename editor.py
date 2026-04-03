@@ -4065,9 +4065,9 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "No Workspace", "Something went wrong - no active workspace found.")
             return
 
-        # Origin near camera target
+        # Origin near camera target, but anchored to floor (human-scale VR default).
         target = self.viewport.camera.target
-        origin = Vec3(target[0], target[1], target[2])
+        origin = Vec3(target[0], target[1], 0.0)
 
         generator = TEMPLATES.get(template_name)
         if not generator:
@@ -4210,6 +4210,14 @@ class MainWindow(QMainWindow):
                 dx = p.x - origin.x
                 p.x = origin.x
                 p.y = origin.y + dx
+
+        # Keep generated content on/above the floor plane by default.
+        if elements:
+            min_z = min(elem.transform.translation.z for elem in elements)
+            if min_z < 0.0:
+                lift = -min_z
+                for elem in elements:
+                    elem.transform.translation.z += lift
 
         if not elements:
             self.statusbar.showMessage(f"Template '{template_name}' produced no elements.", 4000)
