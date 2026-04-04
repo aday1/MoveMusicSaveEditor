@@ -21785,3 +21785,121 @@ _rtmidi.SystemError: MidiOutWinMM::openPort: error creating Windows MM MIDI outp
 2026-04-04 18:11:12,736 INFO   tree item found: True
 2026-04-04 18:11:15,961 INFO _on_viewport_select: None
 2026-04-04 18:11:16,362 INFO OpenGL initialized
+2026-04-04 18:17:42,121 INFO OpenGL initialized
+2026-04-04 18:17:43,405 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:17:43,405 INFO   tree item found: True
+2026-04-04 18:17:44,186 INFO _on_viewport_select: None
+2026-04-04 18:17:44,530 INFO _on_viewport_select: None
+2026-04-04 18:17:45,177 INFO _on_viewport_select: None
+2026-04-04 18:17:45,246 INFO _on_viewport_select: None
+2026-04-04 18:17:48,068 INFO _on_viewport_select: None
+2026-04-04 18:17:48,820 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:17:48,820 INFO   tree item found: True
+2026-04-04 18:17:49,035 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:17:49,035 INFO   tree item found: True
+2026-04-04 18:17:49,622 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:17:49,622 INFO   tree item found: True
+2026-04-04 18:17:51,304 INFO _on_viewport_select: None
+2026-04-04 18:17:51,399 INFO _on_viewport_select: None
+2026-04-04 18:17:51,906 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:17:51,906 INFO   tree item found: True
+2026-04-04 18:17:59,289 INFO OpenGL initialized
+2026-04-04 18:18:00,353 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:18:00,353 INFO   tree item found: True
+2026-04-04 18:18:18,002 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:18:18,002 INFO   tree item found: True
+2026-04-04 18:18:57,543 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:18:57,543 INFO   tree item found: True
+2026-04-04 18:19:03,263 INFO _on_viewport_select: None
+2026-04-04 18:19:04,515 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:04,515 INFO   tree item found: True
+2026-04-04 18:19:05,098 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:05,099 INFO   tree item found: True
+2026-04-04 18:19:05,580 INFO _on_viewport_select: None
+2026-04-04 18:19:05,998 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:05,998 INFO   tree item found: True
+2026-04-04 18:19:06,582 INFO _on_viewport_select: None
+2026-04-04 18:19:09,856 INFO _on_viewport_select: None
+2026-04-04 18:19:10,375 INFO _on_viewport_select: None
+2026-04-04 18:19:10,896 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:10,896 INFO   tree item found: True
+2026-04-04 18:19:14,739 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:14,739 INFO   tree item found: True
+2026-04-04 18:19:15,337 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:15,338 INFO   tree item found: True
+2026-04-04 18:19:15,990 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:15,990 INFO   tree item found: True
+2026-04-04 18:19:16,882 INFO OpenGL initialized
+2026-04-04 18:19:21,632 INFO _on_viewport_select: None
+2026-04-04 18:19:21,717 INFO _on_viewport_select: None
+2026-04-04 18:19:22,382 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:22,382 INFO   tree item found: True
+2026-04-04 18:19:23,959 INFO _on_viewport_select: HitZone_4
+2026-04-04 18:19:23,959 INFO   tree item found: True
+2026-04-04 18:19:24,665 INFO _on_viewport_select: None
+2026-04-04 18:19:24,787 INFO _on_viewport_select: None
+2026-04-04 18:19:27,196 INFO OpenGL initialized
+2026-04-04 18:19:28,259 INFO _on_viewport_select: HitZone_4
+2026-04-04 18:19:28,259 INFO   tree item found: True
+2026-04-04 18:19:28,723 INFO _on_viewport_select: HitZone_4
+2026-04-04 18:19:28,723 INFO   tree item found: True
+2026-04-04 18:19:29,124 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:29,124 INFO   tree item found: True
+2026-04-04 18:19:29,371 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:29,372 INFO   tree item found: True
+2026-04-04 18:19:29,857 INFO _on_viewport_select: HitZone_4
+2026-04-04 18:19:29,857 INFO   tree item found: True
+2026-04-04 18:19:30,167 INFO _on_viewport_select: HitZone_4
+2026-04-04 18:19:30,167 INFO   tree item found: True
+2026-04-04 18:19:30,809 INFO _on_viewport_select: HitZone_4
+2026-04-04 18:19:30,809 INFO   tree item found: True
+2026-04-04 18:19:31,269 INFO _on_viewport_select: HitZone_4
+2026-04-04 18:19:31,269 INFO   tree item found: True
+2026-04-04 18:19:32,242 INFO _on_viewport_select: None
+2026-04-04 18:19:32,488 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:32,488 INFO   tree item found: True
+2026-04-04 18:19:34,610 INFO _on_viewport_select: HitZone_4
+2026-04-04 18:19:34,610 INFO   tree item found: True
+2026-04-04 18:19:42,939 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:19:42,940 INFO   tree item found: True
+2026-04-04 18:19:55,596 INFO _on_viewport_select: HitZone_4
+2026-04-04 18:19:55,596 INFO   tree item found: True
+2026-04-04 18:19:56,416 INFO _on_viewport_select: None
+2026-04-04 18:20:00,093 INFO _on_viewport_select: MorphZone_5
+2026-04-04 18:20:00,093 INFO   tree item found: True
+2026-04-04 18:20:00,783 INFO _on_viewport_select: MorphZone_5
+2026-04-04 18:20:00,783 INFO   tree item found: True
+2026-04-04 18:20:08,603 INFO _on_viewport_select: MorphZone_5
+2026-04-04 18:20:08,603 INFO   tree item found: True
+2026-04-04 18:20:08,957 INFO OpenGL initialized
+2026-04-04 18:20:15,217 INFO OpenGL initialized
+2026-04-04 18:20:16,814 INFO _on_viewport_select: MorphZone_6
+2026-04-04 18:20:16,814 INFO   tree item found: True
+2026-04-04 18:20:18,907 INFO _on_viewport_select: MorphZone_6
+2026-04-04 18:20:18,907 INFO   tree item found: True
+2026-04-04 18:20:19,385 INFO OpenGL initialized
+2026-04-04 18:20:23,712 INFO OpenGL initialized
+2026-04-04 18:20:24,639 INFO _on_viewport_select: MorphZone_6
+2026-04-04 18:20:24,640 INFO   tree item found: True
+2026-04-04 18:20:40,774 INFO _on_viewport_select: None
+2026-04-04 18:20:41,275 INFO OpenGL initialized
+2026-04-04 18:21:00,994 INFO OpenGL initialized
+2026-04-04 18:21:09,106 INFO _on_viewport_select: None
+2026-04-04 18:21:10,710 INFO _on_viewport_select: HitZone_86
+2026-04-04 18:21:10,711 INFO   tree item found: True
+2026-04-04 18:21:11,293 INFO _on_viewport_select: HitZone_86
+2026-04-04 18:21:11,293 INFO   tree item found: True
+2026-04-04 18:21:11,643 INFO _on_viewport_select: HitZone_86
+2026-04-04 18:21:11,644 INFO   tree item found: True
+2026-04-04 18:21:12,169 INFO _on_viewport_select: None
+2026-04-04 18:21:12,752 INFO _on_viewport_select: MorphZone_54
+2026-04-04 18:21:12,753 INFO   tree item found: True
+2026-04-04 18:21:14,535 INFO _on_viewport_select: None
+2026-04-04 18:21:16,449 INFO _on_viewport_select: None
+2026-04-04 18:21:17,346 INFO _on_viewport_select: None
+2026-04-04 18:21:17,720 INFO _on_viewport_select: None
+2026-04-04 18:21:18,282 INFO _on_viewport_select: MorphZone_60
+2026-04-04 18:21:18,282 INFO   tree item found: True
+2026-04-04 18:21:24,875 INFO _on_viewport_select: MorphZone_74
+2026-04-04 18:21:24,875 INFO   tree item found: True
+2026-04-04 18:21:26,743 INFO OpenGL initialized
