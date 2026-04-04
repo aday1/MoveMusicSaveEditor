@@ -1,9 +1,9 @@
 """
 3D viewport widget for the MoveMusic editor.
 
-Renders HitZones as solid colored boxes and MorphZones as wireframe cubes.
-Provides orbit/pan/zoom camera, multi-select (Shift+click, marquee),
-clickable HUD toolbar, grid snapping, and overlays.
+Renders HitZones by role (note pad vs CC strip) and MorphZones by dimension
+(1D axis rod, 2D plane slab, 3D box). Provides orbit/pan/zoom camera,
+multi-select (Shift+click, marquee), clickable HUD toolbar, grid snapping, and overlays.
 """
 
 from __future__ import annotations
@@ -11,20 +11,29 @@ from __future__ import annotations
 import copy
 import logging
 import math
-from typing import Optional, List
+from typing import List, Optional, Tuple
 
 from PyQt6.QtCore import Qt, pyqtSignal, QPoint, QRectF, QRect
 from PyQt6.QtGui import (
     QMouseEvent, QWheelEvent, QPainter, QFont, QFontMetrics,
     QColor, QPen, QBrush, QPainterPath, QKeySequence, QShortcut,
 )
-from PyQt6.QtWidgets import QMenu, QSplitter, QWidget, QVBoxLayout
+from PyQt6.QtWidgets import QApplication, QInputDialog, QMenu, QSplitter, QWidget, QVBoxLayout
 from PyQt6.QtOpenGLWidgets import QOpenGLWidget
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from model import Project, HitZone, MorphZone, TextLabel, GroupIE, Vec3, Quat
+from model import (
+    Project,
+    HitZone,
+    MorphZone,
+    TextLabel,
+    GroupIE,
+    Vec3,
+    Quat,
+    MidiCCMapping,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -120,10 +129,10 @@ class OrbitCamera:
 
     def world_to_screen(self, wx, wy, wz, viewport_w, viewport_h):
         """Project a world-space point to screen coordinates using camera math."""
-        eye = self.eye()
-        dx = wx - eye[0]
-        dy = wy - eye[1]
-        dz = wz - eye[2]
+        ex, ey, ez = self.eye()
+        dx = wx - ex
+        dy = wy - ey
+        dz = wz - ez
 
         rx, ry, rz = self.right_vector()
         ux, uy, uz = self.up_vector()
@@ -154,17 +163,164 @@ class OrbitCamera:
 
         return (sx, sy, cam_z)
 
+    def screen_to_world_ray(self, mx: float, my: float, viewport_w: int, viewport_h: int):
+        """Return ray origin (ox,oy,oz) and unit direction (dx,dy,dz) through screen pixel."""
+        w = max(int(viewport_w), 1)
+        h = max(int(viewport_h), 1)
+        ndc_x = (mx / w) * 2.0 - 1.0
+        ndc_y = 1.0 - (my / h) * 2.0
+        aspect = w / max(h, 1)
+        rx, ry, rz = self.right_vector()
+        ux, uy, uz = self.up_vector()
+        fx, fy, fz = self.forward_vector()
+
+        ox, oy, oz = self.eye()
+
+        if self.ortho:
+            half_h = self.distance * 0.5
+            half_w = half_h * aspect
+            ox += ndc_x * half_w * rx + ndc_y * half_h * ux
+            oy += ndc_x * half_w * ry + ndc_y * half_h * uy
+            oz += ndc_x * half_w * rz + ndc_y * half_h * uz
+            vx, vy, vz = fx, fy, fz
+        else:
+            fov_scale = math.tan(math.radians(self.fov) * 0.5)
+            dx = ndc_x * fov_scale * aspect * rx + ndc_y * fov_scale * ux + fx
+            dy = ndc_x * fov_scale * aspect * ry + ndc_y * fov_scale * uy + fy
+            dz = ndc_x * fov_scale * aspect * rz + ndc_y * fov_scale * uz + fz
+            ln = math.sqrt(dx * dx + dy * dy + dz * dz)
+            if ln < 1e-12:
+                return None
+            vx, vy, vz = dx / ln, dy / ln, dz / ln
+            return ((ox, oy, oz), (vx, vy, vz))
+
+        ln = math.sqrt(vx * vx + vy * vy + vz * vz)
+        if ln < 1e-12:
+            return None
+        return ((ox, oy, oz), (vx / ln, vy / ln, vz / ln))
+
 
 # ---------------------------------------------------------------------------
 # Bounding box helpers
 # ---------------------------------------------------------------------------
 
+_MORPH_SLAB_HALF_T = 1.35
+
+
+def _morph_dimensions_rank(mz: MorphZone) -> int:
+    d = getattr(mz, "dimensions", "") or ""
+    if "::Three" in d or d.endswith("Three"):
+        return 3
+    if "::Two" in d or d.endswith("Two"):
+        return 2
+    if "::One" in d or d.endswith("One"):
+        return 1
+    return 3
+
+
+def _morph_enabled_axes(mz: MorphZone) -> Tuple[str, ...]:
+    axes = []
+    if mz.is_x_axis_enabled:
+        axes.append("x")
+    if mz.is_y_axis_enabled:
+        axes.append("y")
+    if mz.is_z_axis_enabled:
+        axes.append("z")
+    return tuple(axes)
+
+
+def _morph_visual_half_extents(mz: MorphZone, s) -> Tuple[float, float, float]:
+    """Half-extents matching on-screen shape: 1D rod, 2D slab, or 3D box."""
+    ext = mz.mesh_extent
+    hx = max(ext.x * s.x * 0.5, 3.0)
+    hy = max(ext.y * s.y * 0.5, 3.0)
+    hz = max(ext.z * s.z * 0.5, 1.0)
+    t = _MORPH_SLAB_HALF_T
+    rank = _morph_dimensions_rank(mz)
+    axes = _morph_enabled_axes(mz)
+    n = len(axes)
+    if n == 0:
+        if rank <= 1:
+            return (hx, t, t)
+        if rank == 2:
+            return (hx, hy, t)
+        return (hx, hy, hz)
+    cap = min(rank, n)
+    if cap >= 3:
+        return (hx, hy, hz)
+    if cap <= 1:
+        if axes == ("y",):
+            return (t, hy, t)
+        if axes == ("z",):
+            return (t, t, hz)
+        return (hx, t, t)
+    if "x" in axes and "y" in axes:
+        return (hx, hy, t)
+    if "x" in axes and "z" in axes:
+        return (hx, t, hz)
+    if "y" in axes and "z" in axes:
+        return (t, hy, hz)
+    return (hx, hy, t)
+
+
+def _hitzone_is_cc(hz: HitZone) -> bool:
+    """True when this HitZone sends MIDI CC (Unreal may use ::ControlChange or editor ::CC)."""
+    mt = getattr(hz, "midi_message_type", "") or ""
+    return (
+        "ControlChange" in mt
+        or mt == "EMidiMessageType::CC"
+        or mt.endswith("::CC")
+    )
+
+
+def _hitzone_is_note(hz: HitZone) -> bool:
+    if _hitzone_is_cc(hz):
+        return False
+    mt = getattr(hz, "midi_message_type", "") or ""
+    return "Note" in mt
+
+
+def _hitzone_is_toggle(hz: HitZone) -> bool:
+    b = getattr(hz, "behavior", "") or ""
+    return "Toggle" in b
+
+
+def _hitzone_visual_half_extents(hz: HitZone, s) -> Tuple[float, float, float]:
+    thin = 1.15
+    if _hitzone_is_note(hz):
+        r = max(13.0 * max(s.x, s.y, 0.25), 4.0)
+        return (r, r, thin)
+    hx = max(24.0 * s.x, 6.0)
+    hy = max(9.0 * s.y, 3.5)
+    return (hx, hy, thin)
+
+
+def _element_role_label(elem) -> str:
+    if isinstance(elem, MorphZone):
+        rank = _morph_dimensions_rank(elem)
+        axes = _morph_enabled_axes(elem)
+        al = "".join(a.upper() for a in axes)
+        if rank == 1:
+            return f"Morph 1D ({al or 'X'})"
+        if rank == 2:
+            return f"Morph 2D ({al or 'XY'})"
+        return f"Morph 3D ({al or 'XYZ'})"
+    if isinstance(elem, HitZone):
+        if _hitzone_is_note(elem):
+            return "Note pad (toggle)" if _hitzone_is_toggle(elem) else "Note pad (hold)"
+        return "CC control"
+    if isinstance(elem, GroupIE):
+        return "Group"
+    return type(elem).__name__
+
+
 def _get_element_bbox(elem, half_size=15.0) -> tuple:
     p = elem.transform.translation
     s = elem.transform.scale
     if isinstance(elem, MorphZone):
-        ext = elem.mesh_extent
-        hx, hy, hz = ext.x * s.x * 0.5, ext.y * s.y * 0.5, ext.z * s.z * 0.5
+        hx, hy, hz = _morph_visual_half_extents(elem, s)
+    elif isinstance(elem, HitZone):
+        hx, hy, hz = _hitzone_visual_half_extents(elem, s)
     elif isinstance(elem, TextLabel):
         hx, hy, hz = 10.0 * s.x, 8.0 * s.y, 0.5
     elif isinstance(elem, GroupIE):
@@ -215,6 +371,9 @@ class SceneViewport(QOpenGLWidget):
     # Workspace transfer signals
     move_to_workspace_requested = pyqtSignal(list, str)  # [elements], workspace_id
     status_message = pyqtSignal(str)
+    play_mode_exit_requested = pyqtSignal()
+    play_perf_send = pyqtSignal(str, dict)
+    play_morph_interaction = pyqtSignal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -226,11 +385,13 @@ class SceneViewport(QOpenGLWidget):
         # View configuration
         self.view_label = "Perspective"
         self.lock_orbit = False
-        self.lock_move = False  # Performance mode: allow select but block element drag/resize/rotate
+        self.lock_move = False  # Performance mode: block pick-drag and scale/rotate; move handle still works
+        self.play_mode = False  # Desktop Play: fullscreen game-like session
 
         # Mouse state
         self._last_mouse = QPoint()
         self._dragging_element = False
+        self._gizmo_move_screen_pos = None  # (sx, sy) cached in paintGL for hit test
         self._drag_start_positions = {}  # id(elem) -> (x, y, z)
         self._mouse_moved = False
         self._resizing = False
@@ -245,6 +406,12 @@ class SceneViewport(QOpenGLWidget):
         self._marquee_active = False
         self._marquee_start = QPoint()
         self._marquee_rect = None  # QRect or None
+
+        # Desktop Play: 3D morph drag / hitzone notes
+        self._play_morph_drag = False
+        self._play_morph_elem: Optional[MorphZone] = None
+        self._play_hitzone_elem: Optional[HitZone] = None
+        self._midi_quick_panel_rect: Optional[QRect] = None
 
         # Snap grid
         self._snap_grid_enabled = False
@@ -401,10 +568,52 @@ class SceneViewport(QOpenGLWidget):
             if midi:
                 self._show_status(f"Hover: {best_elem.display_name or best_elem.unique_id} -> {', '.join(midi)}")
 
+    def _show_scale_rotate_gizmo(self) -> bool:
+        """Scale cubes and rotation rings — layout tools; off in Performance Lock and Desktop Play."""
+        if self.lock_move:
+            return False
+        if self.play_mode:
+            return False
+        return True
+
+    def _hit_move_gizmo(self, mx: int, my: int) -> bool:
+        pos = self._gizmo_move_screen_pos
+        if pos is None and self.selected_elements:
+            p = self.selected_elements[-1].transform.translation
+            sp = self.camera.world_to_screen(p.x, p.y, p.z, self.width(), self.height())
+            if sp:
+                pos = (sp[0], sp[1])
+        if pos is None:
+            return False
+        sx, sy = pos
+        r = 34 if self.play_mode else 30
+        return (mx - sx) ** 2 + (my - sy) ** 2 <= r * r
+
+    def _start_move_drag_from_gizmo(self) -> None:
+        self._dragging_element = True
+        self._drag_start_positions = {}
+        for elem in self.selected_elements:
+            p = elem.transform.translation
+            self._drag_start_positions[id(elem)] = (p.x, p.y, p.z)
+
     def _update_gizmo_hover_cursor(self, mx: int, my: int):
         """Change cursor when hovering over gizmo handles."""
         if not self.selected_elements:
             self.setCursor(Qt.CursorShape.ArrowCursor)
+            return
+
+        if self._hit_move_gizmo(mx, my):
+            self.setCursor(Qt.CursorShape.SizeAllCursor)
+            if getattr(self, "_hover_gizmo", None) != "move":
+                self._hover_gizmo = "move"
+                self.update()
+            return
+
+        if not self._show_scale_rotate_gizmo():
+            if getattr(self, "_hover_gizmo", None):
+                self._hover_gizmo = None
+                self.setCursor(Qt.CursorShape.ArrowCursor)
+                self.update()
             return
 
         # Check resize handles
@@ -433,7 +642,7 @@ class SceneViewport(QOpenGLWidget):
 
     def initializeGL(self):
         try:
-            glClearColor(0.15, 0.15, 0.18, 1.0)
+            glClearColor(0.06, 0.04, 0.1, 1.0)
             glEnable(GL_DEPTH_TEST)
             glEnable(GL_BLEND)
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -448,11 +657,18 @@ class SceneViewport(QOpenGLWidget):
 
     def paintGL(self):
         try:
+            if self.play_mode:
+                glClearColor(0.05, 0.05, 0.08, 1.0)
+            else:
+                glClearColor(0.06, 0.04, 0.1, 1.0)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             self.camera.apply(self.width(), self.height())
 
-            self._draw_grid()
-            self._draw_world_axes()
+            if not self.play_mode:
+                self._draw_grid()
+                self._draw_world_axes()
+            else:
+                self._draw_play_floor_hologrid()
 
             if self.project:
                 visible_elements = self._active_workspace_elements()
@@ -473,23 +689,29 @@ class SceneViewport(QOpenGLWidget):
                     if sp:
                         self._screen_positions[id(elem)] = (sp[0], sp[1], sp[2], elem)
 
-                # Draw gizmo on primary selected element only
+                # Transform gizmo: yellow move handle always when selected; scale/rotate only when unlocked
                 if self.selected_elements:
                     primary = self.selected_elements[-1]
                     if len(self.selected_elements) == 1:
                         self._draw_selection_gizmo(primary)
                     else:
-                        # Just draw a simple crosshair at each selected element
                         self._draw_multi_select_indicator()
                         self._draw_selection_gizmo(primary)
+                else:
+                    self._handle_screen_pos = {}
+                    self._rot_ring_screen_points = {}
+                    self._rot_handle_screen_pos = {}
+                    self._gizmo_move_screen_pos = None
 
         except Exception:
             logging.exception("paintGL failed")
 
     def _draw_grid(self):
-        glLineWidth(1.0)
+        """Holodeck / synthwave floor: neon green + cyan/magenta accents on Z=0."""
+        glPushAttrib(GL_ALL_ATTRIB_BITS)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        # Dynamic grid spacing based on camera distance
         distance = self.camera.distance
         if distance < 50:
             base_step = 5
@@ -506,73 +728,141 @@ class SceneViewport(QOpenGLWidget):
 
         cx = round(self.camera.target[0] / base_step) * base_step
         cy = round(self.camera.target[1] / base_step) * base_step
-        half = min(1000, int(distance * 8))  # Dynamic grid extent
+        half = min(1000, int(distance * 8))
         step = base_step
 
         snap_on = self._snap_grid_enabled
         snap_sz = self._snap_grid_size
-
-        # Store grid coordinate positions for text rendering later
         self._grid_coords = []
 
+        zf = -0.4
+        big = float(half) * 1.15
+        glDisable(GL_DEPTH_TEST)
+        glBegin(GL_QUADS)
+        glColor4f(0.0, 0.14, 0.08, 0.45)
+        glVertex3f(cx - big, cy - big, zf)
+        glVertex3f(cx + big, cy - big, zf)
+        glVertex3f(cx + big, cy + big, zf)
+        glVertex3f(cx - big, cy + big, zf)
+        glEnd()
+        glEnable(GL_DEPTH_TEST)
+
+        glLineWidth(1.15)
         glBegin(GL_LINES)
+        line_idx = 0
         for i in range(-half, half + 1, step):
+            dist_f = abs(i) / float(half + 1)
+            fade = 0.35 + 0.55 * (1.0 - dist_f)
+
             if snap_on and snap_sz > 0:
-                # Enhanced snap grid visual feedback
                 if (i % int(snap_sz * 10)) == 0:
-                    a = 0.80  # Bright snap lines
-                    glColor4f(0.0, 1.0, 0.3, a)
+                    glColor4f(0.2, 1.0, 0.55, 0.88 * fade)
                 elif (i % coord_interval) == 0:
-                    a = 0.55   # Major grid lines — green
-                    glColor4f(0.0, 0.85, 0.25, a)
+                    if line_idx % 2 == 0:
+                        glColor4f(0.0, 0.95, 0.85, 0.72 * fade)
+                    else:
+                        glColor4f(0.85, 0.25, 1.0, 0.55 * fade)
                     self._grid_coords.append((cx + i, cy + i))
                 else:
-                    a = 0.18  # Minor grid lines — dark green
-                    glColor4f(0.0, 0.55, 0.15, a)
+                    glColor4f(0.0, 0.75, 0.35, 0.22 * fade)
             else:
                 is_major = (i % coord_interval) == 0
                 if is_major:
-                    glColor4f(0.0, 0.85, 0.25, 0.55)   # bright green major
+                    if line_idx % 2 == 0:
+                        glColor4f(0.0, 1.0, 0.72, 0.62 * fade)
+                    else:
+                        glColor4f(0.95, 0.15, 0.85, 0.45 * fade)
                     self._grid_coords.append((cx + i, cy + i))
                 else:
-                    glColor4f(0.0, 0.45, 0.12, 0.22)   # dim green minor
+                    glColor4f(0.05, 0.55, 0.28, 0.28 * fade)
 
-            glVertex3f(cx + i, cy - half, 0)
-            glVertex3f(cx + i, cy + half, 0)
-            glVertex3f(cx - half, cy + i, 0)
-            glVertex3f(cx + half, cy + i, 0)
+            glVertex3f(cx + i, cy - half, 0.0)
+            glVertex3f(cx + i, cy + half, 0.0)
+            glVertex3f(cx - half, cy + i, 0.0)
+            glVertex3f(cx + half, cy + i, 0.0)
+            line_idx += 1
         glEnd()
+        glPopAttrib()
 
-        # Add grid cell count overlay in corner
-        self._grid_cell_count = len([coord for coord in self._grid_coords if abs(coord[0] - cx) <= half and abs(coord[1] - cy) <= half])
+        self._grid_cell_count = len(
+            [c for c in self._grid_coords if abs(c[0] - cx) <= half and abs(c[1] - cy) <= half]
+        )
+
+    def _draw_play_floor_hologrid(self):
+        """Neon floor grid on Z=0 for Desktop Play (subtle holographic look)."""
+        glPushAttrib(GL_ALL_ATTRIB_BITS)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glLineWidth(1.2)
+
+        distance = self.camera.distance
+        if distance < 200:
+            base_step = 25
+        elif distance < 800:
+            base_step = 50
+        else:
+            base_step = 100
+
+        cx = round(self.camera.target[0] / base_step) * base_step
+        cy = round(self.camera.target[1] / base_step) * base_step
+        half = min(900, max(200, int(distance * 8)))
+        step = base_step
+
+        glBegin(GL_LINES)
+        n = 0
+        for i in range(-half, half + 1, step):
+            t = abs(i) / float(half + 1)
+            a = 0.12 + 0.28 * (1.0 - t)
+            if n % 2 == 0:
+                glColor4f(0.0, 0.95, 1.0, a)
+            else:
+                glColor4f(0.75, 0.0, 1.0, a * 0.9)
+            glVertex3f(cx + i, cy - half, 0.0)
+            glVertex3f(cx + i, cy + half, 0.0)
+            glColor4f(0.35, 0.75, 1.0, a * 0.85)
+            glVertex3f(cx - half, cy + i, 0.0)
+            glVertex3f(cx + half, cy + i, 0.0)
+            n += 1
+        glEnd()
+        glPopAttrib()
 
     def _draw_world_axes(self):
-        glLineWidth(2.0)
+        glPushAttrib(GL_ALL_ATTRIB_BITS)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glLineWidth(2.4)
         cx = round(self.camera.target[0] / 50) * 50
         cy = round(self.camera.target[1] / 50) * 50
         length = 200
 
         glBegin(GL_LINES)
-        glColor4f(1.0, 0.2, 0.2, 0.6)
+        glColor4f(1.0, 0.35, 0.45, 0.75)
         glVertex3f(cx - length, cy, 0)
         glVertex3f(cx + length, cy, 0)
-        glColor4f(0.2, 1.0, 0.2, 0.6)
+        glColor4f(0.35, 1.0, 0.55, 0.75)
         glVertex3f(cx, cy - length, 0)
         glVertex3f(cx, cy + length, 0)
-        glColor4f(0.2, 0.2, 1.0, 0.6)
+        glColor4f(0.45, 0.65, 1.0, 0.75)
         glVertex3f(cx, cy, -length)
         glVertex3f(cx, cy, length)
         glEnd()
+        glPopAttrib()
 
     def _draw_multi_select_indicator(self):
         """Draw a subtle marker at each selected element's position."""
         glPushAttrib(GL_ALL_ATTRIB_BITS)
         glDisable(GL_DEPTH_TEST)
-        glLineWidth(2.0)
-        sz = 5.0
+        if self.play_mode:
+            glLineWidth(1.0)
+            sz = 2.2
+            ca = 0.22
+        else:
+            glLineWidth(1.4)
+            sz = 4.0
+            ca = 0.5
         for elem in self.selected_elements:
             p = elem.transform.translation
-            glColor4f(1.0, 1.0, 0.2, 0.8)
+            glColor4f(0.45, 0.95, 1.0, ca)
             glBegin(GL_LINES)
             glVertex3f(p.x - sz, p.y, p.z); glVertex3f(p.x + sz, p.y, p.z)
             glVertex3f(p.x, p.y - sz, p.z); glVertex3f(p.x, p.y + sz, p.z)
@@ -582,13 +872,71 @@ class SceneViewport(QOpenGLWidget):
 
     def _draw_selection_gizmo(self, elem):
         p = elem.transform.translation
-        size = 30.0
+        w, h = self.width(), self.height()
+        self._handle_screen_pos = {}
+        self._rot_handle_screen_pos = {}
+        self._rot_ring_screen_points = {}
+
+        full = self._show_scale_rotate_gizmo()
+        play_lite = self.play_mode
+        size = 22.0 if play_lite else 30.0
         handle_size = 4.0
+        move_hs = 3.2 if play_lite else 3.5
+        hover = getattr(self, "_hover_gizmo", None)
 
         glPushAttrib(GL_ALL_ATTRIB_BITS)
         glDisable(GL_DEPTH_TEST)
-        glLineWidth(4.0)
 
+        sp0 = self.camera.world_to_screen(p.x, p.y, p.z, w, h)
+        self._gizmo_move_screen_pos = (sp0[0], sp0[1]) if sp0 else None
+
+        if not full and play_lite:
+            # Desktop Play: tiny pivot hint only (no box, no long axes over the control)
+            stub = 5.5
+            glLineWidth(1.05 if hover != "move" else 1.35)
+            ha = 0.42 if hover == "move" else 0.28
+            glBegin(GL_LINES)
+            glColor4f(0.35, 0.95, 1.0, ha)
+            glVertex3f(p.x - stub, p.y, p.z); glVertex3f(p.x + stub, p.y, p.z)
+            glColor4f(0.35, 1.0, 0.75, ha * 0.92)
+            glVertex3f(p.x, p.y - stub, p.z); glVertex3f(p.x, p.y + stub, p.z)
+            glColor4f(0.55, 0.75, 1.0, ha * 0.88)
+            glVertex3f(p.x, p.y, p.z - stub); glVertex3f(p.x, p.y, p.z + stub)
+            glEnd()
+            glPopAttrib()
+            return
+
+        # --- Move handle (compact wire box at pivot): edit mode / perf lock ---
+        glLineWidth(1.6 if play_lite else 1.8)
+        if hover == "move":
+            glColor4f(1.0, 0.92, 0.4, 0.95)
+        else:
+            glColor4f(1.0, 0.78, 0.2, 0.72 if play_lite else 0.78)
+        mx0, mx1 = p.x - move_hs, p.x + move_hs
+        my0, my1 = p.y - move_hs, p.y + move_hs
+        mz0, mz1 = p.z - move_hs, p.z + move_hs
+        _draw_wire_box(mx0, my0, mz0, mx1, my1, mz1)
+        glColor4f(1.0, 0.8, 0.15, 0.08 if play_lite else 0.1)
+        _draw_solid_box(mx0, my0, mz0, mx1, my1, mz1)
+
+        if not full:
+            glLineWidth(1.8 if play_lite else 2.2)
+            a = 0.38 if play_lite else 0.55
+            glBegin(GL_LINES)
+            glColor4f(1.0, 0.25, 0.25, a)
+            glVertex3f(p.x, p.y, p.z)
+            glVertex3f(p.x + size, p.y, p.z)
+            glColor4f(0.25, 1.0, 0.25, a)
+            glVertex3f(p.x, p.y, p.z)
+            glVertex3f(p.x, p.y + size, p.z)
+            glColor4f(0.25, 0.25, 1.0, a)
+            glVertex3f(p.x, p.y, p.z)
+            glVertex3f(p.x, p.y, p.z + size)
+            glEnd()
+            glPopAttrib()
+            return
+
+        glLineWidth(4.0)
         glBegin(GL_LINES)
         glColor4f(1.0, 0.2, 0.2, 1.0)
         glVertex3f(p.x, p.y, p.z)
@@ -601,7 +949,6 @@ class SceneViewport(QOpenGLWidget):
         glVertex3f(p.x, p.y, p.z + size)
         glEnd()
 
-        # Arrow heads
         glBegin(GL_LINES)
         ah = 5.0
         glColor4f(1.0, 0.2, 0.2, 1.0)
@@ -621,7 +968,6 @@ class SceneViewport(QOpenGLWidget):
         glVertex3f(p.x - ah * 0.5, p.y, p.z + size - ah)
         glEnd()
 
-        # Resize handle cubes
         hs = handle_size
         glColor4f(1.0, 0.3, 0.3, 0.9)
         _draw_solid_box(p.x + size - hs, p.y - hs, p.z - hs,
@@ -633,11 +979,9 @@ class SceneViewport(QOpenGLWidget):
         _draw_solid_box(p.x - hs, p.y - hs, p.z + size - hs,
                         p.x + hs, p.y + hs, p.z + size + hs)
 
-        # Rotation ring handles — single thick ring per axis, highlight on hover
         rot_dist = size * 0.5
         ring_r = 8.0
         ring_segs = 32
-        hover = getattr(self, '_hover_gizmo', None)
         for axis, color_normal, color_hover, ring_fn in [
             ('x', (1.0, 0.45, 0.45, 0.95), (1.0, 0.8, 0.8, 1.0),
              lambda i, r=ring_r: (p.x + rot_dist, p.y + r * math.cos(2*math.pi*i/ring_segs), p.z + r * math.sin(2*math.pi*i/ring_segs))),
@@ -656,9 +1000,6 @@ class SceneViewport(QOpenGLWidget):
 
         glPopAttrib()
 
-        # Cache handle screen positions
-        w, h = self.width(), self.height()
-        self._handle_screen_pos = {}
         for axis, wx, wy, wz in [
             ('x', p.x + size, p.y, p.z),
             ('y', p.x, p.y + size, p.z),
@@ -668,9 +1009,6 @@ class SceneViewport(QOpenGLWidget):
             if sp:
                 self._handle_screen_pos[axis] = (sp[0], sp[1])
 
-        # Cache rotation ring screen points (sample 8 points around each ring)
-        self._rot_handle_screen_pos = {}
-        self._rot_ring_screen_points = {}  # axis -> list of (sx, sy)
         ring_samples = 8
         ring_world_points = {
             'x': [(p.x + rot_dist, p.y + ring_r * math.cos(2*math.pi*i/ring_samples),
@@ -688,7 +1026,6 @@ class SceneViewport(QOpenGLWidget):
                     screen_pts.append((sp[0], sp[1]))
             if screen_pts:
                 self._rot_ring_screen_points[axis] = screen_pts
-                # Also keep center for backward compat
                 csp = self.camera.world_to_screen(*world_pts[0][:3], w, h)
                 if csp:
                     self._rot_handle_screen_pos[axis] = (csp[0], csp[1])
@@ -709,7 +1046,7 @@ class SceneViewport(QOpenGLWidget):
             glRotatef(angle, ax, ay, az)
 
         if isinstance(elem, HitZone):
-            self._draw_hit_zone_box(s, c, alpha, is_selected)
+            self._draw_hit_zone(elem, s, c, alpha, is_selected)
         elif isinstance(elem, MorphZone):
             self._draw_morph_zone(elem, s, c, alpha, is_selected)
         elif isinstance(elem, TextLabel):
@@ -719,62 +1056,138 @@ class SceneViewport(QOpenGLWidget):
 
         glPopMatrix()
 
-    def _draw_hit_zone_box(self, s, c, alpha, is_selected):
-        hx, hy, hz = max(15.0 * s.x, 3.0), max(15.0 * s.y, 3.0), max(2.5 * s.z, 1.0)
+    def _draw_hit_zone(self, hz: HitZone, s, c, alpha, is_selected):
+        hx, hy, hzz = _hitzone_visual_half_extents(hz, s)
+        if _hitzone_is_note(hz):
+            self._draw_hit_zone_note_shape(hx, hzz, c, alpha, is_selected, _hitzone_is_toggle(hz))
+        else:
+            self._draw_hit_zone_cc_shape(hx, hy, hzz, c, alpha, is_selected)
 
-        if is_selected:
-            glLineWidth(3.0)
-            glColor4f(1.0, 1.0, 0.2, 1.0)
+    def _draw_hit_zone_note_shape(self, r: float, hz: float, c, alpha, is_selected, is_toggle: bool):
+        """Drum-pad style short cylinder (note targets)."""
+        body_r = max(r * 0.92, 2.5)
+        h = hz
+        quad = gluNewQuadric()
+        gluQuadricNormals(quad, GLU_SMOOTH)
+
+        if is_selected and not self.play_mode:
+            glLineWidth(1.8)
+            glColor4f(1.0, 0.88, 0.35, 0.55)
+            if is_toggle:
+                glEnable(GL_LINE_STIPPLE)
+                glLineStipple(2, 0xAAAA)
+            glBegin(GL_LINE_LOOP)
+            for i in range(36):
+                ang = 2.0 * math.pi * i / 36
+                glVertex3f(body_r * math.cos(ang), body_r * math.sin(ang), h + 0.02)
+            glEnd()
+            glBegin(GL_LINE_LOOP)
+            for i in range(36):
+                ang = 2.0 * math.pi * i / 36
+                glVertex3f(body_r * math.cos(ang), body_r * math.sin(ang), -h - 0.02)
+            glEnd()
+            if is_toggle:
+                glDisable(GL_LINE_STIPPLE)
+
+        glColor4f(c.r * 0.55, c.g * 0.55, c.b * 0.55, alpha * 0.9)
+        glPushMatrix()
+        glTranslatef(0.0, 0.0, -h)
+        gluDisk(quad, 0.0, body_r, 28, 1)
+        glColor4f(c.r, c.g, c.b, alpha)
+        gluCylinder(quad, body_r, body_r, 2.0 * h, 28, 1)
+        glTranslatef(0.0, 0.0, 2.0 * h)
+        gluDisk(quad, 0.0, body_r, 28, 1)
+        glPopMatrix()
+
+        glLineWidth(2.0 if is_toggle else 1.4)
+        glColor4f(min(c.r + 0.35, 1.0), min(c.g + 0.35, 1.0), min(c.b + 0.35, 1.0), alpha)
+        if is_toggle:
+            glEnable(GL_LINE_STIPPLE)
+            glLineStipple(2, 0xCCCC)
+        glBegin(GL_LINE_LOOP)
+        for i in range(36):
+            ang = 2.0 * math.pi * i / 36
+            glVertex3f(body_r * math.cos(ang), body_r * math.sin(ang), h + 0.03)
+        glEnd()
+        if is_toggle:
+            glDisable(GL_LINE_STIPPLE)
+        ir = body_r * 0.42
+        glLineWidth(1.0)
+        glColor4f(c.r * 0.9, c.g * 0.9, c.b * 0.9, alpha * 0.65)
+        glBegin(GL_LINE_LOOP)
+        for i in range(24):
+            ang = 2.0 * math.pi * i / 24
+            glVertex3f(ir * math.cos(ang), ir * math.sin(ang), h + 0.04)
+        glEnd()
+
+        gluDeleteQuadric(quad)
+
+    def _draw_hit_zone_cc_shape(self, hx: float, hy: float, hz: float, c, alpha, is_selected):
+        """Elongated strip suggesting a CC / fader target."""
+        if is_selected and not self.play_mode:
+            glLineWidth(1.8)
+            glColor4f(1.0, 0.88, 0.35, 0.55)
             _draw_wire_box(-hx, -hy, -hz, hx, hy, hz)
 
         glColor4f(c.r, c.g, c.b, alpha)
         _draw_solid_box(-hx, -hy, -hz, hx, hy, hz)
 
+        glLineWidth(1.2)
+        glColor4f(min(c.r + 0.28, 1.0), min(c.g + 0.28, 1.0), min(c.b + 0.28, 1.0), alpha * 0.95)
+        zt = hz + 0.04
+        glBegin(GL_LINES)
+        for k in range(5):
+            t = -1.0 + 0.5 * k
+            x = t * hx * 0.82
+            glVertex3f(x, -hy * 0.88, zt)
+            glVertex3f(x, hy * 0.88, zt)
+        glEnd()
         glLineWidth(1.5)
-        glColor4f(min(c.r + 0.3, 1), min(c.g + 0.3, 1), min(c.b + 0.3, 1), alpha)
+        glColor4f(min(c.r + 0.15, 1.0), min(c.g + 0.15, 1.0), min(c.b + 0.15, 1.0), alpha)
         _draw_wire_box(-hx, -hy, -hz, hx, hy, hz)
 
     def _draw_morph_zone(self, mz, s, c, alpha, is_selected):
-        ext = mz.mesh_extent
-        hx = max(ext.x * s.x * 0.5, 3.0)
-        hy = max(ext.y * s.y * 0.5, 3.0)
-        hz = max(ext.z * s.z * 0.5, 1.0)
+        hx, hy, hz = _morph_visual_half_extents(mz, s)
 
-        if is_selected:
-            glLineWidth(3.0)
-            glColor4f(1.0, 1.0, 0.2, 1.0)
+        if is_selected and not self.play_mode:
+            glLineWidth(1.8)
+            glColor4f(1.0, 0.88, 0.35, 0.55)
             _draw_wire_box(-hx, -hy, -hz, hx, hy, hz)
 
-        glLineWidth(2.0)
+        glLineWidth(1.6 if not self.play_mode else 1.35)
         glColor4f(c.r, c.g, c.b, alpha)
         _draw_wire_box(-hx, -hy, -hz, hx, hy, hz)
 
-        glColor4f(c.r, c.g, c.b, alpha * 0.15)
+        fill_a = alpha * (0.12 if self.play_mode else 0.15)
+        glColor4f(c.r, c.g, c.b, fill_a)
         _draw_solid_box(-hx, -hy, -hz, hx, hy, hz)
 
         cp = mz.control_position_normalized
         cpx = -hx + cp.x * 2 * hx
         cpy = -hy + cp.y * 2 * hy
         cpz = -hz + cp.z * 2 * hz
-        glColor4f(1.0, 1.0, 1.0, 0.9)
+        knob_a = 0.55 if self.play_mode else 0.9
+        knob_r = 1.15 if self.play_mode else 1.5
+        glColor4f(1.0, 1.0, 1.0, knob_a)
         glPushMatrix()
         glTranslatef(cpx, cpy, cpz)
-        _draw_sphere(1.5, 8, 8)
+        _draw_sphere(knob_r, 8 if not self.play_mode else 6, 8 if not self.play_mode else 6)
         glPopMatrix()
 
-        glLineWidth(1.0)
+        glLineWidth(1.0 if not self.play_mode else 0.9)
+        guide_a = 0.28 if self.play_mode else 0.6
         if mz.is_x_axis_enabled:
-            glColor4f(1.0, 0.3, 0.3, 0.6)
+            glColor4f(1.0, 0.3, 0.3, guide_a)
             glBegin(GL_LINES)
             glVertex3f(-hx, cpy, cpz); glVertex3f(hx, cpy, cpz)
             glEnd()
         if mz.is_y_axis_enabled:
-            glColor4f(0.3, 1.0, 0.3, 0.6)
+            glColor4f(0.3, 1.0, 0.3, guide_a)
             glBegin(GL_LINES)
             glVertex3f(cpx, -hy, cpz); glVertex3f(cpx, hy, cpz)
             glEnd()
         if mz.is_z_axis_enabled:
-            glColor4f(0.3, 0.3, 1.0, 0.6)
+            glColor4f(0.3, 0.3, 1.0, guide_a)
             glBegin(GL_LINES)
             glVertex3f(cpx, cpy, -hz); glVertex3f(cpx, cpy, hz)
             glEnd()
@@ -782,9 +1195,9 @@ class SceneViewport(QOpenGLWidget):
     def _draw_text_label(self, tl, s, c, alpha, is_selected):
         hx, hy = max(10.0 * s.x, 3.0), max(8.0 * s.y, 3.0)
 
-        if is_selected:
-            glLineWidth(3.0)
-            glColor4f(1.0, 1.0, 0.2, 1.0)
+        if is_selected and not self.play_mode:
+            glLineWidth(1.8)
+            glColor4f(1.0, 0.88, 0.35, 0.55)
             _draw_wire_box(-hx, -hy, -0.5, hx, hy, 0.5)
 
         glColor4f(c.r, c.g, c.b, alpha * 0.7)
@@ -811,9 +1224,9 @@ class SceneViewport(QOpenGLWidget):
         hy = max((bb.max.y - bb.min.y) * s.y * 0.5, 3.0)
         hz = max((bb.max.z - bb.min.z) * s.z * 0.5, 1.0)
 
-        if is_selected:
-            glLineWidth(3.0)
-            glColor4f(1.0, 1.0, 0.2, 1.0)
+        if is_selected and not self.play_mode:
+            glLineWidth(1.8)
+            glColor4f(1.0, 0.88, 0.35, 0.55)
             _draw_wire_box(-hx, -hy, -hz, hx, hy, hz)
 
         glLineWidth(2.0)
@@ -839,13 +1252,18 @@ class SceneViewport(QOpenGLWidget):
         painter = QPainter(self)
         try:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            self._draw_grid_coordinates(painter)  # Grid coordinate numbers
-            self._draw_element_labels(painter)
-            self._draw_axis_hud(painter)
-            self._draw_info_hud(painter)
-            self._draw_overlay_toolbar(painter)
-            self._draw_shortcuts_overlay(painter)  # Always visible shortcuts
-            self._draw_status_message(painter)     # Action feedback
+            if self.play_mode:
+                self._draw_midi_quick_panel(painter)
+                self._draw_status_message(painter)
+            else:
+                self._draw_grid_coordinates(painter)  # Grid coordinate numbers
+                self._draw_element_labels(painter)
+                self._draw_axis_hud(painter)
+                self._draw_info_hud(painter)
+                self._draw_overlay_toolbar(painter)
+                self._draw_shortcuts_overlay(painter)  # Always visible shortcuts
+                self._draw_midi_quick_panel(painter)
+                self._draw_status_message(painter)     # Action feedback
             if self._marquee_rect:
                 self._draw_marquee(painter)
         except Exception:
@@ -869,9 +1287,12 @@ class SceneViewport(QOpenGLWidget):
             painter.setFont(font)
             fm = QFontMetrics(font)
 
-            label = elem.display_name or elem.unique_id
-            if is_text and elem.display_name:
-                label = f'T: "{elem.display_name}"'
+            base_name = elem.display_name or elem.unique_id
+            if is_text:
+                label = f'T: "{elem.display_name}"' if elem.display_name else base_name
+            else:
+                role = _element_role_label(elem)
+                label = f"{role} — {base_name}"
             is_sel = id(elem) in sel_set
             is_hover = elem is self._hover_element
 
@@ -880,10 +1301,10 @@ class SceneViewport(QOpenGLWidget):
             ry = int(sy - 22)
 
             if is_sel:
-                painter.setPen(Qt.PenStyle.NoPen)
-                painter.setBrush(QColor(255, 255, 50, 200))
+                painter.setPen(QColor(255, 210, 80, 140))
+                painter.setBrush(QColor(40, 48, 58, 120))
                 painter.drawRoundedRect(rx - 4, ry - fm.ascent() - 2, tw + 8, fm.height() + 4, 4, 4)
-                painter.setPen(QColor(0, 0, 0))
+                painter.setPen(QColor(235, 240, 250))
             else:
                 painter.setPen(Qt.PenStyle.NoPen)
                 painter.setBrush(QColor(30, 30, 35, 180))
@@ -941,7 +1362,7 @@ class SceneViewport(QOpenGLWidget):
                 ly = f"Y{world_y:.0f}"
 
             coord_text = f"{lx} {ly}"
-            painter.setPen(QColor(0, 210, 80, 200))
+            painter.setPen(QColor(0, 255, 210, 220))
             painter.drawText(int(sx + 4), int(sy - 4), coord_text)
 
         # Grid info in top-right
@@ -957,7 +1378,7 @@ class SceneViewport(QOpenGLWidget):
 
             info_font = QFont("Segoe UI", 9, QFont.Weight.Bold)
             painter.setFont(info_font)
-            painter.setPen(QColor(0, 200, 70, 220))
+            painter.setPen(QColor(0, 255, 180, 235))
 
             metrics = painter.fontMetrics()
             text_rect = metrics.boundingRect(grid_info)
@@ -1218,14 +1639,14 @@ class SceneViewport(QOpenGLWidget):
                     midi_controls.append(f"Button: CC{cc.control} value={cc.value}")
             if hasattr(elem, 'midi_note_mappings') and elem.midi_note_mappings:
                 for note in elem.midi_note_mappings:
-                    midi_controls.append(f"Drum: Note{note.note} Ch{note.channel}")
+                    midi_controls.append(f"Note pad: n{note.note} ch{note.channel}")
 
             if midi_controls:
                 shortcuts.append("")
                 shortcuts.extend(["🎵 MIDI MAPPINGS:"] + midi_controls[:4])
                 if elem_type == "MorphZone":
                     shortcuts.append("Alt+↑↓: Adjust CC output values ±1")
-                elif elem_type == "HitZone" and midi_controls[0].startswith("Drum"):
+                elif elem_type == "HitZone" and midi_controls[0].startswith("Note pad"):
                     shortcuts.append("Alt+Shift+↑↓: Adjust note values ±1")
                 elif elem_type == "HitZone":
                     shortcuts.append("Alt+↑↓: Adjust CC output values ±1")
@@ -1241,7 +1662,8 @@ class SceneViewport(QOpenGLWidget):
             shortcuts.extend([
                 "",
                 "⚡ MOVEMENT (Selected Element):",
-                "Drag: Move freely",
+                "Pivot cross / cube: drag to move (full cube in Performance Lock; tiny cross in Desktop Play)",
+                "Drag element body: Move freely (when Performance Lock is off)",
                 "Ctrl+←→: Nudge X-axis ±1 unit",
                 "Ctrl+↑↓: Nudge Y-axis ±1 unit",
                 "Ctrl+PgUp/Dn: Nudge Z-axis ±1 unit",
@@ -1356,7 +1778,7 @@ class SceneViewport(QOpenGLWidget):
                     # Section headers
                     painter.setPen(QColor(150, 200, 255))
                     painter.drawText(bx + 10, ty, s)
-                elif s.startswith('Type:') or s.startswith('Position:') or s.startswith('Y-axis:') or s.startswith('X-axis:') or s.startswith('Z-axis:') or s.startswith('Button:') or s.startswith('Drum:'):
+                elif s.startswith('Type:') or s.startswith('Position:') or s.startswith('Y-axis:') or s.startswith('X-axis:') or s.startswith('Z-axis:') or s.startswith('Button:') or s.startswith('Note pad:'):
                     # Data lines
                     painter.setPen(QColor(180, 255, 180))
                     painter.drawText(bx + 10, ty, s)
@@ -1436,8 +1858,32 @@ class SceneViewport(QOpenGLWidget):
                 if self._check_overlay_click(mx, my):
                     return
 
+                if (
+                    not self.play_mode
+                    and self._midi_quick_panel_rect is not None
+                    and self._midi_quick_panel_rect.contains(mx, my)
+                    and len(self.selected_elements) == 1
+                    and isinstance(self.selected_elements[0], (MorphZone, HitZone))
+                ):
+                    self._run_midi_edit_dialog(self.selected_elements[0])
+                    return
+
+                if self.selected_elements and self._hit_move_gizmo(mx, my):
+                    use_move = True
+                    if self.play_mode and self.lock_move:
+                        tgt = self._pick_play_ray_target(float(mx), float(my))
+                        if isinstance(tgt, (MorphZone, HitZone)):
+                            use_move = False
+                    if use_move:
+                        self._start_move_drag_from_gizmo()
+                        return
+
+                if self.play_mode and self.lock_move:
+                    if self._try_play_mode_press(mx, my):
+                        return
+
                 # Check resize handles (works for single and multi-selection)
-                if self.selected_elements and hasattr(self, '_handle_screen_pos') and not self.lock_move:
+                if self.selected_elements and self._handle_screen_pos and self._show_scale_rotate_gizmo():
                     for axis, (hx, hy) in self._handle_screen_pos.items():
                         if math.sqrt((mx - hx) ** 2 + (my - hy) ** 2) < 30:
                             self._resizing = True
@@ -1449,7 +1895,7 @@ class SceneViewport(QOpenGLWidget):
                             return
 
                 # Check rotation handles — test against ring sample points
-                if self.selected_elements and hasattr(self, '_rot_ring_screen_points') and not self.lock_move:
+                if self.selected_elements and self._rot_ring_screen_points and self._show_scale_rotate_gizmo():
                     for axis, pts in self._rot_ring_screen_points.items():
                         for (hx, hy) in pts:
                             if (mx - hx) ** 2 + (my - hy) ** 2 < 900:  # 30px radius
@@ -1479,6 +1925,19 @@ class SceneViewport(QOpenGLWidget):
         elif event.buttons() & Qt.MouseButton.MiddleButton:
             self.camera.pan(dx, dy)
             self.update()
+        elif event.buttons() & Qt.MouseButton.LeftButton and self._play_morph_drag and self._play_morph_elem:
+            self._update_morph_drag_from_screen(self._play_morph_elem, event.pos().x(), event.pos().y())
+            self.update()
+        elif (
+            self.play_mode
+            and event.buttons() & Qt.MouseButton.LeftButton
+            and self._play_hitzone_elem is not None
+        ):
+            hz = self._play_hitzone_elem
+            mt = getattr(hz, "midi_message_type", "") or ""
+            bh = getattr(hz, "behavior", "") or ""
+            if _hitzone_is_cc(hz) and "Toggle" not in bh and hz.midi_cc_mappings:
+                self._update_hitzone_cc_drag_from_screen(hz, event.pos().x(), event.pos().y())
         elif event.buttons() & Qt.MouseButton.LeftButton and self._marquee_active:
             # Update marquee rectangle
             self._marquee_rect = QRect(self._marquee_start, event.pos()).normalized()
@@ -1500,6 +1959,34 @@ class SceneViewport(QOpenGLWidget):
         self._last_mouse = event.pos()
 
     def mouseReleaseEvent(self, event: QMouseEvent):
+        if event.button() == Qt.MouseButton.LeftButton and self._play_morph_drag:
+            self._play_morph_drag = False
+            self._play_morph_elem = None
+            self.update()
+            return
+        if event.button() == Qt.MouseButton.LeftButton and self._play_hitzone_elem is not None:
+            hz = self._play_hitzone_elem
+            self._play_hitzone_elem = None
+            if _hitzone_is_note(hz) and hz.midi_note_mappings:
+                m = hz.midi_note_mappings[0]
+                self.play_perf_send.emit(
+                    hz.unique_id,
+                    {"type": "note_off", "note": m.note, "channel": m.channel, "velocity": 0},
+                )
+            elif _hitzone_is_cc(hz) and hz.midi_cc_mappings:
+                m = hz.midi_cc_mappings[0]
+                self.play_perf_send.emit(
+                    hz.unique_id,
+                    {
+                        "type": "cc",
+                        "cc": m.control,
+                        "channel": m.channel,
+                        "value": 0,
+                        "axis": "hitzone",
+                    },
+                )
+            self.update()
+            return
         if event.button() == Qt.MouseButton.LeftButton and self._marquee_active:
             # Finish marquee select
             if self._marquee_rect and self._mouse_moved:
@@ -1559,9 +2046,22 @@ class SceneViewport(QOpenGLWidget):
             self._dragging_element = False
             self._drag_start_positions = {}
         elif event.button() == Qt.MouseButton.RightButton and not self._mouse_moved:
+            mx, my = event.pos().x(), event.pos().y()
+            if (
+                self.play_mode
+                and self._midi_quick_panel_rect is not None
+                and self._midi_quick_panel_rect.contains(mx, my)
+                and len(self.selected_elements) == 1
+                and isinstance(self.selected_elements[0], (MorphZone, HitZone))
+            ):
+                self._run_midi_edit_dialog(self.selected_elements[0])
+                return
             self._show_context_menu(event.pos())
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
+        if self.play_mode:
+            event.accept()
+            return
         if event.button() == Qt.MouseButton.LeftButton:
             self.maximize_requested.emit()
             event.accept()
@@ -1579,6 +2079,9 @@ class SceneViewport(QOpenGLWidget):
         if key == Qt.Key.Key_Home:
             self._fit_all()
         elif key == Qt.Key.Key_Escape:
+            if self.play_mode:
+                self.play_mode_exit_requested.emit()
+                return
             self.selected_elements = []
             self._emit_selection()
             self.update()
@@ -1828,12 +2331,17 @@ class SceneViewport(QOpenGLWidget):
                 else:
                     self._show_status(f"Selected: {best_elem.display_name or best_elem.unique_id}")
             else:
-                # Miss on empty — start marquee select
-                self._marquee_active = True
-                self._marquee_start = QPoint(mx, my)
-                self._marquee_rect = None
+                # Miss on empty — marquee (disabled in Desktop Play)
                 self.selected_elements = []
-                self._show_status("Click and drag to marquee select")
+                if self.play_mode:
+                    self._show_status(
+                        "Click a control to select — drag MorphZones to play (Desktop Play)"
+                    )
+                else:
+                    self._marquee_active = True
+                    self._marquee_start = QPoint(mx, my)
+                    self._marquee_rect = None
+                    self._show_status("Click and drag to marquee select")
 
         # Set up drag if we have a selection (unless move is locked)
         if self.selected_elements and best_elem is not None and not self.lock_move:
@@ -1866,7 +2374,333 @@ class SceneViewport(QOpenGLWidget):
 
         self._emit_selection()
 
+    def _run_midi_edit_dialog(self, elem) -> None:
+        """Set morph MIDI targets (ch/CC/value) or output levels; HitZone note/CC routing."""
+        changed = False
+        if isinstance(elem, MorphZone):
+            mz = elem
+            mode_labels = (
+                "MIDI targets (channel, CC number, value per axis)",
+                "Morph output level only (0-127 position)",
+            )
+            mode, ok_mode = QInputDialog.getItem(
+                self,
+                "MorphZone MIDI",
+                "What to edit:",
+                mode_labels,
+                0,
+                False,
+            )
+            if not ok_mode:
+                self.update()
+                return
+            if mode == mode_labels[0]:
+                undo_changes = []
+                axis_cfgs = []
+                if mz.is_x_axis_enabled:
+                    axis_cfgs.append(("X", "x_axis_cc_mappings"))
+                if mz.is_y_axis_enabled:
+                    axis_cfgs.append(("Y", "y_axis_cc_mappings"))
+                if mz.is_z_axis_enabled:
+                    axis_cfgs.append(("Z", "z_axis_cc_mappings"))
+                if not axis_cfgs:
+                    self._show_status("No morph axes enabled — enable X/Y/Z in properties first")
+                    self.update()
+                    return
+                for axis_label, attr in axis_cfgs:
+                    maps = getattr(mz, attr)
+                    if not maps:
+                        setattr(mz, attr, [MidiCCMapping()])
+                        maps = getattr(mz, attr)
+                    cm = maps[0]
+                    old_maps = copy.deepcopy(maps)
+                    ch0 = max(1, min(16, int(getattr(cm, "channel", 1) or 1)))
+                    ch, ok_ch = QInputDialog.getInt(
+                        self,
+                        f"Morph {axis_label} — where MIDI goes",
+                        "MIDI channel (1-16)",
+                        ch0,
+                        1,
+                        16,
+                    )
+                    if not ok_ch:
+                        self.update()
+                        return
+                    cc0 = max(0, min(127, int(cm.control)))
+                    cc_num, ok_cc = QInputDialog.getInt(
+                        self,
+                        f"Morph {axis_label} — where MIDI goes",
+                        "Controller number CC 0-127",
+                        cc0,
+                        0,
+                        127,
+                    )
+                    if not ok_cc:
+                        self.update()
+                        return
+                    val0 = max(0, min(127, int(cm.value)))
+                    nv, ok_v = QInputDialog.getInt(
+                        self,
+                        f"Morph {axis_label} — where MIDI goes",
+                        "CC value sent at this axis position (0-127)",
+                        val0,
+                        0,
+                        127,
+                    )
+                    if not ok_v:
+                        self.update()
+                        return
+                    if ch != cm.channel or cc_num != cm.control or nv != cm.value:
+                        cm.channel = ch
+                        cm.control = cc_num
+                        cm.value = nv
+                        changed = True
+                        undo_changes.append(
+                            (mz, attr, old_maps, copy.deepcopy(maps))
+                        )
+                if undo_changes:
+                    self.midi_mappings_nudged.emit(undo_changes, "Set morph MIDI targets")
+                if changed:
+                    self._emit_morph_play_payloads(mz, None)
+                    self.play_morph_interaction.emit(mz)
+            else:
+                cp = mz.control_position_normalized
+                if mz.is_x_axis_enabled:
+                    cur = int(round(max(0.0, min(1.0, cp.x)) * 127.0))
+                    nv, ok = QInputDialog.getInt(self, "Morph X", "Output 0-127", cur, 0, 127)
+                    if ok:
+                        cp.x = nv / 127.0
+                        changed = True
+                if mz.is_y_axis_enabled:
+                    cur = int(round(max(0.0, min(1.0, cp.y)) * 127.0))
+                    nv, ok = QInputDialog.getInt(self, "Morph Y", "Output 0-127", cur, 0, 127)
+                    if ok:
+                        cp.y = nv / 127.0
+                        changed = True
+                if mz.is_z_axis_enabled:
+                    cur = int(round(max(0.0, min(1.0, cp.z)) * 127.0))
+                    nv, ok = QInputDialog.getInt(self, "Morph Z", "Output 0-127", cur, 0, 127)
+                    if ok:
+                        cp.z = nv / 127.0
+                        changed = True
+                if changed:
+                    self._emit_morph_play_payloads(mz, None)
+                    self.play_morph_interaction.emit(mz)
+        elif isinstance(elem, HitZone):
+            hz = elem
+            if _hitzone_is_cc(hz) and hz.midi_cc_mappings:
+                old = copy.deepcopy(hz.midi_cc_mappings)
+                cm = hz.midi_cc_mappings[0]
+                ch0 = max(1, min(16, int(getattr(cm, "channel", 1) or 1)))
+                cc0, val0 = int(cm.control), int(cm.value)
+                ch, ok_ch = QInputDialog.getInt(
+                    self, "MIDI channel", "Channel 1-16", ch0, 1, 16
+                )
+                if not ok_ch:
+                    self.update()
+                    return
+                cc_num, ok_cc = QInputDialog.getInt(
+                    self, "CC number", "Controller 0-127", max(0, min(127, cc0)), 0, 127
+                )
+                if not ok_cc:
+                    self.update()
+                    return
+                nv, ok_v = QInputDialog.getInt(
+                    self, "CC value", "Value 0-127", max(0, min(127, val0)), 0, 127
+                )
+                if not ok_v:
+                    self.update()
+                    return
+                if ch != cm.channel or cc_num != cm.control or nv != cm.value:
+                    cm.channel = ch
+                    cm.control = cc_num
+                    cm.value = nv
+                    changed = True
+                    self.midi_mappings_nudged.emit(
+                        [(hz, "midi_cc_mappings", old, copy.deepcopy(hz.midi_cc_mappings))],
+                        "Set MIDI CC mapping",
+                    )
+                    if self.play_mode:
+                        self.play_perf_send.emit(
+                            hz.unique_id,
+                            {
+                                "type": "cc",
+                                "cc": cm.control,
+                                "channel": cm.channel,
+                                "value": nv,
+                                "axis": "hitzone",
+                            },
+                        )
+            elif _hitzone_is_note(hz) and hz.midi_note_mappings:
+                old = copy.deepcopy(hz.midi_note_mappings)
+                nm = hz.midi_note_mappings[0]
+                ch0 = max(1, min(16, int(getattr(nm, "channel", 1) or 1)))
+                ch, ok_ch = QInputDialog.getInt(
+                    self, "MIDI channel", "Channel 1-16", ch0, 1, 16
+                )
+                if not ok_ch:
+                    self.update()
+                    return
+                nv, ok_n = QInputDialog.getInt(
+                    self, "MIDI note", "Note number 0-127", int(nm.note), 0, 127
+                )
+                if not ok_n:
+                    self.update()
+                    return
+                if ch != nm.channel or nv != nm.note:
+                    nm.channel = ch
+                    nm.note = nv
+                    changed = True
+                    self.midi_mappings_nudged.emit(
+                        [(hz, "midi_note_mappings", old, copy.deepcopy(hz.midi_note_mappings))],
+                        "Set MIDI note",
+                    )
+        if changed:
+            self._emit_selection()
+            self._show_status("Updated MIDI routing / output")
+        self.update()
+
+    def _draw_midi_quick_panel(self, painter: QPainter) -> None:
+        self._midi_quick_panel_rect = None
+        if getattr(self, "view_label", "Perspective") != "Perspective":
+            return
+        if len(self.selected_elements) != 1:
+            return
+        elem = self.selected_elements[0]
+        if not isinstance(elem, (MorphZone, HitZone)):
+            return
+
+        w = self.width()
+        h = self.height()
+        margin = 12
+        if self.play_mode:
+            lines = ["MIDI / output — right-click to edit"]
+        else:
+            lines = ["MIDI / output — click to edit"]
+        if isinstance(elem, MorphZone):
+            cp = elem.control_position_normalized
+            if elem.is_x_axis_enabled:
+                if elem.x_axis_cc_mappings:
+                    m = elem.x_axis_cc_mappings[0]
+                    lines.append(
+                        f"X: ch{m.channel} CC{m.control} val{m.value}  pos {int(round(cp.x * 127))}"
+                    )
+                else:
+                    lines.append(f"X out: {int(round(cp.x * 127))}")
+            if elem.is_y_axis_enabled:
+                if elem.y_axis_cc_mappings:
+                    m = elem.y_axis_cc_mappings[0]
+                    lines.append(
+                        f"Y: ch{m.channel} CC{m.control} val{m.value}  pos {int(round(cp.y * 127))}"
+                    )
+                else:
+                    lines.append(f"Y out: {int(round(cp.y * 127))}")
+            if elem.is_z_axis_enabled:
+                if elem.z_axis_cc_mappings:
+                    m = elem.z_axis_cc_mappings[0]
+                    lines.append(
+                        f"Z: ch{m.channel} CC{m.control} val{m.value}  pos {int(round(cp.z * 127))}"
+                    )
+                else:
+                    lines.append(f"Z out: {int(round(cp.z * 127))}")
+        else:
+            hz = elem
+            if hz.midi_note_mappings:
+                m = hz.midi_note_mappings[0]
+                lines.append(f"Note: {m.note}  ch {m.channel}")
+            if hz.midi_cc_mappings:
+                m = hz.midi_cc_mappings[0]
+                lines.append(f"CC{m.control}: {m.value}  ch {m.channel}")
+
+        font = QFont("Segoe UI", 9, QFont.Weight.Bold)
+        painter.setFont(font)
+        fm = painter.fontMetrics()
+        text_w = max(fm.horizontalAdvance(s) for s in lines)
+        text_h = fm.height()
+        pad = 10
+        box_w = text_w + pad * 2
+        box_h = len(lines) * text_h + pad * 2
+        x = margin
+        y = h - margin - box_h
+        self._midi_quick_panel_rect = QRect(x, y, box_w, box_h)
+
+        path = QPainterPath()
+        path.addRoundedRect(float(x), float(y), float(box_w), float(box_h), 8, 8)
+        painter.fillPath(path, QColor(8, 22, 18, 220))
+        painter.setPen(QPen(QColor(0, 255, 200, 200), 1.5))
+        painter.drawPath(path)
+        painter.setPen(QColor(200, 255, 240, 255))
+        ty = y + pad + fm.ascent()
+        for line in lines:
+            painter.drawText(x + pad, ty, line)
+            ty += text_h
+
+    def _show_play_context_menu(self, pos):
+        """Lightweight add / selection actions while in Desktop Play."""
+        menu = QMenu(self)
+        qm = menu.addMenu("Quick add MorphZone")
+        for label, key in (
+            ("Morph X (1 axis)", "MorphZone_X"),
+            ("Morph XY", "MorphZone_XY"),
+            ("Morph XYZ", "MorphZone_XYZ"),
+        ):
+            act = qm.addAction(label)
+            act.setData(key)
+        qh = menu.addMenu("Quick add HitZone")
+        for label, key in (
+            ("Note + Hold", "HitZone_NoteHold"),
+            ("Note + Toggle", "HitZone_NoteToggle"),
+            ("CC + Hold", "HitZone_CCHold"),
+        ):
+            act = qh.addAction(label)
+            act.setData(key)
+        menu.addSeparator()
+        dup_action = None
+        del_action = None
+        midi_edit_action = None
+        if len(self.selected_elements) == 1:
+            e0 = self.selected_elements[0]
+            if isinstance(e0, (MorphZone, HitZone)):
+                midi_edit_action = menu.addAction("Edit MIDI / output levels…")
+                menu.addSeparator()
+        if len(self.selected_elements) > 1:
+            n = len(self.selected_elements)
+            dup_action = menu.addAction(f"Duplicate {n} elements")
+            del_action = menu.addAction(f"Delete {n} elements")
+        elif len(self.selected_elements) == 1:
+            elem = self.selected_elements[0]
+            dup_action = menu.addAction(f"Duplicate {elem.unique_id}")
+            del_action = menu.addAction(f"Delete {elem.unique_id}")
+        menu.addSeparator()
+        exit_a = menu.addAction("Exit Desktop Play (Esc)")
+        action = menu.exec(self.mapToGlobal(pos))
+        if action is None:
+            return
+        if action == midi_edit_action and len(self.selected_elements) == 1:
+            self._run_midi_edit_dialog(self.selected_elements[0])
+            return
+        if action == exit_a:
+            self.play_mode_exit_requested.emit()
+            return
+        data = action.data()
+        if isinstance(data, str) and (
+            data.startswith("MorphZone_") or data.startswith("HitZone_")
+        ):
+            self.add_element_requested.emit(data)
+            return
+        if action == dup_action:
+            for elem in list(self.selected_elements):
+                self.duplicate_element_requested.emit(elem)
+        elif action == del_action:
+            if len(self.selected_elements) == 1:
+                self.delete_element_requested.emit(self.selected_elements[0])
+            else:
+                self.delete_elements_requested.emit(list(self.selected_elements))
+
     def _show_context_menu(self, pos):
+        if self.play_mode:
+            self._show_play_context_menu(pos)
+            return
         menu = QMenu(self)
 
         add_menu = menu.addMenu("Add Element")
@@ -1887,6 +2721,7 @@ class SceneViewport(QOpenGLWidget):
         change_color_action = None
         toggle_lock_action = None
         workspace_menu = None
+        midi_edit_action = None
 
         if len(self.selected_elements) > 1:
             menu.addSeparator()
@@ -1952,6 +2787,8 @@ class SceneViewport(QOpenGLWidget):
                 edit_text_action = menu.addAction(f"Edit Display Name")
 
             change_color_action = menu.addAction(f"Change Color")
+            if isinstance(elem, (MorphZone, HitZone)):
+                midi_edit_action = menu.addAction("Edit MIDI / output levels…")
 
             # Group operations for single element
             if self.project:
@@ -2018,6 +2855,9 @@ class SceneViewport(QOpenGLWidget):
             self.change_color_requested.emit(list(self.selected_elements))
         elif action is not None and action == toggle_lock_action:
             self.toggle_lock_requested.emit(list(self.selected_elements))
+        elif action is not None and action == midi_edit_action:
+            if len(self.selected_elements) == 1:
+                self._run_midi_edit_dialog(self.selected_elements[0])
 
         # Use action data to identify group operations and workspace transfers
         if action is not None and hasattr(action, 'data') and action.data():
@@ -2268,6 +3108,269 @@ class SceneViewport(QOpenGLWidget):
         else:
             self._show_status("No MIDI note mappings found on selected elements!")
 
+    def _morph_local_hit_point(self, mz: MorphZone, origin_w: tuple, dir_w: tuple):
+        """Return (px,py,pz, hx,hy,hz) local hit on morph box, or None."""
+        t = mz.transform.translation
+        q = mz.transform.rotation
+        s = mz.transform.scale
+        hx, hy, hz = _morph_local_half_extents(mz, s)
+        tr = _ray_obb_intersect(mz, hx, hy, hz, origin_w, dir_w)
+        if tr is None:
+            return None
+        vx = origin_w[0] - t.x
+        vy = origin_w[1] - t.y
+        vz = origin_w[2] - t.z
+        lo = _quat_rotate_vec_inv(q, vx, vy, vz)
+        ld = _quat_rotate_vec_inv(q, dir_w[0], dir_w[1], dir_w[2])
+        ln = math.sqrt(ld[0] * ld[0] + ld[1] * ld[1] + ld[2] * ld[2])
+        if ln < 1e-12:
+            return None
+        ld = (ld[0] / ln, ld[1] / ln, ld[2] / ln)
+        px = lo[0] + tr * ld[0]
+        py = lo[1] + tr * ld[1]
+        pz = lo[2] + tr * ld[2]
+        return (px, py, pz, hx, hy, hz)
+
+    def _pick_play_ray_target(self, mx: float, my: float):
+        """Return closest MorphZone or HitZone under ray, or None."""
+        ray = self.camera.screen_to_world_ray(mx, my, self.width(), self.height())
+        if not ray:
+            return None
+        ow, dw = ray
+        best = None
+        best_t = None
+        for elem in self._active_workspace_elements():
+            if isinstance(elem, MorphZone):
+                s = elem.transform.scale
+                hx, hy, hz = _morph_local_half_extents(elem, s)
+                tr = _ray_obb_intersect(elem, hx, hy, hz, ow, dw)
+            elif isinstance(elem, HitZone):
+                s = elem.transform.scale
+                hx, hy, hz = _hitzone_visual_half_extents(elem, s)
+                tr = _ray_obb_intersect(elem, hx, hy, hz, ow, dw)
+            else:
+                continue
+            if tr is None:
+                continue
+            if best_t is None or tr < best_t:
+                best_t = tr
+                best = elem
+        return best
+
+    def _play_drag_axis_mask(self):
+        """Desktop Play: optional subset of axes while dragging (Alt=X, Ctrl=Y, Shift=Z)."""
+        if not self.play_mode:
+            return None
+        m = QApplication.keyboardModifiers()
+        axes = set()
+        if m & Qt.KeyboardModifier.AltModifier:
+            axes.add("X")
+        if m & Qt.KeyboardModifier.ControlModifier:
+            axes.add("Y")
+        if m & Qt.KeyboardModifier.ShiftModifier:
+            axes.add("Z")
+        return axes if axes else None
+
+    def _emit_morph_play_payloads(self, mz: MorphZone, axes_filter=None):
+        cp = mz.control_position_normalized
+        uid = mz.unique_id
+        active = axes_filter
+
+        def _emit_axis(axis_letter: str, enabled: bool, mappings, norm_val: float) -> None:
+            if not enabled or not mappings:
+                return
+            if active is not None and axis_letter not in active:
+                return
+            m = mappings[0]
+            val = int(round(max(0.0, min(1.0, norm_val)) * 127.0))
+            self.play_perf_send.emit(
+                uid,
+                {"type": "cc", "cc": m.control, "channel": m.channel, "value": val, "axis": axis_letter},
+            )
+
+        _emit_axis("X", mz.is_x_axis_enabled, mz.x_axis_cc_mappings, cp.x)
+        _emit_axis("Y", mz.is_y_axis_enabled, mz.y_axis_cc_mappings, cp.y)
+        _emit_axis("Z", mz.is_z_axis_enabled, mz.z_axis_cc_mappings, cp.z)
+
+    def _camera_forward_unit(self) -> tuple:
+        fx, fy, fz = self.camera.forward_vector()
+        ln = math.sqrt(fx * fx + fy * fy + fz * fz)
+        if ln < 1e-12:
+            return (0.0, 0.0, -1.0)
+        return (fx / ln, fy / ln, fz / ln)
+
+    def _update_morph_drag_from_screen(self, mz: MorphZone, mx: float, my: float):
+        ray = self.camera.screen_to_world_ray(mx, my, self.width(), self.height())
+        if not ray:
+            return
+        ow, dw = ray
+        s = mz.transform.scale
+        hx, hy, hz = _morph_local_half_extents(mz, s)
+        hit = self._morph_local_hit_point(mz, ow, dw)
+        if hit:
+            px, py, pz, hx, hy, hz = hit
+        else:
+            t = mz.transform.translation
+            pw = (t.x, t.y, t.z)
+            n = self._camera_forward_unit()
+            wp = _ray_plane_intersect_point(ow, dw, pw, n)
+            if wp is None:
+                return
+            q = mz.transform.rotation
+            vx, vy, vz = wp[0] - t.x, wp[1] - t.y, wp[2] - t.z
+            lo = _quat_rotate_vec_inv(q, vx, vy, vz)
+            px = max(-hx, min(hx, lo[0]))
+            py = max(-hy, min(hy, lo[1]))
+            pz = max(-hz, min(hz, lo[2]))
+        cp = mz.control_position_normalized
+        mask = self._play_drag_axis_mask()
+        move_x = mz.is_x_axis_enabled and (mask is None or "X" in mask)
+        move_y = mz.is_y_axis_enabled and (mask is None or "Y" in mask)
+        move_z = mz.is_z_axis_enabled and (mask is None or "Z" in mask)
+        if move_x:
+            cp.x = max(0.0, min(1.0, (px + hx) / (2.0 * hx)))
+        if move_y:
+            cp.y = max(0.0, min(1.0, (py + hy) / (2.0 * hy)))
+        if move_z:
+            cp.z = max(0.0, min(1.0, (pz + hz) / (2.0 * hz)))
+        self._emit_morph_play_payloads(mz, mask)
+        self.play_morph_interaction.emit(mz)
+        self.update()
+
+    def _update_hitzone_cc_drag_from_screen(self, hz: HitZone, mx: float, my: float):
+        """Sticky CC fader: ray-box hit, else plane through pad so cursor need not stay on mesh."""
+        if not hz.midi_cc_mappings:
+            return
+        ray = self.camera.screen_to_world_ray(mx, my, self.width(), self.height())
+        if not ray:
+            return
+        ow, dw = ray
+        s = hz.transform.scale
+        hx, hy, hzz = _hitzone_visual_half_extents(hz, s)
+        tr = _ray_obb_intersect(hz, hx, hy, hzz, ow, dw)
+        t = hz.transform.translation
+        q = hz.transform.rotation
+        if tr is not None:
+            hw = (ow[0] + tr * dw[0], ow[1] + tr * dw[1], ow[2] + tr * dw[2])
+            vx = hw[0] - t.x
+            vy = hw[1] - t.y
+            vz = hw[2] - t.z
+            lo = _quat_rotate_vec_inv(q, vx, vy, vz)
+            px, py, pz = lo[0], lo[1], lo[2]
+        else:
+            n = self._camera_forward_unit()
+            wp = _ray_plane_intersect_point(ow, dw, (t.x, t.y, t.z), n)
+            if wp is None:
+                return
+            vx = wp[0] - t.x
+            vy = wp[1] - t.y
+            vz = wp[2] - t.z
+            lo = _quat_rotate_vec_inv(q, vx, vy, vz)
+            px = max(-hx, min(hx, lo[0]))
+            py = max(-hy, min(hy, lo[1]))
+            pz = max(-hzz, min(hzz, lo[2]))
+        norm = max(0.0, min(1.0, (px + hx) / (2.0 * hx)))
+        val = int(round(norm * 127.0))
+        m = hz.midi_cc_mappings[0]
+        m.value = val
+        self.play_perf_send.emit(
+            hz.unique_id,
+            {"type": "cc", "cc": m.control, "channel": m.channel, "value": val, "axis": "hitzone"},
+        )
+        self.update()
+
+    def _try_play_mode_press(self, mx: int, my: int) -> bool:
+        """Handle Desktop Play left-click: morph drag or hitzone note. Returns True if handled."""
+        if not self.play_mode or not self.lock_move:
+            return False
+        target = self._pick_play_ray_target(float(mx), float(my))
+        if isinstance(target, MorphZone):
+            self.selected_elements = [target]
+            self._play_morph_drag = True
+            self._play_morph_elem = target
+            self._play_hitzone_elem = None
+            self._update_morph_drag_from_screen(target, mx, my)
+            self._emit_selection()
+            self._show_status(
+                f"Play: {target.display_name or target.unique_id}  |  "
+                "Alt=X only, Ctrl=Y, Shift=Z (combine keys for 2D/1D); no keys = all axes"
+            )
+            return True
+        if isinstance(target, HitZone):
+            hz = target
+            self.selected_elements = [hz]
+            self._play_morph_drag = False
+            self._play_morph_elem = None
+
+            if _hitzone_is_note(hz) and hz.behavior == "EHitZoneBehavior::Toggle":
+                hz.toggle_state = not hz.toggle_state
+                if hz.midi_note_mappings:
+                    m = hz.midi_note_mappings[0]
+                    vel = int(hz.fixed_midi_velocity_output or 127)
+                    if hz.toggle_state:
+                        self.play_perf_send.emit(
+                            hz.unique_id,
+                            {"type": "note_on", "note": m.note, "channel": m.channel, "velocity": vel},
+                        )
+                    else:
+                        self.play_perf_send.emit(
+                            hz.unique_id,
+                            {"type": "note_off", "note": m.note, "channel": m.channel, "velocity": 0},
+                        )
+                self._play_hitzone_elem = None
+                self._emit_selection()
+                self._show_status(f"Play toggle: {hz.display_name or hz.unique_id}")
+                return True
+
+            if _hitzone_is_cc(hz) and hz.midi_cc_mappings:
+                m = hz.midi_cc_mappings[0]
+                if hz.behavior == "EHitZoneBehavior::Toggle":
+                    hz.toggle_state = not hz.toggle_state
+                    val = 127 if hz.toggle_state else 0
+                    self.play_perf_send.emit(
+                        hz.unique_id,
+                        {
+                            "type": "cc",
+                            "cc": m.control,
+                            "channel": m.channel,
+                            "value": val,
+                            "axis": "hitzone",
+                        },
+                    )
+                    self._play_hitzone_elem = None
+                else:
+                    self._play_hitzone_elem = hz
+                    self.play_perf_send.emit(
+                        hz.unique_id,
+                        {
+                            "type": "cc",
+                            "cc": m.control,
+                            "channel": m.channel,
+                            "value": 127,
+                            "axis": "hitzone",
+                        },
+                    )
+                self._emit_selection()
+                self._show_status(f"Play: {hz.display_name or hz.unique_id}")
+                return True
+
+            self._play_hitzone_elem = hz
+            if hz.midi_note_mappings:
+                m = hz.midi_note_mappings[0]
+                vel = int(hz.fixed_midi_velocity_output or 127)
+                self.play_perf_send.emit(
+                    hz.unique_id,
+                    {"type": "note_on", "note": m.note, "channel": m.channel, "velocity": vel},
+                )
+            self._emit_selection()
+            self._show_status(f"Play: {hz.display_name or hz.unique_id}")
+            return True
+        self.selected_elements = []
+        self._emit_selection()
+        self._show_status("Desktop Play — click a MorphZone or HitZone")
+        self.update()
+        return True
+
     def _show_status(self, message: str):
         """Show a status message that fades out after a few seconds."""
         self._status_message = message
@@ -2283,6 +3386,87 @@ def _multiply_quaternions(q1: Quat, q2: Quat) -> Quat:
         y=q1.w*q2.y - q1.x*q2.z + q1.y*q2.w + q1.z*q2.x,
         z=q1.w*q2.z + q1.x*q2.y - q1.y*q2.x + q1.z*q2.w
     )
+
+
+def _quat_rotate_vec(q: Quat, vx: float, vy: float, vz: float) -> tuple:
+    """Rotate vector v by quaternion q."""
+    qx, qy, qz, qw = q.x, q.y, q.z, q.w
+    tx = 2 * (qy * vz - qz * vy)
+    ty = 2 * (qz * vx - qx * vz)
+    tz = 2 * (qx * vy - qy * vx)
+    cx = qy * tz - qz * ty
+    cy = qz * tx - qx * tz
+    cz = qx * ty - qy * tx
+    return (vx + qw * tx + cx, vy + qw * ty + cy, vz + qw * tz + cz)
+
+
+def _quat_rotate_vec_inv(q: Quat, vx: float, vy: float, vz: float) -> tuple:
+    """Rotate by inverse quaternion (world offset/direction -> local)."""
+    qi = Quat(-q.x, -q.y, -q.z, q.w)
+    return _quat_rotate_vec(qi, vx, vy, vz)
+
+
+def _ray_aabb_intersect(lo, ld, bmin, bmax) -> Optional[float]:
+    """Ray vs axis-aligned box in local space. lo, ld: 3-tuples; returns t or None."""
+    tmin = -1e30
+    tmax = 1e30
+    for i in range(3):
+        if abs(ld[i]) < 1e-12:
+            if lo[i] < bmin[i] or lo[i] > bmax[i]:
+                return None
+            continue
+        inv = 1.0 / ld[i]
+        t0 = (bmin[i] - lo[i]) * inv
+        t1 = (bmax[i] - lo[i]) * inv
+        if t0 > t1:
+            t0, t1 = t1, t0
+        tmin = max(tmin, t0)
+        tmax = min(tmax, t1)
+        if tmin > tmax:
+            return None
+    if tmax < 0:
+        return None
+    if tmin >= 0:
+        return tmin
+    return 0.0
+
+
+def _morph_local_half_extents(mz: MorphZone, s) -> tuple:
+    return _morph_visual_half_extents(mz, s)
+
+
+def _ray_obb_intersect(elem, hx: float, hy: float, hz: float, origin_w: tuple, dir_w: tuple) -> Optional[float]:
+    """Ray vs OBB; box centered at element origin in local space with half-extents hx,hy,hz."""
+    t = elem.transform.translation
+    q = elem.transform.rotation
+    vx = origin_w[0] - t.x
+    vy = origin_w[1] - t.y
+    vz = origin_w[2] - t.z
+    lo = _quat_rotate_vec_inv(q, vx, vy, vz)
+    ld = _quat_rotate_vec_inv(q, dir_w[0], dir_w[1], dir_w[2])
+    ln = math.sqrt(ld[0] * ld[0] + ld[1] * ld[1] + ld[2] * ld[2])
+    if ln < 1e-12:
+        return None
+    ld = (ld[0] / ln, ld[1] / ln, ld[2] / ln)
+    return _ray_aabb_intersect(lo, ld, (-hx, -hy, -hz), (hx, hy, hz))
+
+
+def _ray_plane_intersect_point(
+    ow: tuple, dw: tuple, plane_point: tuple, plane_normal_unit: tuple
+) -> Optional[tuple]:
+    """Return world hit point of ray origin+dir with plane, or None."""
+    nx, ny, nz = plane_normal_unit
+    denom = dw[0] * nx + dw[1] * ny + dw[2] * nz
+    if abs(denom) < 1e-10:
+        return None
+    t = (
+        (plane_point[0] - ow[0]) * nx
+        + (plane_point[1] - ow[1]) * ny
+        + (plane_point[2] - ow[2]) * nz
+    ) / denom
+    if t < 0:
+        return None
+    return (ow[0] + t * dw[0], ow[1] + t * dw[1], ow[2] + t * dw[2])
 
 
 # ---------------------------------------------------------------------------

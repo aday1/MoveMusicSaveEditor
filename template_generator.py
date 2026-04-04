@@ -1365,6 +1365,155 @@ def generate_novation_x_station(project: Project, origin: Vec3 = None) -> List:
     return all_elements
 
 
+
+
+def generate_serum_performance(project: Project, origin: Vec3 = None) -> List:
+    """Xfer Serum-style macros, filters, and performance XY (map in Serum MIDI learn)."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+    ch = 1
+    o = origin
+    el = []
+    el.extend(generate_xy_pads(project, 2, "Row", 50, o, base_cc_x=80, base_cc_y=90, channel=ch, label_prefix="Serum XY"))
+    el.extend(generate_knobs(project, 4, "Row", 28, Vec3(o.x, o.y + 55, o.z), base_cc=70, channel=ch, label_prefix="Serum Macro", color_mode="Neon"))
+    el.extend(generate_knobs(project, 8, "Grid", 24, Vec3(o.x, o.y + 25, o.z), base_cc=20, channel=ch, label_prefix="Serum Ctrl", color_mode="Cool"))
+    el.extend(generate_faders(project, 4, "Row", 32, Vec3(o.x, o.y - 20, o.z), base_cc=40, channel=ch, label_prefix="Serum Mix", color_mode="Gradient"))
+    return el
+
+
+def generate_serumfx_performance(project: Project, origin: Vec3 = None) -> List:
+    """SerumFX-style effect chain (map in SerumFX MIDI learn)."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+    ch = 1
+    o = origin
+    el = []
+    el.extend(generate_xy_pads(project, 1, "Row", 50, o, base_cc_x=40, base_cc_y=48, channel=ch, label_prefix="SerumFX XY"))
+    el.extend(generate_knobs(project, 8, "Grid", 26, Vec3(o.x, o.y + 45, o.z), base_cc=50, channel=ch, label_prefix="SerumFX Macro", color_mode="Warm"))
+    el.extend(generate_faders(project, 6, "Row", 28, Vec3(o.x, o.y, o.z), base_cc=20, channel=ch, label_prefix="SerumFX Send", color_mode="Monochrome"))
+    el.extend(generate_buttons(project, 6, "Row", 24, Vec3(o.x, o.y - 30, o.z), base_cc=98, channel=ch, label_prefix="SerumFX Bypass"))
+    return el
+
+
+def _reason_note(project: Project, name: str, channel: int, base_cc: int, origin: Vec3) -> List:
+    tl_id = project.generate_id("TextLabel_C")
+    tl = TextLabel(
+        unique_id=tl_id,
+        display_name=f"{name}\nCh{channel} CC base {base_cc}\nReason Remote Override",
+        transform=Transform(translation=Vec3(origin.x, origin.y - 30, origin.z + 30), scale=Vec3(0.25, 0.25, 0.25)),
+        color=LABEL_COLOR,
+    )
+    return [tl]
+
+
+def generate_reason_subtractor(project: Project, origin: Vec3 = None) -> List:
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+    ch = 1
+    b = 20
+    o = origin
+    el = []
+    el.extend(_reason_note(project, "Subtractor", ch, b, o))
+    el.extend(generate_knobs(project, 8, "Row", 26, Vec3(o.x, o.y + 40, o.z), base_cc=b, channel=ch, label_prefix="Sub OSC", color_mode="Cool"))
+    el.extend(generate_knobs(project, 8, "Row", 26, Vec3(o.x, o.y + 15, o.z), base_cc=b + 8, channel=ch, label_prefix="Sub Flt", color_mode="Cool"))
+    el.extend(generate_xy_pads(project, 1, "Row", 45, Vec3(o.x, o.y - 15, o.z), base_cc_x=b + 16, base_cc_y=b + 17, channel=ch, label_prefix="Sub XY"))
+    return el
+
+
+def generate_reason_malstrom(project: Project, origin: Vec3 = None) -> List:
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+    ch = 2
+    b = 20
+    o = origin
+    el = []
+    el.extend(_reason_note(project, "Malstrom", ch, b, o))
+    el.extend(generate_knobs(project, 8, "Grid", 24, Vec3(o.x, o.y + 35, o.z), base_cc=b, channel=ch, label_prefix="Mal Grains", color_mode="Neon"))
+    el.extend(generate_faders(project, 4, "Row", 28, Vec3(o.x, o.y, o.z), base_cc=b + 8, channel=ch, label_prefix="Mal Mod", color_mode="Gradient"))
+    el.extend(generate_xy_pads(project, 1, "Row", 45, Vec3(o.x, o.y - 25, o.z), base_cc_x=b + 12, base_cc_y=b + 13, channel=ch, label_prefix="Mal XY"))
+    return el
+
+
+def generate_reason_thor(project: Project, origin: Vec3 = None) -> List:
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+    ch = 3
+    b = 20
+    o = origin
+    el = []
+    el.extend(_reason_note(project, "Thor", ch, b, o))
+    el.extend(generate_knobs(project, 12, "Grid", 22, Vec3(o.x, o.y + 40, o.z), base_cc=b, channel=ch, label_prefix="Thor", color_mode="Rainbow"))
+    el.extend(generate_xy_pads(project, 2, "Row", 40, Vec3(o.x, o.y + 5, o.z), base_cc_x=b + 12, base_cc_y=b + 14, channel=ch, label_prefix="Thor XY"))
+    return el
+
+
+def generate_reason_europa(project: Project, origin: Vec3 = None) -> List:
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+    ch = 4
+    b = 20
+    o = origin
+    el = []
+    el.extend(_reason_note(project, "Europa", ch, b, o))
+    el.extend(generate_knobs(project, 8, "Row", 26, Vec3(o.x, o.y + 40, o.z), base_cc=b, channel=ch, label_prefix="Eur Engine", color_mode="Cool"))
+    el.extend(generate_xy_pads(project, 2, "Grid", 44, Vec3(o.x, o.y + 10, o.z), base_cc_x=b + 8, base_cc_y=b + 10, channel=ch, label_prefix="Eur XY"))
+    el.extend(generate_faders(project, 4, "Row", 28, Vec3(o.x, o.y - 20, o.z), base_cc=b + 12, channel=ch, label_prefix="Eur Shp", color_mode="Monochrome"))
+    return el
+
+
+def generate_reason_grain(project: Project, origin: Vec3 = None) -> List:
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+    ch = 5
+    b = 20
+    o = origin
+    el = []
+    el.extend(_reason_note(project, "Grain", ch, b, o))
+    el.extend(generate_knobs(project, 8, "Grid", 24, Vec3(o.x, o.y + 35, o.z), base_cc=b, channel=ch, label_prefix="Grain", color_mode="Warm"))
+    el.extend(generate_xy_pads(project, 1, "Row", 48, Vec3(o.x, o.y, o.z), base_cc_x=b + 8, base_cc_y=b + 9, channel=ch, label_prefix="Grain XY"))
+    return el
+
+
+def generate_reason_kong(project: Project, origin: Vec3 = None) -> List:
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+    ch = 6
+    o = origin
+    el = []
+    el.extend(_reason_note(project, "Kong", ch, 20, o))
+    el.extend(generate_drum_pads(project, 16, "Grid", 26, Vec3(o.x, o.y + 30, o.z), base_note=36, channel=ch, label_prefix="Kong Pad"))
+    el.extend(generate_knobs(project, 8, "Row", 24, Vec3(o.x, o.y - 20, o.z), base_cc=20, channel=ch, label_prefix="Kong Ctrl", color_mode="Neon"))
+    return el
+
+
+def generate_reason_redrum(project: Project, origin: Vec3 = None) -> List:
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+    ch = 7
+    o = origin
+    el = []
+    el.extend(_reason_note(project, "Redrum", ch, 20, o))
+    el.extend(generate_drum_pads(project, 10, "Row", 22, Vec3(o.x, o.y + 40, o.z), base_note=36, channel=ch, label_prefix="Redrum"))
+    el.extend(generate_buttons(project, 8, "Row", 22, Vec3(o.x, o.y + 10, o.z), base_cc=20, channel=ch, label_prefix="Redrum Step"))
+    return el
+
+
+def generate_reason_rex_octorex(project: Project, origin: Vec3 = None) -> List:
+    """Dr. Octo Rex / REX-style slices (Reason Remote Override)."""
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+    ch = 8
+    b = 20
+    o = origin
+    el = []
+    el.extend(_reason_note(project, "REX / OctoRex", ch, b, o))
+    el.extend(generate_knobs(project, 8, "Row", 24, Vec3(o.x, o.y + 40, o.z), base_cc=b, channel=ch, label_prefix="REX", color_mode="Cool"))
+    el.extend(generate_xy_pads(project, 1, "Row", 45, Vec3(o.x, o.y + 10, o.z), base_cc_x=b + 8, base_cc_y=b + 9, channel=ch, label_prefix="REX XY"))
+    el.extend(generate_buttons(project, 8, "Row", 22, Vec3(o.x, o.y - 15, o.z), base_cc=b + 10, channel=ch, label_prefix="REX Trig"))
+    return el
+
+
+
 def generate_calibrator(project: Project, origin: Vec3 = None) -> List:
     """Create a mixed-reality calibration helper made from TextLabels."""
     if origin is None:
@@ -1749,6 +1898,17 @@ TEMPLATES["Reaktor: Ensemble Macros"] = lambda p, o: generate_reaktor_performanc
 TEMPLATES["M-Audio CODE49 Preset"] = lambda p, o: generate_m_audio_code49(p, o)
 TEMPLATES["Behringer X-Touch"] = lambda p, o: generate_behringer_x_touch(p, o)
 TEMPLATES["Novation X-Station"] = lambda p, o: generate_novation_x_station(p, o)
+
+TEMPLATES["Serum: Performance + Macros"] = lambda p, o: generate_serum_performance(p, o)
+TEMPLATES["SerumFX: Effects + Mix"] = lambda p, o: generate_serumfx_performance(p, o)
+TEMPLATES["Reason: Subtractor"] = lambda p, o: generate_reason_subtractor(p, o)
+TEMPLATES["Reason: Malstrom"] = lambda p, o: generate_reason_malstrom(p, o)
+TEMPLATES["Reason: Thor"] = lambda p, o: generate_reason_thor(p, o)
+TEMPLATES["Reason: Europa"] = lambda p, o: generate_reason_europa(p, o)
+TEMPLATES["Reason: Grain"] = lambda p, o: generate_reason_grain(p, o)
+TEMPLATES["Reason: Kong"] = lambda p, o: generate_reason_kong(p, o)
+TEMPLATES["Reason: Redrum"] = lambda p, o: generate_reason_redrum(p, o)
+TEMPLATES["Reason: REX / OctoRex"] = lambda p, o: generate_reason_rex_octorex(p, o)
 
 
 # ---------------------------------------------------------------------------

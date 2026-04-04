@@ -15,7 +15,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 try:
     import mido
@@ -127,8 +127,11 @@ from model import (
     duplicate_element,
 )
 from viewport3d import SceneViewport, QuadViewport
+from play_mode_window import PlayModeWindow
+from desktop_play_midi_in import DesktopPlayMidiInThread, resolve_midi_input_port
 from template_generator import TEMPLATES, _row_positions, _grid_positions, _circle_positions, _make_group
 from performance_panel import PerformancePanel
+from roliblock_led import default_mirror
 from theme import STYLESHEET
 
 
@@ -1546,6 +1549,13 @@ class MainWindow(QMainWindow):
 
         self._settings_dialog: Optional[SettingsDialog] = None
         self._midi_overview_dialog: Optional[MidiOverviewDialog] = None
+        self._roliblock_mirror = default_mirror()
+        self._play_mode_window: Optional[PlayModeWindow] = None
+        self._play_viewport_placeholder: Optional[QWidget] = None
+        self._play_viewport_split_index: int = 0
+        self._desktop_play_midi_in_threads: List[DesktopPlayMidiInThread] = []
+        # Mirrors action_perf_lock; must exist before Desktop Play (not only after first F5 toggle).
+        self._performance_lock: bool = False
 
         self._setup_ui()
         self._setup_toolbar()
@@ -1564,6 +1574,9 @@ class MainWindow(QMainWindow):
                 self.restoreGeometry(QByteArray.fromHex(bytes(saved_geom, "ascii")))
             except Exception:
                 pass
+
+        # Blank project so the viewport and Desktop Play Mode work before File > New.
+        self._create_new_project()
 
     def _setup_global_shortcuts(self):
         """Editor-wide shortcuts for MIDI nudging regardless of focused widget."""
@@ -1621,9 +1634,6 @@ class MainWindow(QMainWindow):
         if vp is not None and hasattr(vp, '_on_shortcut_midi_note'):
             vp._on_shortcut_midi_note(delta)
 
-        # Start with a blank project so users can immediately add templates
-        self._create_new_project()
-
     def _setup_ui(self):
         # Outer vertical splitter: 3D viewport on top, tree+props on bottom
         self.outer_splitter = QSplitter(Qt.Orientation.Vertical)
@@ -1671,7 +1681,11 @@ class MainWindow(QMainWindow):
         self.performance_panel = PerformancePanel()
         # Pre-populate transport bar from saved config
         self.performance_panel.load_config(_load_config())
-        
+        self.performance_panel.set_roliblock_bind_callback(self._on_roliblock_bind)
+        self.performance_panel.roliblock_changed.connect(self._on_roliblock_config_changed)
+        self._apply_roliblock_debug_visibility()
+        self._sync_roliblock_mirror_from_panel()
+
         # Property panel with tabs (Properties + Performance)
         self._props_tabs = QTabWidget()
         
@@ -1710,6 +1724,9 @@ class MainWindow(QMainWindow):
         """Update both viewports."""
         self.viewport.update()
         self.quad_viewport.refresh()
+        pw = getattr(self, "_play_mode_window", None)
+        if pw is not None and self.project:
+            pw.refresh_navigator(self.project, self.project.active_workspace_index)
 
     def _sync_selection(self, elem_or_list):
         """Set selection on both viewports. Accepts element, list, or None."""
@@ -1860,6 +1877,11 @@ class MainWindow(QMainWindow):
         self.action_midi_overview.setShortcut("Ctrl+M")
         self.action_midi_overview.triggered.connect(self._on_open_midi_overview)
         view_menu.addSeparator()
+        self.action_desktop_play = view_menu.addAction("Desktop Play Mode...")
+        self.action_desktop_play.setShortcut("F11")
+        self.action_desktop_play.setToolTip("Fullscreen 3D play session (Esc exits)")
+        self.action_desktop_play.triggered.connect(self._on_desktop_play_mode)
+        view_menu.addSeparator()
         self.action_settings = view_menu.addAction("Settings...")
         self.action_settings.triggered.connect(self._on_open_settings)
 
@@ -1878,6 +1900,12 @@ class MainWindow(QMainWindow):
                 return "Renoise"
             if "reaktor" in n:
                 return "Reaktor"
+            if "serumfx" in n:
+                return "Serum"
+            if "serum" in n:
+                return "Serum"
+            if "reason:" in n:
+                return "Reason"
             if "code49" in n or "x-touch" in n or "behringer" in n or "m-audio" in n or "x-station" in n or "novation" in n:
                 return "Hardware Controllers"
             if "bitwig" in n:
@@ -1910,7 +1938,7 @@ class MainWindow(QMainWindow):
 
         category_order = [
             "Faders", "Knobs", "XY Pads", "Buttons", "Drum Pads", "Keyboards", "Mixer",
-            "iOS / AUM", "Ruismaker", "Renoise", "Reaktor", "Hardware Controllers",
+            "iOS / AUM", "Ruismaker", "Renoise", "Reaktor", "Serum", "Reason", "Hardware Controllers",
             "Bitwig", "Reaper", "Resolume", "Grooveboxes", "Sugarbytes",
             "Fun Shapes", "Debug", "Other"
         ]
@@ -2014,12 +2042,14 @@ class MainWindow(QMainWindow):
         self.viewport.change_color_requested.connect(self._on_change_color)
         self.viewport.toggle_lock_requested.connect(self._on_toggle_lock)
         self.viewport.move_to_workspace_requested.connect(self._on_move_to_workspace)
+        self.viewport.play_perf_send.connect(self._on_play_perf_send)
+        self.viewport.play_morph_interaction.connect(self._on_play_morph_interaction)
+        self.viewport.play_mode_exit_requested.connect(self._exit_desktop_play_mode)
         self.action_fit_all.triggered.connect(self._on_fit_all)
         self.action_top_view.triggered.connect(self._on_top_view)
         self.action_front_view.triggered.connect(self._on_front_view)
         self.action_side_view.triggered.connect(self._on_side_view)
         self.action_quad_view.triggered.connect(self._on_toggle_quad_view)
-
         # Also connect quad viewport signals
         self.quad_viewport.element_selected.connect(self._on_viewport_select)
         self.quad_viewport.element_moved.connect(self._on_viewport_move)
@@ -3148,6 +3178,10 @@ class MainWindow(QMainWindow):
             "Debug mode enabled" if self.debug_mode else "Debug mode disabled",
             2500,
         )
+        self._apply_roliblock_debug_visibility()
+        self._sync_roliblock_mirror_from_panel()
+        if getattr(self, "_play_mode_window", None) is not None:
+            self._restart_desktop_play_midi_in()
         # Refresh panel for current selection so mode applies immediately.
         self._on_selection_changed()
 
@@ -3722,8 +3756,43 @@ class MainWindow(QMainWindow):
 
         if element_type == "HitZone":
             elem = HitZone(unique_id=self.project.generate_id("HitZone"))
+        elif element_type == "HitZone_NoteHold":
+            elem = HitZone(unique_id=self.project.generate_id("HitZone"))
+            elem.behavior = "EHitZoneBehavior::Hold"
+            elem.midi_message_type = "EMidiMessageType::Note"
+            elem.fixed_midi_velocity_output = 127.0
+        elif element_type == "HitZone_NoteToggle":
+            elem = HitZone(unique_id=self.project.generate_id("HitZone"))
+            elem.behavior = "EHitZoneBehavior::Toggle"
+            elem.midi_message_type = "EMidiMessageType::Note"
+            elem.fixed_midi_velocity_output = 127.0
+            elem.toggle_state = False
+        elif element_type == "HitZone_CCHold":
+            elem = HitZone(unique_id=self.project.generate_id("HitZone"))
+            elem.behavior = "EHitZoneBehavior::Hold"
+            elem.midi_message_type = "EMidiMessageType::ControlChange"
+            elem.midi_cc_mappings = [MidiCCMapping(channel=1, control=1, value=127)]
+            elem.fixed_midi_velocity_output = 127.0
         elif element_type == "MorphZone":
             elem = MorphZone(unique_id=self.project.generate_id("MorphZone"))
+        elif element_type == "MorphZone_X":
+            elem = MorphZone(unique_id=self.project.generate_id("MorphZone"))
+            elem.dimensions = "EDimensions::One"
+            elem.is_x_axis_enabled = True
+            elem.is_y_axis_enabled = False
+            elem.is_z_axis_enabled = False
+        elif element_type == "MorphZone_XY":
+            elem = MorphZone(unique_id=self.project.generate_id("MorphZone"))
+            elem.dimensions = "EDimensions::Two"
+            elem.is_x_axis_enabled = True
+            elem.is_y_axis_enabled = True
+            elem.is_z_axis_enabled = False
+        elif element_type == "MorphZone_XYZ":
+            elem = MorphZone(unique_id=self.project.generate_id("MorphZone"))
+            elem.dimensions = "EDimensions::Three"
+            elem.is_x_axis_enabled = True
+            elem.is_y_axis_enabled = True
+            elem.is_z_axis_enabled = True
         elif element_type == "TextLabel":
             elem = TextLabel(unique_id=self.project.generate_id("TextLabel_C"))
         elif element_type == "GroupIE":
@@ -4478,6 +4547,435 @@ class MainWindow(QMainWindow):
         self.statusbar.showMessage(f"Added template '{template_name}' ({len(elements)} elements)", 4000)
         self._active_viewport()._focus_selected()
 
+    def _on_desktop_play_mode(self):
+        self._enter_desktop_play_mode()
+
+    def _enter_desktop_play_mode(self):
+        if self._quad_mode:
+            self.statusbar.showMessage("Exit Quad View to use Desktop Play Mode.", 5000)
+            return
+        if not self.project:
+            self.statusbar.showMessage("Open a project first.", 3000)
+            return
+        if self._play_mode_window is not None:
+            return
+        idx = self.outer_splitter.indexOf(self.viewport)
+        if idx < 0:
+            self.statusbar.showMessage("Desktop Play: 3D viewport not in layout — restart the editor.", 8000)
+            logging.error("Desktop Play: outer_splitter.indexOf(viewport) == %s", idx)
+            return
+        try:
+            self._desktop_play_perf_lock_backup = self._performance_lock
+            if not self._performance_lock:
+                self.action_perf_lock.setChecked(True)
+            else:
+                for vp in self._all_viewports():
+                    vp.lock_move = True
+
+            self._play_viewport_split_index = idx
+            self.viewport.setParent(None)
+            self._play_viewport_placeholder = QWidget()
+            self.outer_splitter.insertWidget(idx, self._play_viewport_placeholder)
+
+            # Top-level window: child QMainWindow fullscreen often fails on Windows (no visible window).
+            self._play_mode_window = PlayModeWindow(None)
+            self._play_mode_window.attach_viewport(self.viewport)
+            self._play_mode_window.transport_bar.load_from_runtime_dict(
+                self.performance_panel.transport_bar.get_config()
+            )
+            self._play_mode_window.transport_bar.config_changed.connect(self._on_play_transport_changed)
+            self._play_mode_window.exiting.connect(self._exit_desktop_play_mode)
+
+            ws = self._active_workspace()
+            wname = (ws.display_name or ws.unique_id) if ws else ""
+            self._play_mode_window.set_roliblock_visible(self.debug_mode)
+            self._play_mode_window.set_hud_text(wname, show_roliblock_tips=self.debug_mode)
+
+            self._play_mode_window.refresh_navigator(
+                self.project, self.project.active_workspace_index
+            )
+            prb = self._play_mode_window.roliblock_strip
+            prb.load_from_dict(self.performance_panel.get_roliblock_config(), emit=False)
+            prb.set_bind_callback(self._on_roliblock_bind)
+            prb.config_changed.connect(self._on_play_roliblock_changed)
+            self._play_mode_window.navigator_workspace_changed.connect(self._on_play_nav_workspace)
+            self._play_mode_window.navigator_element_clicked.connect(self._on_play_nav_element)
+
+            self.viewport.play_mode = True
+            self.viewport.lock_move = True
+            self.viewport.update()
+            self._play_mode_window.showFullScreen()
+            QApplication.processEvents()
+            self._play_mode_window.raise_()
+            self._play_mode_window.activateWindow()
+            self.viewport.setFocus(Qt.FocusReason.OtherFocusReason)
+            self.statusbar.showMessage("Desktop Play Mode — Esc to exit", 4000)
+            self._start_desktop_play_midi_in()
+        except Exception:
+            logging.exception("Desktop Play Mode failed to start")
+            self.statusbar.showMessage("Desktop Play Mode failed — see editor.log", 8000)
+            self._play_mode_window = None
+            if self._play_viewport_placeholder is not None:
+                ph = self._play_viewport_placeholder
+                self._play_viewport_placeholder = None
+                ix = self.outer_splitter.indexOf(ph)
+                if ix >= 0 and self.viewport.parent() is None:
+                    self.outer_splitter.replaceWidget(ix, self.viewport)
+            self.viewport.play_mode = False
+            QMessageBox.warning(
+                self,
+                "Desktop Play Mode",
+                "Could not start Desktop Play Mode. See editor.log for details.",
+            )
+
+    def _exit_desktop_play_mode(self):
+        if self._play_mode_window is None:
+            return
+        self._stop_desktop_play_midi_in()
+        pw = self._play_mode_window
+        self._play_mode_window = None
+        try:
+            pw.transport_bar.config_changed.disconnect(self._on_play_transport_changed)
+        except Exception:
+            pass
+        try:
+            pw.exiting.disconnect(self._exit_desktop_play_mode)
+        except Exception:
+            pass
+        try:
+            pw.roliblock_strip.config_changed.disconnect(self._on_play_roliblock_changed)
+        except Exception:
+            pass
+        try:
+            pw.navigator_workspace_changed.disconnect(self._on_play_nav_workspace)
+        except Exception:
+            pass
+        try:
+            pw.navigator_element_clicked.disconnect(self._on_play_nav_element)
+        except Exception:
+            pass
+        pw.roliblock_strip.set_bind_callback(None)
+
+        self.viewport.play_mode = False
+        backup = getattr(self, "_desktop_play_perf_lock_backup", False)
+        self.action_perf_lock.blockSignals(True)
+        self.action_perf_lock.setChecked(backup)
+        self.action_perf_lock.blockSignals(False)
+        self._on_perf_lock_toggled(backup)
+
+        ph = self._play_viewport_placeholder
+        if ph is not None:
+            ix = self.outer_splitter.indexOf(ph)
+            if ix >= 0:
+                self.outer_splitter.replaceWidget(ix, self.viewport)
+        self._play_viewport_placeholder = None
+
+        self.viewport.show()
+        self.viewport.update()
+        pw.hide()
+        pw.deleteLater()
+        self.show()
+        self.raise_()
+        self.statusbar.showMessage("Exited Desktop Play Mode", 3000)
+
+    def _stop_desktop_play_midi_in(self) -> None:
+        threads = self._desktop_play_midi_in_threads
+        self._desktop_play_midi_in_threads = []
+        for t in threads:
+            try:
+                t.control_change.disconnect(self._on_desktop_play_midi_in_cc)
+            except Exception:
+                pass
+            try:
+                t.pitchwheel.disconnect(self._on_desktop_play_midi_in_pitchwheel)
+            except Exception:
+                pass
+            t.stop_gracefully()
+            t.wait(3000)
+
+    def _start_desktop_play_midi_in(self) -> None:
+        self._stop_desktop_play_midi_in()
+        if not self.debug_mode:
+            return
+        if self._play_mode_window is None or not self.project:
+            return
+        d = self.performance_panel.get_roliblock_config()
+        bid = d.get("roliblock_bound_id")
+        if not bid:
+            return
+        elem = self.project.find_element(bid)
+        if not isinstance(elem, MorphZone):
+            return
+        outs: List[str] = []
+        for key in ("roliblock_pad_a", "roliblock_pad_b"):
+            raw = d.get(key)
+            if raw is not None and str(raw).strip():
+                outs.append(str(raw).strip())
+        if not outs:
+            return
+        seen_in: set = set()
+        in_names: List[str] = []
+        for out_port in outs:
+            in_name = resolve_midi_input_port(out_port)
+            if in_name and in_name not in seen_in:
+                seen_in.add(in_name)
+                in_names.append(in_name)
+        if not in_names:
+            self.statusbar.showMessage(
+                "Desktop Play: no MIDI input matched Roliblock Pad A/B outputs — Block touch will not drive the MorphZone",
+                8000,
+            )
+            logging.warning("Desktop play MIDI in: no input for outputs %r", outs)
+            return
+        started: List[DesktopPlayMidiInThread] = []
+        for in_name in in_names:
+            th = DesktopPlayMidiInThread(in_name)
+            th.control_change.connect(self._on_desktop_play_midi_in_cc)
+            th.pitchwheel.connect(self._on_desktop_play_midi_in_pitchwheel)
+            started.append(th)
+            th.start()
+        self._desktop_play_midi_in_threads = started
+        if len(in_names) == 1:
+            msg = f"Desktop Play: MIDI in {in_names[0]} (bound MorphZone)"
+        else:
+            msg = "Desktop Play: MIDI in " + ", ".join(in_names) + " (bound MorphZone)"
+        self.statusbar.showMessage(msg, 5000)
+
+    def _restart_desktop_play_midi_in(self) -> None:
+        if self._play_mode_window is not None:
+            self._start_desktop_play_midi_in()
+
+    def _on_desktop_play_midi_in_cc(self, ch0: int, control: int, value: int) -> None:
+        if self._play_mode_window is None or not self.project:
+            return
+        d = self.performance_panel.get_roliblock_config()
+        bid = d.get("roliblock_bound_id")
+        if not bid:
+            return
+        elem = self.project.find_element(bid)
+        if not isinstance(elem, MorphZone):
+            return
+        ch1 = ch0 + 1
+
+        def _match_maps(maps) -> bool:
+            for m in maps or []:
+                if int(m.channel) == ch1 and int(m.control) == int(control):
+                    return True
+            return False
+
+        axis = None
+        ch_out = ch1
+        if elem.is_x_axis_enabled and _match_maps(elem.x_axis_cc_mappings):
+            elem.control_position_normalized.x = max(0.0, min(1.0, value / 127.0))
+            axis = "X"
+        elif elem.is_y_axis_enabled and _match_maps(elem.y_axis_cc_mappings):
+            elem.control_position_normalized.y = max(0.0, min(1.0, value / 127.0))
+            axis = "Y"
+        elif elem.is_z_axis_enabled and _match_maps(elem.z_axis_cc_mappings):
+            elem.control_position_normalized.z = max(0.0, min(1.0, value / 127.0))
+            axis = "Z"
+        if axis is None:
+            loose_axes = []
+            if elem.is_x_axis_enabled and any(
+                int(m.control) == int(control) for m in (elem.x_axis_cc_mappings or [])
+            ):
+                loose_axes.append("X")
+            if elem.is_y_axis_enabled and any(
+                int(m.control) == int(control) for m in (elem.y_axis_cc_mappings or [])
+            ):
+                loose_axes.append("Y")
+            if elem.is_z_axis_enabled and any(
+                int(m.control) == int(control) for m in (elem.z_axis_cc_mappings or [])
+            ):
+                loose_axes.append("Z")
+            if len(loose_axes) != 1:
+                return
+            axis = loose_axes[0]
+            maps = (
+                elem.x_axis_cc_mappings
+                if axis == "X"
+                else elem.y_axis_cc_mappings
+                if axis == "Y"
+                else elem.z_axis_cc_mappings
+            )
+            m0 = next((m for m in (maps or []) if int(m.control) == int(control)), None)
+            if m0 is None:
+                return
+            ch_out = int(m0.channel)
+            v = max(0.0, min(1.0, value / 127.0))
+            if axis == "X":
+                elem.control_position_normalized.x = v
+            elif axis == "Y":
+                elem.control_position_normalized.y = v
+            else:
+                elem.control_position_normalized.z = v
+        self._modified = True
+        self._perf_send(
+            elem.unique_id,
+            {
+                "type": "cc",
+                "cc": int(control),
+                "channel": ch_out,
+                "value": int(value),
+                "axis": axis,
+            },
+        )
+        self.viewport.update()
+
+    def _on_desktop_play_midi_in_pitchwheel(self, ch0: int, value: int) -> None:
+        """Roli MPE often sends X as per-channel pitch bend instead of CC."""
+        if self._play_mode_window is None or not self.project:
+            return
+        d = self.performance_panel.get_roliblock_config()
+        bid = d.get("roliblock_bound_id")
+        if not bid:
+            return
+        elem = self.project.find_element(bid)
+        if not isinstance(elem, MorphZone) or not elem.is_x_axis_enabled:
+            return
+        ch1 = ch0 + 1
+        maps = elem.x_axis_cc_mappings or []
+        if not maps:
+            return
+        chans = {int(m.channel) for m in maps}
+        use = ch1 in chans
+        if not use and chans and min(chans) == 1 and max(chans) == 1 and 2 <= ch1 <= 16:
+            use = True
+        if not use:
+            return
+        v = max(0.0, min(1.0, int(value) / 127.0))
+        elem.control_position_normalized.x = v
+        self._modified = True
+        ch_out = min(chans) if chans else ch1
+        self._perf_send(
+            elem.unique_id,
+            {
+                "type": "cc",
+                "cc": -1,
+                "channel": ch_out,
+                "value": int(value),
+                "axis": "X",
+            },
+        )
+        self.viewport.update()
+
+    def _on_play_transport_changed(self, cfg: dict):
+        self.performance_panel.transport_bar.load_from_runtime_dict(cfg)
+        self.performance_panel._override_cfg = dict(cfg)
+
+    def _on_play_nav_workspace(self, index: int) -> None:
+        if not self.project:
+            return
+        if 0 <= index < len(self.project.workspaces):
+            self._set_active_workspace_index(index)
+        pw = getattr(self, "_play_mode_window", None)
+        if pw is not None and self.project:
+            pw.refresh_navigator(self.project, self.project.active_workspace_index)
+
+    def _on_play_nav_element(self, elem) -> None:
+        self.viewport.set_selected(elem)
+        self.viewport._emit_selection()
+
+    def _on_play_perf_send(self, element_id: str, payload: dict):
+        self._perf_send(element_id, payload)
+
+    def _on_play_morph_interaction(self, elem):
+        self._modified = True
+        self._update_statusbar()
+
+    def _on_roliblock_bind(self):
+        if not self.debug_mode:
+            self.statusbar.showMessage(
+                "Roliblock is hidden: enable Debug Mode in the View menu to use it.",
+                5000,
+            )
+            return
+        elem = None
+        if self.viewport.selected_elements:
+            cand = self.viewport.selected_elements[-1]
+            if isinstance(cand, MorphZone):
+                elem = cand
+        if elem is None:
+            items = self.tree.selectedItems()
+            if not items:
+                self.statusbar.showMessage("Select a MorphZone in the 3D view or tree.", 3000)
+                return
+            data = items[0].data(0, Qt.ItemDataRole.UserRole)
+            if not data or data[0] != ITEM_TYPE_ELEMENT:
+                self.statusbar.showMessage("Select an element in the tree.", 3000)
+                return
+            elem = data[1]
+        if not isinstance(elem, MorphZone):
+            self.statusbar.showMessage("Roliblock bind requires a MorphZone.", 3000)
+            return
+        self.performance_panel.set_bound_morphzone_id(elem.unique_id)
+        self.statusbar.showMessage(f"Roliblock bound to {elem.display_name or elem.unique_id}", 3000)
+
+    def _on_roliblock_config_changed(self, d: dict):
+        cfg = _load_config()
+        for k in (
+            "roliblock_enabled",
+            "roliblock_pad_a",
+            "roliblock_pad_b",
+            "roliblock_mode",
+            "roliblock_bound_id",
+            "roliblock_device_ids",
+        ):
+            if k in d:
+                cfg[k] = d[k]
+        _save_config(cfg)
+        self._sync_roliblock_mirror_from_panel()
+        pw = getattr(self, "_play_mode_window", None)
+        if pw is not None:
+            pw.roliblock_strip.load_from_dict(d, emit=False)
+        self._restart_desktop_play_midi_in()
+
+    def _on_play_roliblock_changed(self, d: dict):
+        self.performance_panel.roliblock_strip.load_from_dict(d, emit=False)
+        cfg = _load_config()
+        for k in (
+            "roliblock_enabled",
+            "roliblock_pad_a",
+            "roliblock_pad_b",
+            "roliblock_mode",
+            "roliblock_bound_id",
+            "roliblock_device_ids",
+        ):
+            if k in d:
+                cfg[k] = d[k]
+        _save_config(cfg)
+        self._sync_roliblock_mirror_from_panel()
+        self._restart_desktop_play_midi_in()
+
+    def _apply_roliblock_debug_visibility(self) -> None:
+        self.performance_panel.set_roliblock_visible(self.debug_mode)
+        pw = getattr(self, "_play_mode_window", None)
+        if pw is not None:
+            pw.set_roliblock_visible(self.debug_mode)
+            ws = self._active_workspace()
+            wname = (ws.display_name or ws.unique_id) if ws else ""
+            pw.set_hud_text(wname, show_roliblock_tips=self.debug_mode)
+
+    def _sync_roliblock_mirror_from_panel(self) -> None:
+        if not self.debug_mode:
+            self._roliblock_mirror.set_config(
+                False, None, None, "off", None, None
+            )
+            return
+        d = self.performance_panel.get_roliblock_config()
+        mode = d.get("roliblock_mode") or "off"
+        if not d.get("roliblock_enabled"):
+            mode = "off"
+        mm = "xy" if mode == "xy" else ("xyz_split" if mode == "xyz_split" else "off")
+        self._roliblock_mirror.set_config(
+            bool(d.get("roliblock_enabled", False)),
+            d.get("roliblock_pad_a"),
+            d.get("roliblock_pad_b"),
+            mm,
+            d.get("roliblock_bound_id"),
+            d.get("roliblock_device_ids"),
+        )
+
     def _perf_send(self, element_id: str, payload: dict):
         """Performance panel callback: send note/CC payload via OSC or MIDI.
 
@@ -4503,6 +5001,9 @@ class MainWindow(QMainWindow):
 
         def _log(transport: str, destination: str, detail: str):
             self.performance_panel.log_sent(msg_type, detail, transport, destination)
+            pw = getattr(self, "_play_mode_window", None)
+            if pw is not None:
+                pw.log_sent(msg_type, detail, transport, destination)
             self.statusbar.showMessage(f"[{transport.upper()}] {detail} → {destination}", 1200)
 
         if msg_type in ("note_on", "note_off"):
@@ -4535,26 +5036,46 @@ class MainWindow(QMainWindow):
             value = int(payload.get("value", 64))
             axis = payload.get("axis", "")
             detail = f"CC{cc}={value} ch={channel_1}{' [' + axis + ']' if axis else ''}"
-            if mode in ("osc", "both") and SimpleUDPClient is not None:
-                try:
-                    SimpleUDPClient(osc_host, osc_port).send_message(
-                        cc_addr, [channel_1, cc, value]
-                    )
-                    _log("osc", f"{osc_host}:{osc_port}{cc_addr}", detail)
-                except Exception as exc:
-                    self.statusbar.showMessage(f"OSC error: {exc}", 4000)
-            if mode in ("midi", "both") and mido is not None:
-                if midi_port_name:
+            if cc >= 0:
+                if mode in ("osc", "both") and SimpleUDPClient is not None:
                     try:
-                        with mido.open_output(midi_port_name) as port:
-                            port.send(mido.Message(
-                                "control_change", channel=channel_0, control=cc, value=value
-                            ))
-                        _log("midi", midi_port_name, detail)
+                        SimpleUDPClient(osc_host, osc_port).send_message(
+                            cc_addr, [channel_1, cc, value]
+                        )
+                        _log("osc", f"{osc_host}:{osc_port}{cc_addr}", detail)
                     except Exception as exc:
-                        self.statusbar.showMessage(f"MIDI error: {exc}", 4000)
-                else:
-                    self.statusbar.showMessage("No MIDI port selected in Performance panel.", 3000)
+                        self.statusbar.showMessage(f"OSC error: {exc}", 4000)
+                if mode in ("midi", "both") and mido is not None:
+                    if midi_port_name:
+                        try:
+                            with mido.open_output(midi_port_name) as port:
+                                port.send(mido.Message(
+                                    "control_change", channel=channel_0, control=cc, value=value
+                                ))
+                            _log("midi", midi_port_name, detail)
+                        except Exception as exc:
+                            self.statusbar.showMessage(f"MIDI error: {exc}", 4000)
+                    else:
+                        self.statusbar.showMessage("No MIDI port selected in Performance panel.", 3000)
+            else:
+                detail = f"pitchbend~{value} ch={channel_1}{' [' + axis + ']' if axis else ''} (local morph only)"
+                self.performance_panel.log_sent(msg_type, detail, "local", "Desktop MIDI in")
+                pw = getattr(self, "_play_mode_window", None)
+                if pw is not None:
+                    pw.log_sent(msg_type, detail, "local", "Desktop MIDI in")
+
+            elem = self.project.find_element(element_id) if self.project else None
+            if elem is not None and hasattr(elem, "dimensions"):
+                self._roliblock_mirror.on_cc_perf(
+                    element_id,
+                    str(payload.get("axis", "")),
+                    int(payload.get("value", 0)),
+                    getattr(elem, "dimensions", ""),
+                    getattr(elem, "is_z_axis_enabled", False),
+                    is_x_enabled=getattr(elem, "is_x_axis_enabled", True),
+                    is_y_enabled=getattr(elem, "is_y_axis_enabled", True),
+                    is_z_axis_enabled=getattr(elem, "is_z_axis_enabled", True),
+                )
 
 
 # ---------------------------------------------------------------------------

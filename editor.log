@@ -20938,3 +20938,850 @@ AttributeError: 'MainWindow' object has no attribute 'performance_panel'
 2026-04-03 18:33:42,739 INFO _on_viewport_select: None
 2026-04-03 18:33:43,409 INFO _on_viewport_select: MorphZone_8
 2026-04-03 18:33:43,409 INFO   tree item found: True
+2026-04-04 11:52:46,817 INFO OpenGL initialized
+2026-04-04 11:52:48,351 INFO _on_viewport_select: None
+2026-04-04 11:52:48,536 INFO _on_viewport_select: None
+2026-04-04 12:11:54,135 INFO OpenGL initialized
+2026-04-04 12:12:05,586 INFO _on_viewport_select: None
+2026-04-04 12:12:05,701 INFO _on_viewport_select: None
+2026-04-04 12:12:06,363 INFO _on_viewport_select: None
+2026-04-04 12:12:06,395 INFO _on_viewport_select: None
+2026-04-04 12:13:06,727 INFO _on_viewport_select: MorphZone_128
+2026-04-04 12:13:06,730 INFO   tree item found: True
+2026-04-04 12:13:08,786 INFO _on_viewport_select: None
+2026-04-04 12:13:08,902 INFO _on_viewport_select: None
+2026-04-04 12:13:10,474 INFO _on_viewport_select: TextLabel_C_65
+2026-04-04 12:13:10,474 INFO   tree item found: True
+2026-04-04 12:13:28,333 INFO _on_viewport_select: None
+2026-04-04 12:13:28,399 INFO _on_viewport_select: None
+2026-04-04 13:11:16,400 INFO _on_viewport_select: None
+2026-04-04 13:35:38,164 INFO OpenGL initialized
+2026-04-04 13:36:10,302 INFO _on_viewport_select: TextLabel_C_3
+2026-04-04 13:36:10,303 INFO   tree item found: True
+2026-04-04 13:36:11,589 INFO _on_viewport_select: None
+2026-04-04 13:36:12,083 INFO _on_viewport_select: None
+2026-04-04 13:36:12,282 INFO _on_viewport_select: None
+2026-04-04 13:36:12,853 INFO _on_viewport_select: None
+2026-04-04 13:36:13,089 INFO _on_viewport_select: None
+2026-04-04 13:36:13,770 INFO _on_viewport_select: None
+2026-04-04 13:36:41,434 INFO _on_viewport_select: HitZone_96
+2026-04-04 13:36:41,434 INFO   tree item found: True
+2026-04-04 13:36:47,205 INFO _on_viewport_select: MorphZone_40
+2026-04-04 13:36:47,205 INFO   tree item found: True
+2026-04-04 13:39:03,043 INFO OpenGL initialized
+2026-04-04 13:39:07,367 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4515, in _on_toggle_vr_emulator
+    self._vr_perf_lock_backup = self._performance_lock
+                                ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MainWindow' object has no attribute '_performance_lock'. Did you mean: 'performance_panel'?
+
+2026-04-04 13:39:19,365 INFO _on_viewport_select: MorphZone_106
+2026-04-04 13:39:19,365 INFO   tree item found: True
+2026-04-04 13:39:19,458 INFO _on_viewport_select: MorphZone_106
+2026-04-04 13:39:19,458 INFO   tree item found: True
+2026-04-04 13:39:20,068 INFO _on_viewport_select: MorphZone_106
+2026-04-04 13:39:20,069 INFO   tree item found: True
+2026-04-04 13:39:20,792 INFO _on_viewport_select: MorphZone_106
+2026-04-04 13:39:20,792 INFO   tree item found: True
+2026-04-04 13:39:21,133 INFO _on_viewport_select: MorphZone_106
+2026-04-04 13:39:21,134 INFO   tree item found: True
+2026-04-04 13:39:22,138 INFO _on_viewport_select: MorphZone_110
+2026-04-04 13:39:22,139 INFO   tree item found: True
+2026-04-04 13:39:23,207 INFO _on_viewport_select: MorphZone_106
+2026-04-04 13:39:23,208 INFO   tree item found: True
+2026-04-04 13:39:23,533 INFO _on_viewport_select: MorphZone_104
+2026-04-04 13:39:23,533 INFO   tree item found: True
+2026-04-04 13:39:23,645 INFO _on_viewport_select: MorphZone_104
+2026-04-04 13:39:23,646 INFO   tree item found: True
+2026-04-04 13:39:24,443 INFO _on_viewport_select: MorphZone_102
+2026-04-04 13:39:24,444 INFO   tree item found: True
+2026-04-04 13:39:25,008 INFO _on_viewport_select: MorphZone_98
+2026-04-04 13:39:25,008 INFO   tree item found: True
+2026-04-04 13:39:25,558 INFO _on_viewport_select: MorphZone_98
+2026-04-04 13:39:25,559 INFO   tree item found: True
+2026-04-04 13:39:26,037 INFO _on_viewport_select: MorphZone_98
+2026-04-04 13:39:26,039 INFO   tree item found: True
+2026-04-04 13:39:26,421 INFO _on_viewport_select: MorphZone_104
+2026-04-04 13:39:26,421 INFO   tree item found: True
+2026-04-04 13:39:26,818 INFO _on_viewport_select: HitZone_82
+2026-04-04 13:39:26,818 INFO   tree item found: True
+2026-04-04 13:39:27,288 INFO _on_viewport_select: MorphZone_134
+2026-04-04 13:39:27,289 INFO   tree item found: True
+2026-04-04 13:39:31,336 INFO _on_viewport_select: MorphZone_104
+2026-04-04 13:39:31,337 INFO   tree item found: True
+2026-04-04 13:39:31,724 INFO _on_viewport_select: MorphZone_104
+2026-04-04 13:39:31,724 INFO   tree item found: True
+2026-04-04 13:39:32,474 INFO _on_viewport_select: MorphZone_106
+2026-04-04 13:39:32,474 INFO   tree item found: True
+2026-04-04 13:39:33,299 INFO _on_viewport_select: MorphZone_108
+2026-04-04 13:39:33,299 INFO   tree item found: True
+2026-04-04 13:39:34,054 INFO _on_viewport_select: MorphZone_110
+2026-04-04 13:39:34,055 INFO   tree item found: True
+2026-04-04 13:39:34,653 INFO _on_viewport_select: MorphZone_106
+2026-04-04 13:39:34,653 INFO   tree item found: True
+2026-04-04 13:39:37,287 INFO _on_viewport_select: MorphZone_116
+2026-04-04 13:39:37,287 INFO   tree item found: True
+2026-04-04 13:39:38,221 INFO _on_viewport_select: MorphZone_116
+2026-04-04 13:39:38,222 INFO   tree item found: True
+2026-04-04 13:41:44,944 INFO OpenGL initialized
+2026-04-04 13:48:07,537 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4515, in _on_toggle_vr_emulator
+    self._vr_perf_lock_backup = self._performance_lock
+                                ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MainWindow' object has no attribute '_performance_lock'. Did you mean: 'performance_panel'?
+
+2026-04-04 13:48:10,261 INFO _on_viewport_select: HitZone_78
+2026-04-04 13:48:10,261 INFO   tree item found: True
+2026-04-04 13:48:14,043 INFO _on_viewport_select: HitZone_78
+2026-04-04 13:48:14,043 INFO   tree item found: True
+2026-04-04 15:41:00,098 INFO OpenGL initialized
+2026-04-04 15:41:04,973 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4546, in _on_desktop_play_mode
+    self._enter_desktop_play_mode()
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4562, in _enter_desktop_play_mode
+    self._desktop_play_perf_lock_backup = self._performance_lock
+                                          ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MainWindow' object has no attribute '_performance_lock'. Did you mean: 'performance_panel'?
+
+2026-04-04 15:41:10,197 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4546, in _on_desktop_play_mode
+    self._enter_desktop_play_mode()
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4562, in _enter_desktop_play_mode
+    self._desktop_play_perf_lock_backup = self._performance_lock
+                                          ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MainWindow' object has no attribute '_performance_lock'. Did you mean: 'performance_panel'?
+
+2026-04-04 15:41:11,815 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4526, in _on_toggle_vr_emulator
+    self._vr_perf_lock_backup = self._performance_lock
+                                ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MainWindow' object has no attribute '_performance_lock'. Did you mean: 'performance_panel'?
+
+2026-04-04 16:35:59,746 INFO OpenGL initialized
+2026-04-04 16:36:03,776 ERROR Desktop Play Mode failed to start
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4568, in _enter_desktop_play_mode
+    self._desktop_play_perf_lock_backup = self._performance_lock
+                                          ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'MainWindow' object has no attribute '_performance_lock'. Did you mean: 'performance_panel'?
+2026-04-04 16:37:37,170 INFO OpenGL initialized
+2026-04-04 16:37:40,492 INFO OpenGL initialized
+2026-04-04 16:37:43,436 INFO _on_viewport_select: MorphZone_42
+2026-04-04 16:37:43,437 INFO   tree item found: True
+2026-04-04 16:37:46,487 INFO _on_viewport_select: MorphZone_42
+2026-04-04 16:37:46,487 INFO   tree item found: True
+2026-04-04 16:37:47,182 INFO _on_viewport_select: MorphZone_42
+2026-04-04 16:37:47,183 INFO   tree item found: True
+2026-04-04 16:37:47,371 INFO _on_viewport_select: None
+2026-04-04 16:37:48,913 INFO _on_viewport_select: MorphZone_38
+2026-04-04 16:37:48,913 INFO   tree item found: True
+2026-04-04 16:37:49,338 INFO _on_viewport_select: MorphZone_38
+2026-04-04 16:37:49,339 INFO   tree item found: True
+2026-04-04 16:37:51,711 INFO _on_viewport_select: MorphZone_36
+2026-04-04 16:37:51,711 INFO   tree item found: True
+2026-04-04 16:37:52,661 INFO _on_viewport_select: MorphZone_34
+2026-04-04 16:37:52,661 INFO   tree item found: True
+2026-04-04 16:37:53,606 INFO _on_viewport_select: HitZone_10
+2026-04-04 16:37:53,607 INFO   tree item found: True
+2026-04-04 16:37:54,169 INFO _on_viewport_select: None
+2026-04-04 16:37:55,668 INFO OpenGL initialized
+2026-04-04 16:50:23,547 INFO _on_viewport_select: HitZone_90
+2026-04-04 16:50:23,548 INFO   tree item found: True
+2026-04-04 16:51:17,288 INFO OpenGL initialized
+2026-04-04 16:51:18,769 INFO _on_viewport_select: TextLabel_C_33
+2026-04-04 16:51:18,769 INFO   tree item found: True
+2026-04-04 16:51:40,199 INFO OpenGL initialized
+2026-04-04 16:51:47,903 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:51:47,904 INFO   tree item found: True
+2026-04-04 16:53:18,129 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\viewport3d.py", line 1008, in paintEvent
+    def paintEvent(self, event):
+    
+KeyboardInterrupt
+
+2026-04-04 16:53:23,253 INFO OpenGL initialized
+2026-04-04 16:53:29,529 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:53:29,529 INFO   tree item found: True
+2026-04-04 16:54:30,737 INFO OpenGL initialized
+2026-04-04 16:54:32,038 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:54:32,038 INFO   tree item found: True
+2026-04-04 16:54:32,390 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:54:32,390 INFO   tree item found: True
+2026-04-04 16:54:32,660 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:54:32,660 INFO   tree item found: True
+2026-04-04 16:54:41,012 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:54:41,012 INFO   tree item found: True
+2026-04-04 16:54:53,707 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:54:53,708 INFO   tree item found: True
+2026-04-04 16:55:01,980 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:55:01,981 INFO   tree item found: True
+2026-04-04 16:56:20,661 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:56:20,661 INFO   tree item found: True
+2026-04-04 16:56:28,552 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:56:28,552 INFO   tree item found: True
+2026-04-04 16:56:28,819 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:56:28,819 INFO   tree item found: True
+2026-04-04 16:56:36,418 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:56:36,418 INFO   tree item found: True
+2026-04-04 16:56:40,736 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:56:40,736 INFO   tree item found: True
+2026-04-04 16:56:44,955 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4736, in _on_play_perf_send
+    self._perf_send(element_id, payload)
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4881, in _perf_send
+    self._roliblock_mirror.on_cc_perf(
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 374, in on_cc_perf
+    if not self.ensure_sessions():
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 357, in ensure_sessions
+    self._pad_b.do_handshake()
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 268, in do_handshake
+    self.send_sysex_raw(build_block_sysex(DEVICE_INDEX, [0x01, 0x02, 0x00]))
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 258, in send_sysex_raw
+    self._open()
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 244, in _open
+    self._port = mido.open_output(self.port_name)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\backend.py", line 117, in open_output
+    return self.module.Output(name, **self._add_api(kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 269, in __init__
+    BasePort.__init__(self, name, **kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 90, in __init__
+    self._open(**kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 204, in _open
+    self.name = _open_port(self._rt, self.name, client_name=client_name,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 105, in _open_port
+    rt.open_port(port_id)
+  File "_rtmidi.pyx", line 581, in _rtmidi.MidiBase.open_port
+  File "_rtmidi.pyx", line 218, in _rtmidi._cb_error_func
+  File "_rtmidi.pyx", line 403, in _rtmidi._default_error_handler
+_rtmidi.SystemError: MidiOutWinMM::openPort: error creating Windows MM MIDI output port.
+
+2026-04-04 16:56:45,044 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:56:45,045 INFO   tree item found: True
+2026-04-04 16:57:10,063 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:57:10,063 INFO   tree item found: True
+2026-04-04 16:57:10,912 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:57:10,912 INFO   tree item found: True
+2026-04-04 16:57:30,739 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:57:30,739 INFO   tree item found: True
+2026-04-04 16:57:37,282 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:57:37,282 INFO   tree item found: True
+2026-04-04 16:57:40,896 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:57:40,896 INFO   tree item found: True
+2026-04-04 16:57:41,611 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:57:41,611 INFO   tree item found: True
+2026-04-04 16:57:48,109 INFO _on_viewport_select: MorphZone_2
+2026-04-04 16:57:48,109 INFO   tree item found: True
+2026-04-04 16:57:48,565 INFO OpenGL initialized
+2026-04-04 17:03:47,040 INFO OpenGL initialized
+2026-04-04 17:03:53,565 INFO OpenGL initialized
+2026-04-04 17:03:55,372 INFO _on_viewport_select: MorphZone_42
+2026-04-04 17:03:55,372 INFO   tree item found: True
+2026-04-04 17:03:56,049 INFO _on_viewport_select: MorphZone_42
+2026-04-04 17:03:56,050 INFO   tree item found: True
+2026-04-04 17:03:56,435 INFO _on_viewport_select: MorphZone_42
+2026-04-04 17:03:56,435 INFO   tree item found: True
+2026-04-04 17:04:02,229 INFO _on_viewport_select: MorphZone_132
+2026-04-04 17:04:02,229 INFO   tree item found: True
+2026-04-04 17:04:05,345 INFO _on_viewport_select: MorphZone_130
+2026-04-04 17:04:05,345 INFO   tree item found: True
+2026-04-04 17:04:05,488 INFO _on_viewport_select: MorphZone_130
+2026-04-04 17:04:05,488 INFO   tree item found: True
+2026-04-04 17:04:05,714 INFO _on_viewport_select: MorphZone_130
+2026-04-04 17:04:05,715 INFO   tree item found: True
+2026-04-04 17:04:10,013 INFO _on_viewport_select: None
+2026-04-04 17:04:10,332 INFO OpenGL initialized
+2026-04-04 17:04:14,427 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:04:14,428 INFO   tree item found: True
+2026-04-04 17:04:20,127 INFO OpenGL initialized
+2026-04-04 17:04:21,168 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:04:21,169 INFO   tree item found: True
+2026-04-04 17:05:17,657 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4736, in _on_play_perf_send
+    self._perf_send(element_id, payload)
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4896, in _perf_send
+    self._roliblock_mirror.on_cc_perf(
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 501, in on_cc_perf
+    if not self.ensure_sessions():
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 480, in ensure_sessions
+    self._pad_b.do_handshake()
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 369, in do_handshake
+    self._broadcast_payload([0x01, 0x02, 0x00])
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 365, in _broadcast_payload
+    self._send_sysex_packet(build_block_sysex(dev, payload))
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 355, in _send_sysex_packet
+    self._open()
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 341, in _open
+    self._port = mido.open_output(self.port_name)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\backend.py", line 117, in open_output
+    return self.module.Output(name, **self._add_api(kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 269, in __init__
+    BasePort.__init__(self, name, **kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 90, in __init__
+    self._open(**kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 204, in _open
+    self.name = _open_port(self._rt, self.name, client_name=client_name,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 105, in _open_port
+    rt.open_port(port_id)
+  File "_rtmidi.pyx", line 581, in _rtmidi.MidiBase.open_port
+  File "_rtmidi.pyx", line 218, in _rtmidi._cb_error_func
+  File "_rtmidi.pyx", line 403, in _rtmidi._default_error_handler
+_rtmidi.SystemError: MidiOutWinMM::openPort: error creating Windows MM MIDI output port.
+
+2026-04-04 17:05:17,671 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:05:17,672 INFO   tree item found: True
+2026-04-04 17:05:17,975 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:05:17,975 INFO   tree item found: True
+2026-04-04 17:05:26,177 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:05:26,177 INFO   tree item found: True
+2026-04-04 17:05:41,791 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:05:41,791 INFO   tree item found: True
+2026-04-04 17:05:58,855 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:05:58,855 INFO   tree item found: True
+2026-04-04 17:06:40,336 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:06:40,337 INFO   tree item found: True
+2026-04-04 17:06:40,940 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:06:40,940 INFO   tree item found: True
+2026-04-04 17:06:49,038 INFO _on_viewport_select: None
+2026-04-04 17:06:53,518 INFO _on_viewport_select: None
+2026-04-04 17:06:54,097 INFO _on_viewport_select: None
+2026-04-04 17:13:23,096 INFO OpenGL initialized
+2026-04-04 17:13:27,620 INFO OpenGL initialized
+2026-04-04 17:13:41,518 INFO OpenGL initialized
+2026-04-04 17:13:44,207 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:13:44,208 INFO   tree item found: True
+2026-04-04 17:14:03,844 WARNING Desktop play MIDI in: no input port for 'ROLI Lightpad BLOCK  2'
+2026-04-04 17:14:03,862 WARNING Desktop play MIDI in: no input port for 'ROLI Lightpad BLOCK  2'
+2026-04-04 17:14:07,707 WARNING Desktop play MIDI in: no input port for 'ROLI Lightpad BLOCK  2'
+2026-04-04 17:14:07,718 WARNING Desktop play MIDI in: no input port for 'ROLI Lightpad BLOCK  2'
+2026-04-04 17:14:10,315 WARNING Desktop play MIDI in: no input port for 'ROLI Lightpad BLOCK  2'
+2026-04-04 17:14:10,799 WARNING Desktop play MIDI in: no input port for 'ROLI Lightpad BLOCK  2'
+2026-04-04 17:14:28,117 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:14:28,117 INFO   tree item found: True
+2026-04-04 17:14:28,334 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:14:28,335 INFO   tree item found: True
+2026-04-04 17:14:31,827 WARNING Desktop play MIDI in: no input port for 'ROLI Lightpad BLOCK  2'
+2026-04-04 17:14:36,449 WARNING Desktop play MIDI in: no input port for 'ROLI Lightpad BLOCK  2'
+2026-04-04 17:14:44,727 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4815, in _on_play_perf_send
+    self._perf_send(element_id, payload)
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4977, in _perf_send
+    self._roliblock_mirror.on_cc_perf(
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 501, in on_cc_perf
+    if not self.ensure_sessions():
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 480, in ensure_sessions
+    self._pad_b.do_handshake()
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 369, in do_handshake
+    self._broadcast_payload([0x01, 0x02, 0x00])
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 365, in _broadcast_payload
+    self._send_sysex_packet(build_block_sysex(dev, payload))
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 355, in _send_sysex_packet
+    self._open()
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 341, in _open
+    self._port = mido.open_output(self.port_name)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\backend.py", line 117, in open_output
+    return self.module.Output(name, **self._add_api(kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 269, in __init__
+    BasePort.__init__(self, name, **kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 90, in __init__
+    self._open(**kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 204, in _open
+    self.name = _open_port(self._rt, self.name, client_name=client_name,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 105, in _open_port
+    rt.open_port(port_id)
+  File "_rtmidi.pyx", line 581, in _rtmidi.MidiBase.open_port
+  File "_rtmidi.pyx", line 218, in _rtmidi._cb_error_func
+  File "_rtmidi.pyx", line 403, in _rtmidi._default_error_handler
+_rtmidi.SystemError: MidiOutWinMM::openPort: error creating Windows MM MIDI output port.
+
+2026-04-04 17:14:44,730 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:14:44,730 INFO   tree item found: True
+2026-04-04 17:15:02,475 WARNING Desktop play MIDI in: no input port for 'ROLI Lightpad BLOCK  2'
+2026-04-04 17:15:04,376 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:15:04,376 INFO   tree item found: True
+2026-04-04 17:20:40,905 INFO OpenGL initialized
+2026-04-04 17:20:50,419 INFO OpenGL initialized
+2026-04-04 17:20:51,856 INFO _on_viewport_select: None
+2026-04-04 17:20:52,242 INFO _on_viewport_select: None
+2026-04-04 17:20:55,027 INFO _on_viewport_select: None
+2026-04-04 17:20:55,133 INFO _on_viewport_select: None
+2026-04-04 17:21:50,622 INFO OpenGL initialized
+2026-04-04 17:21:52,749 INFO _on_viewport_select: None
+2026-04-04 17:21:52,789 INFO _on_viewport_select: None
+2026-04-04 17:22:14,463 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:22:14,464 INFO   tree item found: True
+2026-04-04 17:22:15,297 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:22:15,297 INFO   tree item found: True
+2026-04-04 17:22:25,274 INFO OpenGL initialized
+2026-04-04 17:22:25,415 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  2', 'ROLI Lightpad BLOCK  2']
+2026-04-04 17:22:26,017 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4872, in _on_play_perf_send
+    self._perf_send(element_id, payload)
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 5041, in _perf_send
+    self._roliblock_mirror.on_cc_perf(
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 501, in on_cc_perf
+    if not self.ensure_sessions():
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 469, in ensure_sessions
+    self._pad_a.do_handshake()
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 369, in do_handshake
+    self._broadcast_payload([0x01, 0x02, 0x00])
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 365, in _broadcast_payload
+    self._send_sysex_packet(build_block_sysex(dev, payload))
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 361, in _send_sysex_packet
+    self._port.send(mido.Message("sysex", data=inner))
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 212, in send
+    self._rt.send_message(msg.bytes())
+  File "_rtmidi.pyx", line 1106, in _rtmidi.MidiOut.send_message
+  File "_rtmidi.pyx", line 218, in _rtmidi._cb_error_func
+  File "_rtmidi.pyx", line 403, in _rtmidi._default_error_handler
+_rtmidi.SystemError: MidiOutWinMM::sendMessage: error sending sysex message.
+
+2026-04-04 17:22:26,028 CRITICAL Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 4872, in _on_play_perf_send
+    self._perf_send(element_id, payload)
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 5041, in _perf_send
+    self._roliblock_mirror.on_cc_perf(
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 501, in on_cc_perf
+    if not self.ensure_sessions():
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 480, in ensure_sessions
+    self._pad_b.do_handshake()
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 369, in do_handshake
+    self._broadcast_payload([0x01, 0x02, 0x00])
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 365, in _broadcast_payload
+    self._send_sysex_packet(build_block_sysex(dev, payload))
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 355, in _send_sysex_packet
+    self._open()
+  File "C:\aday.repo\MoveMusicSaveEditor\roliblock_led.py", line 341, in _open
+    self._port = mido.open_output(self.port_name)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\backend.py", line 117, in open_output
+    return self.module.Output(name, **self._add_api(kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 269, in __init__
+    BasePort.__init__(self, name, **kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 90, in __init__
+    self._open(**kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 204, in _open
+    self.name = _open_port(self._rt, self.name, client_name=client_name,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 105, in _open_port
+    rt.open_port(port_id)
+  File "_rtmidi.pyx", line 581, in _rtmidi.MidiBase.open_port
+  File "_rtmidi.pyx", line 218, in _rtmidi._cb_error_func
+  File "_rtmidi.pyx", line 403, in _rtmidi._default_error_handler
+_rtmidi.SystemError: MidiOutWinMM::openPort: error creating Windows MM MIDI output port.
+
+2026-04-04 17:22:26,033 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:22:26,033 INFO   tree item found: True
+2026-04-04 17:22:28,380 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  2', 'ROLI Lightpad BLOCK  2']
+2026-04-04 17:22:28,781 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  2', 'ROLI Lightpad BLOCK  2']
+2026-04-04 17:22:36,818 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  2', 'ROLI Lightpad BLOCK  2']
+2026-04-04 17:22:52,681 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  7']
+2026-04-04 17:22:52,692 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  7']
+2026-04-04 17:22:54,878 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  7', 'ROLI Lightpad BLOCK  7']
+2026-04-04 17:22:54,890 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  7', 'ROLI Lightpad BLOCK  7']
+2026-04-04 17:22:58,977 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  7', 'ROLI Lightpad BLOCK  7']
+2026-04-04 17:23:06,323 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  7', 'ROLI Lightpad BLOCK  7']
+2026-04-04 17:23:12,093 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  7', 'ROLI Lightpad BLOCK  7']
+2026-04-04 17:23:20,996 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  7', 'ROLI Lightpad BLOCK  7']
+2026-04-04 17:23:21,487 WARNING Desktop play MIDI in: no input for outputs ['ROLI Lightpad BLOCK  7', 'ROLI Lightpad BLOCK  7']
+2026-04-04 17:23:24,002 INFO _on_viewport_select: None
+2026-04-04 17:23:24,745 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:23:24,746 INFO   tree item found: True
+2026-04-04 17:23:24,958 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:23:24,959 INFO   tree item found: True
+2026-04-04 17:25:23,790 INFO _on_viewport_select: None
+2026-04-04 17:25:24,054 INFO OpenGL initialized
+2026-04-04 17:26:48,103 INFO OpenGL initialized
+2026-04-04 17:26:49,309 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:26:49,309 INFO   tree item found: True
+2026-04-04 17:26:50,202 INFO _on_viewport_select: None
+2026-04-04 17:26:50,813 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:26:50,814 INFO   tree item found: True
+2026-04-04 17:26:51,705 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:26:51,705 INFO   tree item found: True
+2026-04-04 17:26:53,197 INFO _on_viewport_select: None
+2026-04-04 17:26:53,777 INFO _on_viewport_select: None
+2026-04-04 17:26:54,064 INFO _on_viewport_select: None
+2026-04-04 17:26:54,131 INFO _on_viewport_select: None
+2026-04-04 17:26:54,399 INFO _on_viewport_select: None
+2026-04-04 17:26:54,400 INFO _on_viewport_select: None
+2026-04-04 17:26:55,082 INFO _on_viewport_select: None
+2026-04-04 17:27:02,973 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:27:02,973 INFO   tree item found: True
+2026-04-04 17:27:13,064 INFO OpenGL initialized
+2026-04-04 17:27:13,763 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:27:13,763 INFO   tree item found: True
+2026-04-04 17:27:14,690 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:27:14,690 INFO   tree item found: True
+2026-04-04 17:27:17,493 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:27:17,494 INFO   tree item found: True
+2026-04-04 17:27:32,894 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:27:32,894 INFO   tree item found: True
+2026-04-04 17:27:33,923 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:27:33,923 INFO   tree item found: True
+2026-04-04 17:27:50,667 INFO _on_viewport_select: HitZone_3
+2026-04-04 17:27:50,668 INFO   tree item found: True
+2026-04-04 17:27:51,743 INFO _on_viewport_select: HitZone_3
+2026-04-04 17:27:51,743 INFO   tree item found: True
+2026-04-04 17:27:53,132 INFO _on_viewport_select: HitZone_3
+2026-04-04 17:27:53,132 INFO   tree item found: True
+2026-04-04 17:27:53,876 INFO _on_viewport_select: HitZone_3
+2026-04-04 17:27:53,877 INFO   tree item found: True
+2026-04-04 17:27:54,489 INFO _on_viewport_select: HitZone_3
+2026-04-04 17:27:54,489 INFO   tree item found: True
+2026-04-04 17:27:55,062 INFO _on_viewport_select: HitZone_3
+2026-04-04 17:27:55,062 INFO   tree item found: True
+2026-04-04 17:27:55,929 INFO _on_viewport_select: HitZone_3
+2026-04-04 17:27:55,929 INFO   tree item found: True
+2026-04-04 17:27:56,530 INFO _on_viewport_select: HitZone_3
+2026-04-04 17:27:56,530 INFO   tree item found: True
+2026-04-04 17:28:03,244 INFO _on_viewport_select: MorphZone_4
+2026-04-04 17:28:03,244 INFO   tree item found: True
+2026-04-04 17:28:04,036 INFO _on_viewport_select: MorphZone_4
+2026-04-04 17:28:04,036 INFO   tree item found: True
+2026-04-04 17:28:07,891 INFO _on_viewport_select: None
+2026-04-04 17:34:13,017 INFO OpenGL initialized
+2026-04-04 17:34:34,152 INFO OpenGL initialized
+2026-04-04 17:34:35,596 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:34:35,596 INFO   tree item found: True
+2026-04-04 17:34:36,865 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:34:36,865 INFO   tree item found: True
+2026-04-04 17:34:52,146 INFO OpenGL initialized
+2026-04-04 17:34:52,761 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:34:52,761 INFO   tree item found: True
+2026-04-04 17:34:59,904 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:34:59,904 INFO   tree item found: True
+2026-04-04 17:35:02,388 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:35:02,388 INFO   tree item found: True
+2026-04-04 17:35:07,048 INFO _on_viewport_select: None
+2026-04-04 17:35:11,042 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:35:11,042 INFO   tree item found: True
+2026-04-04 17:35:12,078 INFO _on_viewport_select: None
+2026-04-04 17:35:14,438 INFO OpenGL initialized
+2026-04-04 17:35:15,501 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:35:15,502 INFO   tree item found: True
+2026-04-04 17:35:25,350 INFO _on_viewport_select: None
+2026-04-04 17:35:25,833 INFO _on_viewport_select: None
+2026-04-04 17:35:26,310 INFO _on_viewport_select: None
+2026-04-04 17:35:26,677 INFO _on_viewport_select: None
+2026-04-04 17:35:26,759 INFO _on_viewport_select: None
+2026-04-04 17:35:27,084 INFO _on_viewport_select: None
+2026-04-04 17:35:27,229 INFO _on_viewport_select: None
+2026-04-04 17:35:27,430 INFO _on_viewport_select: None
+2026-04-04 17:35:28,252 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:35:28,252 INFO   tree item found: True
+2026-04-04 17:38:02,560 INFO _on_viewport_select: None
+2026-04-04 17:38:02,992 INFO _on_viewport_select: None
+2026-04-04 17:38:03,321 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:38:03,321 INFO   tree item found: True
+2026-04-04 17:38:06,131 INFO _on_viewport_select: None
+2026-04-04 17:38:06,240 INFO _on_viewport_select: None
+2026-04-04 17:38:07,025 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:38:07,025 INFO   tree item found: True
+2026-04-04 17:38:09,349 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:38:09,349 INFO   tree item found: True
+2026-04-04 17:38:09,708 INFO _on_viewport_select: None
+2026-04-04 17:38:09,948 INFO _on_viewport_select: None
+2026-04-04 17:38:10,483 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:38:10,483 INFO   tree item found: True
+2026-04-04 17:38:11,984 INFO _on_viewport_select: None
+2026-04-04 17:38:12,072 INFO _on_viewport_select: None
+2026-04-04 17:38:12,515 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:38:12,515 INFO   tree item found: True
+2026-04-04 17:38:16,534 INFO OpenGL initialized
+2026-04-04 17:38:20,933 INFO _on_viewport_select: None
+2026-04-04 17:38:21,920 INFO _on_viewport_select: None
+2026-04-04 17:38:22,583 INFO _on_viewport_select: None
+2026-04-04 17:38:23,236 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:38:23,236 INFO   tree item found: True
+2026-04-04 17:42:56,440 INFO OpenGL initialized
+2026-04-04 17:43:06,106 INFO OpenGL initialized
+2026-04-04 17:43:07,387 INFO _on_viewport_select: None
+2026-04-04 17:43:07,995 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:43:07,995 INFO   tree item found: True
+2026-04-04 17:43:08,205 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:43:08,206 INFO   tree item found: True
+2026-04-04 17:43:09,719 INFO _on_viewport_select: None
+2026-04-04 17:43:10,373 INFO _on_viewport_select: None
+2026-04-04 17:43:10,831 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:43:10,832 INFO   tree item found: True
+2026-04-04 17:43:14,958 INFO OpenGL initialized
+2026-04-04 17:43:15,522 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:43:15,522 INFO   tree item found: True
+2026-04-04 17:43:16,093 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:43:16,093 INFO   tree item found: True
+2026-04-04 17:43:18,809 INFO _on_viewport_select: None
+2026-04-04 17:43:19,266 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:43:19,266 INFO   tree item found: True
+2026-04-04 17:43:19,882 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:43:19,883 INFO   tree item found: True
+2026-04-04 17:43:20,352 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:43:20,352 INFO   tree item found: True
+2026-04-04 17:43:32,051 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:43:32,051 INFO   tree item found: True
+2026-04-04 17:43:32,991 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:43:32,991 INFO   tree item found: True
+2026-04-04 17:43:33,649 INFO _on_viewport_select: None
+2026-04-04 17:43:34,331 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:43:34,331 INFO   tree item found: True
+2026-04-04 17:43:35,016 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:43:35,017 INFO   tree item found: True
+2026-04-04 17:43:37,465 INFO _on_viewport_select: None
+2026-04-04 17:43:37,921 INFO _on_viewport_select: None
+2026-04-04 17:43:38,277 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:43:38,278 INFO   tree item found: True
+2026-04-04 17:43:39,303 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:43:39,304 INFO   tree item found: True
+2026-04-04 17:43:39,570 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:43:39,570 INFO   tree item found: True
+2026-04-04 17:43:39,963 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:43:39,963 INFO   tree item found: True
+2026-04-04 17:43:42,283 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:43:42,283 INFO   tree item found: True
+2026-04-04 17:43:43,066 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:43:43,066 INFO   tree item found: True
+2026-04-04 17:43:43,281 INFO _on_viewport_select: MorphZone_3
+2026-04-04 17:43:43,281 INFO   tree item found: True
+2026-04-04 17:43:47,347 INFO _on_viewport_select: HitZone_4
+2026-04-04 17:43:47,347 INFO   tree item found: True
+2026-04-04 17:43:48,336 INFO _on_viewport_select: None
+2026-04-04 17:43:49,425 INFO _on_viewport_select: HitZone_4
+2026-04-04 17:43:49,425 INFO   tree item found: True
+2026-04-04 17:43:49,964 INFO _on_viewport_select: HitZone_4
+2026-04-04 17:43:49,964 INFO   tree item found: True
+2026-04-04 17:43:51,828 INFO OpenGL initialized
+2026-04-04 17:43:59,286 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:43:59,286 INFO   tree item found: True
+2026-04-04 17:44:00,262 INFO _on_viewport_select: HitZone_4
+2026-04-04 17:44:00,262 INFO   tree item found: True
+2026-04-04 17:44:01,571 INFO _on_viewport_select: HitZone_4
+2026-04-04 17:44:01,571 INFO   tree item found: True
+2026-04-04 17:44:08,243 INFO _on_viewport_select: None
+2026-04-04 17:44:08,359 INFO _on_viewport_select: None
+2026-04-04 17:44:09,235 INFO _on_viewport_select: None
+2026-04-04 17:44:09,306 INFO _on_viewport_select: None
+2026-04-04 17:44:09,539 INFO _on_viewport_select: HitZone_4
+2026-04-04 17:44:09,540 INFO   tree item found: True
+2026-04-04 17:54:32,097 INFO OpenGL initialized
+2026-04-04 17:54:37,724 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:54:37,725 INFO   tree item found: True
+2026-04-04 17:54:41,209 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:54:41,209 INFO   tree item found: True
+2026-04-04 17:54:42,293 INFO _on_viewport_select: None
+2026-04-04 17:54:42,385 INFO _on_viewport_select: None
+2026-04-04 17:54:42,756 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:54:42,756 INFO   tree item found: True
+2026-04-04 17:54:43,163 INFO _on_viewport_select: None
+2026-04-04 17:54:45,491 INFO OpenGL initialized
+2026-04-04 17:54:45,918 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:54:45,919 INFO   tree item found: True
+2026-04-04 17:54:46,415 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:54:46,415 INFO   tree item found: True
+2026-04-04 17:54:51,266 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:54:51,267 INFO   tree item found: True
+2026-04-04 17:54:52,112 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:54:52,112 INFO   tree item found: True
+2026-04-04 17:54:52,886 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:54:52,886 INFO   tree item found: True
+2026-04-04 17:54:53,506 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:54:53,506 INFO   tree item found: True
+2026-04-04 17:54:53,738 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:54:53,738 INFO   tree item found: True
+2026-04-04 17:55:05,807 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:55:05,807 INFO   tree item found: True
+2026-04-04 17:55:06,175 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:55:06,175 INFO   tree item found: True
+2026-04-04 17:58:49,018 INFO OpenGL initialized
+2026-04-04 17:58:53,890 INFO OpenGL initialized
+2026-04-04 17:58:54,900 INFO _on_viewport_select: None
+2026-04-04 17:58:55,297 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:58:55,298 INFO   tree item found: True
+2026-04-04 17:58:58,633 INFO OpenGL initialized
+2026-04-04 17:58:59,271 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:58:59,271 INFO   tree item found: True
+2026-04-04 17:59:06,185 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:59:06,185 INFO   tree item found: True
+2026-04-04 17:59:07,525 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:59:07,525 INFO   tree item found: True
+2026-04-04 17:59:10,109 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:59:10,109 INFO   tree item found: True
+2026-04-04 17:59:10,439 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:59:10,439 INFO   tree item found: True
+2026-04-04 17:59:16,867 INFO _on_viewport_select: MorphZone_2
+2026-04-04 17:59:16,867 INFO   tree item found: True
+2026-04-04 18:00:27,137 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:00:27,137 INFO   tree item found: True
+2026-04-04 18:01:02,248 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:01:02,248 INFO   tree item found: True
+2026-04-04 18:01:02,933 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:01:02,933 INFO   tree item found: True
+2026-04-04 18:01:03,804 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:01:03,804 INFO   tree item found: True
+2026-04-04 18:01:04,439 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:01:04,440 INFO   tree item found: True
+2026-04-04 18:01:05,005 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:01:05,005 INFO   tree item found: True
+2026-04-04 18:01:05,608 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:01:05,609 INFO   tree item found: True
+2026-04-04 18:01:05,876 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:01:05,876 INFO   tree item found: True
+2026-04-04 18:01:06,432 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:01:06,432 INFO   tree item found: True
+2026-04-04 18:01:06,882 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:01:06,883 INFO   tree item found: True
+2026-04-04 18:01:07,488 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:01:07,489 INFO   tree item found: True
+2026-04-04 18:01:07,854 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:01:07,854 INFO   tree item found: True
+2026-04-04 18:01:10,542 INFO OpenGL initialized
+2026-04-04 18:08:33,640 INFO OpenGL initialized
+2026-04-04 18:08:38,060 INFO OpenGL initialized
+2026-04-04 18:08:38,815 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:08:38,815 INFO   tree item found: True
+2026-04-04 18:08:40,719 INFO _on_viewport_select: None
+2026-04-04 18:08:41,370 INFO _on_viewport_select: None
+2026-04-04 18:08:43,046 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:08:43,046 INFO   tree item found: True
+2026-04-04 18:09:02,104 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:09:02,104 INFO   tree item found: True
+2026-04-04 18:09:24,544 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:09:24,544 INFO   tree item found: True
+2026-04-04 18:09:25,192 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:09:25,192 INFO   tree item found: True
+2026-04-04 18:09:28,445 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:09:28,445 INFO   tree item found: True
+2026-04-04 18:09:28,759 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:09:28,759 INFO   tree item found: True
+2026-04-04 18:09:30,132 INFO _on_viewport_select: None
+2026-04-04 18:09:33,324 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:09:33,324 INFO   tree item found: True
+2026-04-04 18:09:33,959 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:09:33,960 INFO   tree item found: True
+2026-04-04 18:09:34,368 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:09:34,368 INFO   tree item found: True
+2026-04-04 18:09:34,869 INFO _on_viewport_select: None
+2026-04-04 18:09:35,326 INFO _on_viewport_select: None
+2026-04-04 18:09:38,064 INFO OpenGL initialized
+2026-04-04 18:09:39,148 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:09:39,149 INFO   tree item found: True
+2026-04-04 18:09:44,761 INFO _on_viewport_select: None
+2026-04-04 18:09:44,860 INFO _on_viewport_select: None
+2026-04-04 18:09:45,206 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:09:45,206 INFO   tree item found: True
+2026-04-04 18:09:46,746 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:09:46,746 INFO   tree item found: True
+2026-04-04 18:09:50,112 INFO _on_viewport_select: None
+2026-04-04 18:09:50,662 INFO _on_viewport_select: None
+2026-04-04 18:09:50,830 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:09:50,830 INFO   tree item found: True
+2026-04-04 18:10:00,003 INFO _on_viewport_select: None
+2026-04-04 18:10:00,134 INFO _on_viewport_select: None
+2026-04-04 18:10:00,568 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:00,568 INFO   tree item found: True
+2026-04-04 18:10:10,628 INFO _on_viewport_select: None
+2026-04-04 18:10:11,078 INFO _on_viewport_select: None
+2026-04-04 18:10:11,226 INFO _on_viewport_select: None
+2026-04-04 18:10:11,309 INFO _on_viewport_select: None
+2026-04-04 18:10:11,939 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:11,939 INFO   tree item found: True
+2026-04-04 18:10:12,627 INFO _on_viewport_select: None
+2026-04-04 18:10:12,943 INFO _on_viewport_select: None
+2026-04-04 18:10:13,222 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:13,222 INFO   tree item found: True
+2026-04-04 18:10:24,332 INFO _on_viewport_select: None
+2026-04-04 18:10:24,372 INFO _on_viewport_select: None
+2026-04-04 18:10:25,011 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:25,012 INFO   tree item found: True
+2026-04-04 18:10:30,132 INFO _on_viewport_select: None
+2026-04-04 18:10:30,232 INFO _on_viewport_select: None
+2026-04-04 18:10:30,971 INFO _on_viewport_select: None
+2026-04-04 18:10:31,020 INFO _on_viewport_select: None
+2026-04-04 18:10:42,086 INFO OpenGL initialized
+2026-04-04 18:10:44,384 INFO _on_viewport_select: None
+2026-04-04 18:10:44,692 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:44,692 INFO   tree item found: True
+2026-04-04 18:10:45,107 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:45,107 INFO   tree item found: True
+2026-04-04 18:10:45,676 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:45,676 INFO   tree item found: True
+2026-04-04 18:10:46,093 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:46,093 INFO   tree item found: True
+2026-04-04 18:10:46,284 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:46,284 INFO   tree item found: True
+2026-04-04 18:10:46,557 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:46,557 INFO   tree item found: True
+2026-04-04 18:10:46,833 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:46,833 INFO   tree item found: True
+2026-04-04 18:10:48,016 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:48,016 INFO   tree item found: True
+2026-04-04 18:10:48,423 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:48,423 INFO   tree item found: True
+2026-04-04 18:10:49,142 INFO _on_viewport_select: None
+2026-04-04 18:10:49,638 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:10:49,638 INFO   tree item found: True
+2026-04-04 18:10:50,475 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:50,475 INFO   tree item found: True
+2026-04-04 18:10:51,123 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:51,124 INFO   tree item found: True
+2026-04-04 18:10:51,659 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:51,659 INFO   tree item found: True
+2026-04-04 18:10:51,905 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:51,905 INFO   tree item found: True
+2026-04-04 18:10:52,131 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:52,131 INFO   tree item found: True
+2026-04-04 18:10:52,286 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:52,286 INFO   tree item found: True
+2026-04-04 18:10:52,589 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:52,590 INFO   tree item found: True
+2026-04-04 18:10:53,210 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:53,210 INFO   tree item found: True
+2026-04-04 18:10:53,790 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:53,790 INFO   tree item found: True
+2026-04-04 18:10:54,132 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:54,132 INFO   tree item found: True
+2026-04-04 18:10:54,429 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:10:54,429 INFO   tree item found: True
+2026-04-04 18:10:54,904 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:54,904 INFO   tree item found: True
+2026-04-04 18:10:56,078 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:56,079 INFO   tree item found: True
+2026-04-04 18:10:56,816 INFO _on_viewport_select: None
+2026-04-04 18:10:57,148 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:10:57,148 INFO   tree item found: True
+2026-04-04 18:10:57,388 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:10:57,389 INFO   tree item found: True
+2026-04-04 18:10:57,670 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:57,670 INFO   tree item found: True
+2026-04-04 18:10:58,442 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:58,442 INFO   tree item found: True
+2026-04-04 18:10:59,090 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:10:59,090 INFO   tree item found: True
+2026-04-04 18:10:59,743 INFO _on_viewport_select: MorphZone_2
+2026-04-04 18:10:59,743 INFO   tree item found: True
+2026-04-04 18:11:01,072 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:11:01,073 INFO   tree item found: True
+2026-04-04 18:11:01,537 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:11:01,537 INFO   tree item found: True
+2026-04-04 18:11:02,952 INFO _on_viewport_select: HitZone_3
+2026-04-04 18:11:02,953 INFO   tree item found: True
+2026-04-04 18:11:08,328 INFO _on_viewport_select: None
+2026-04-04 18:11:12,343 INFO _on_viewport_select: MorphZone_4
+2026-04-04 18:11:12,343 INFO   tree item found: True
+2026-04-04 18:11:12,736 INFO _on_viewport_select: MorphZone_4
+2026-04-04 18:11:12,736 INFO   tree item found: True
+2026-04-04 18:11:15,961 INFO _on_viewport_select: None
+2026-04-04 18:11:16,362 INFO OpenGL initialized

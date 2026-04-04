@@ -21,7 +21,7 @@ from PyQt6.QtGui import QPainter, QColor, QBrush, QPen, QFont, QMouseEvent
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSlider,
     QScrollArea, QSizePolicy, QComboBox, QLineEdit, QSpinBox,
-    QFrame, QTextEdit, QPushButton,
+    QFrame, QTextEdit, QPushButton, QCheckBox,
 )
 
 from model import HitZone, MorphZone
@@ -433,8 +433,227 @@ class TransportConfigBar(QWidget):
             "midi_port": self.port_combo.currentData(),
         }
 
+    def load_from_runtime_dict(self, cfg: dict):
+        """Sync from get_config() output (used by Desktop Play duplicate transport bar)."""
+        self.mode_combo.blockSignals(True)
+        self.osc_host.blockSignals(True)
+        self.osc_port.blockSignals(True)
+        self.osc_ns.blockSignals(True)
+        self.port_combo.blockSignals(True)
+        mode = cfg.get("mode", "osc")
+        for i in range(self.mode_combo.count()):
+            if self.mode_combo.itemData(i) == mode:
+                self.mode_combo.setCurrentIndex(i)
+                break
+        self.osc_host.setText(str(cfg.get("osc_host", "127.0.0.1")))
+        self.osc_port.setValue(int(cfg.get("osc_port", 9001)))
+        self.osc_ns.setText(str(cfg.get("osc_ns", "/mmc")))
+        self.mode_combo.blockSignals(False)
+        self.osc_host.blockSignals(False)
+        self.osc_port.blockSignals(False)
+        self.osc_ns.blockSignals(False)
+        self.port_combo.blockSignals(False)
+        self.refresh_ports()
+        midi_port = cfg.get("midi_port")
+        if midi_port:
+            for i in range(self.port_combo.count()):
+                if self.port_combo.itemData(i) == midi_port:
+                    self.port_combo.setCurrentIndex(i)
+                    break
+
     def _emit(self):
         self.config_changed.emit(self.get_config())
+
+
+# ---------------------------------------------------------------------------
+# Roliblock strip (shared by Performance panel and Desktop Play window)
+# ---------------------------------------------------------------------------
+
+class RoliblockStripWidget(QFrame):
+    """Roli Lightpad LED mirror: pad routing, mode, bind MorphZone."""
+
+    config_changed = pyqtSignal(dict)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._bind_cb: Optional[Callable] = None
+        self._bound_id: Optional[str] = None
+        self.setStyleSheet("background-color: #0d1520; border-bottom: 1px solid #1e2a3a;")
+        roli_l = QVBoxLayout(self)
+        roli_l.setContentsMargins(8, 4, 8, 6)
+        roli_l.setSpacing(4)
+        rh = QLabel("Roliblock LED mirror (Lightpad SysEx)")
+        rh.setFont(QFont("Courier", 9, QFont.Weight.Bold))
+        rh.setStyleSheet("color: #88aaff; border: none; background: transparent;")
+        roli_l.addWidget(rh)
+        row0 = QHBoxLayout()
+        self.roli_enable = QCheckBox("Enable")
+        self.roli_enable.setStyleSheet("color: #c0d8f0; font-size: 9px;")
+        self.roli_enable.toggled.connect(self._emit_cfg)
+        row0.addWidget(self.roli_enable)
+        row0.addStretch()
+        roli_l.addLayout(row0)
+        row1 = QHBoxLayout()
+        row1.addWidget(_dark_label("Pad A (XY):"))
+        self.roli_pad_a = QComboBox()
+        self.roli_pad_a.setMinimumWidth(140)
+        self.roli_pad_a.setStyleSheet("font-size: 9px; color: #d0e0f0; background: #1c2438;")
+        self.roli_pad_a.currentIndexChanged.connect(self._emit_cfg)
+        row1.addWidget(self.roli_pad_a)
+        roli_l.addLayout(row1)
+        row2 = QHBoxLayout()
+        row2.addWidget(_dark_label("Pad B (Z):"))
+        self.roli_pad_b = QComboBox()
+        self.roli_pad_b.setMinimumWidth(140)
+        self.roli_pad_b.setStyleSheet("font-size: 9px; color: #d0e0f0; background: #1c2438;")
+        self.roli_pad_b.currentIndexChanged.connect(self._emit_cfg)
+        row2.addWidget(self.roli_pad_b)
+        roli_l.addLayout(row2)
+        row3 = QHBoxLayout()
+        row3.addWidget(_dark_label("Mode:"))
+        self.roli_mode = QComboBox()
+        self.roli_mode.addItem("Off", "off")
+        self.roli_mode.addItem("XY on Pad A", "xy")
+        self.roli_mode.addItem("XYZ: XY on A, Z on B", "xyz_split")
+        self.roli_mode.setStyleSheet("font-size: 9px; color: #d0e0f0; background: #1c2438;")
+        self.roli_mode.currentIndexChanged.connect(self._emit_cfg)
+        row3.addWidget(self.roli_mode)
+        roli_l.addLayout(row3)
+        row_dev = QHBoxLayout()
+        row_dev.addWidget(_dark_label("Block IDs:"))
+        self.roli_device_ids = QLineEdit("0")
+        self.roli_device_ids.setToolTip(
+            "SysEx device index per BLOCK on the chain. Use 0 for one block; 0,1,2 mirrors the same LEDs to each."
+        )
+        self.roli_device_ids.setPlaceholderText("0 or 0,1,2")
+        self.roli_device_ids.setFixedWidth(72)
+        self.roli_device_ids.setStyleSheet("font-size: 9px; color: #d0e0f0; background: #1c2438;")
+        self.roli_device_ids.textChanged.connect(self._emit_cfg)
+        row_dev.addWidget(self.roli_device_ids)
+        row_dev.addStretch()
+        roli_l.addLayout(row_dev)
+        row4 = QHBoxLayout()
+        self.roli_bind_btn = QPushButton("Bind selected MorphZone")
+        self.roli_bind_btn.setStyleSheet(
+            "QPushButton { font-size: 9px; color: #00e5ff; background: #1c2438; border: 1px solid #2a3a50; padding: 3px 8px; }"
+            "QPushButton:hover { background: #2a3a50; }"
+        )
+        self.roli_bind_btn.clicked.connect(self._on_bind_clicked)
+        row4.addWidget(self.roli_bind_btn)
+        self.roli_bound_lbl = QLabel("Bound: (none)")
+        self.roli_bound_lbl.setStyleSheet("color: #607890; font-size: 9px; border: none; background: transparent;")
+        row4.addWidget(self.roli_bound_lbl)
+        row4.addStretch()
+        roli_l.addLayout(row4)
+        roli_refresh = QPushButton("Refresh MIDI outs")
+        roli_refresh.setStyleSheet(
+            "QPushButton { font-size: 8px; color: #607890; background: #1c2438; border: 1px solid #2a3a50; }"
+        )
+        roli_refresh.clicked.connect(self.refresh_ports)
+        roli_l.addWidget(roli_refresh)
+        self.refresh_ports()
+
+    def _on_bind_clicked(self) -> None:
+        if self._bind_cb:
+            self._bind_cb()
+
+    def set_bind_callback(self, cb: Optional[Callable]) -> None:
+        self._bind_cb = cb
+
+    def _emit_cfg(self) -> None:
+        self.config_changed.emit(self.get_config())
+
+    def refresh_ports(self) -> None:
+        for combo in (self.roli_pad_a, self.roli_pad_b):
+            combo.blockSignals(True)
+            prev = combo.currentData()
+            combo.clear()
+            combo.addItem("-- none --", None)
+            names: list[str] = []
+            err_msg: Optional[str] = None
+            try:
+                import mido
+            except ImportError:
+                err_msg = "Install mido + python-rtmidi"
+            else:
+                try:
+                    names = list(mido.get_output_names())
+                except Exception as exc:
+                    err_msg = str(exc)[:80] or "get_output_names() failed"
+            if err_msg:
+                combo.addItem(f"(Roliblock MIDI: {err_msg})", None)
+            elif not names:
+                combo.addItem("(No MIDI output ports — device may be input-only)", None)
+            else:
+                for name in names:
+                    combo.addItem(name, name)
+            for i in range(combo.count()):
+                if combo.itemData(i) == prev:
+                    combo.setCurrentIndex(i)
+                    break
+            combo.blockSignals(False)
+
+    def get_config(self) -> dict:
+        return {
+            "roliblock_enabled": self.roli_enable.isChecked(),
+            "roliblock_pad_a": self.roli_pad_a.currentData(),
+            "roliblock_pad_b": self.roli_pad_b.currentData(),
+            "roliblock_mode": self.roli_mode.currentData() or "off",
+            "roliblock_bound_id": self._bound_id,
+            "roliblock_device_ids": self.roli_device_ids.text().strip(),
+        }
+
+    def load_from_dict(self, cfg: dict, emit: bool = False) -> None:
+        self._bound_id = cfg.get("roliblock_bound_id")
+        for w in (
+            self.roli_enable,
+            self.roli_pad_a,
+            self.roli_pad_b,
+            self.roli_mode,
+            self.roli_device_ids,
+        ):
+            w.blockSignals(True)
+        self.roli_enable.setChecked(bool(cfg.get("roliblock_enabled", False)))
+        self.refresh_ports()
+        pa = cfg.get("roliblock_pad_a")
+        pb = cfg.get("roliblock_pad_b")
+        if pa:
+            for i in range(self.roli_pad_a.count()):
+                if self.roli_pad_a.itemData(i) == pa:
+                    self.roli_pad_a.setCurrentIndex(i)
+                    break
+        if pb:
+            for i in range(self.roli_pad_b.count()):
+                if self.roli_pad_b.itemData(i) == pb:
+                    self.roli_pad_b.setCurrentIndex(i)
+                    break
+        mode = cfg.get("roliblock_mode", "off")
+        for i in range(self.roli_mode.count()):
+            if self.roli_mode.itemData(i) == mode:
+                self.roli_mode.setCurrentIndex(i)
+                break
+        if "roliblock_device_ids" in cfg:
+            self.roli_device_ids.setText(str(cfg.get("roliblock_device_ids") or "0"))
+        for w in (
+            self.roli_enable,
+            self.roli_pad_a,
+            self.roli_pad_b,
+            self.roli_mode,
+            self.roli_device_ids,
+        ):
+            w.blockSignals(False)
+        self._update_bound_label()
+        if emit:
+            self.config_changed.emit(self.get_config())
+
+    def set_bound_id(self, uid: Optional[str], emit: bool = True) -> None:
+        self._bound_id = uid
+        self._update_bound_label()
+        if emit:
+            self.config_changed.emit(self.get_config())
+
+    def _update_bound_label(self) -> None:
+        self.roli_bound_lbl.setText(f"Bound: {self._bound_id or '(none)'}")
 
 
 # ---------------------------------------------------------------------------
@@ -458,7 +677,7 @@ class MessageLogWidget(QWidget):
 
         hdr = QHBoxLayout()
         hdr.setContentsMargins(6, 2, 6, 2)
-        lbl = QLabel("📡 Sent Messages")
+        lbl = QLabel("Sent messages")
         lbl.setStyleSheet("color: #607890; font-size: 9px; font-weight: bold; border: none; background: transparent;")
         hdr.addWidget(lbl)
         hdr.addStretch()
@@ -488,7 +707,7 @@ class MessageLogWidget(QWidget):
     def log_message(self, msg_type: str, detail: str, transport: str, destination: str):
         """Add a line to the log."""
         ts = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
-        icon = {"note_on": "▶", "note_off": "■", "cc": "~"}.get(msg_type, "•")
+        icon = {"note_on": ">", "note_off": "x", "cc": "~"}.get(msg_type, "*")
 
         color = {"note_on": "#00ff88", "note_off": "#ff6060", "cc": "#00e5ff"}.get(msg_type, "#8aa0b8")
         dest_color = "#ffaa00" if transport == "osc" else "#ff88ff" if transport == "midi" else "#ffcc44"
@@ -520,6 +739,8 @@ class MessageLogWidget(QWidget):
 class PerformancePanel(QWidget):
     """Desktop MIDI/OSC performance testing panel."""
 
+    roliblock_changed = pyqtSignal(dict)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.current_elements: list = []
@@ -543,6 +764,12 @@ class PerformancePanel(QWidget):
         self.transport_bar = TransportConfigBar()
         self.transport_bar.config_changed.connect(self._on_transport_changed)
         main_layout.addWidget(self.transport_bar)
+
+        self._roliblock_bind_callback = None
+        self.roliblock_strip = RoliblockStripWidget()
+        self.roliblock_strip.config_changed.connect(self.roliblock_changed.emit)
+        self.roliblock_strip.set_bind_callback(self._on_roliblock_bind_click)
+        main_layout.addWidget(self.roliblock_strip)
 
         # Scrollable controls area
         scroll = QScrollArea()
@@ -572,6 +799,7 @@ class PerformancePanel(QWidget):
         """Load saved config into the transport bar."""
         self.transport_bar.load_from_config(cfg)
         self._override_cfg = self.transport_bar.get_config()
+        self.load_roliblock_from_cfg(cfg)
 
     def _on_transport_changed(self, cfg: dict):
         self._override_cfg = cfg
@@ -579,6 +807,26 @@ class PerformancePanel(QWidget):
     def get_transport_config(self) -> dict:
         """Return the current override config from the transport bar."""
         return dict(self._override_cfg)
+
+    def _on_roliblock_bind_click(self) -> None:
+        if self._roliblock_bind_callback:
+            self._roliblock_bind_callback()
+
+    def get_roliblock_config(self) -> dict:
+        return self.roliblock_strip.get_config()
+
+    def load_roliblock_from_cfg(self, cfg: dict) -> None:
+        self.roliblock_strip.load_from_dict(cfg, emit=False)
+
+    def set_roliblock_bind_callback(self, cb) -> None:
+        self._roliblock_bind_callback = cb
+
+    def set_roliblock_visible(self, visible: bool) -> None:
+        """Hide experimental Roliblock strip unless debug mode is on."""
+        self.roliblock_strip.setVisible(bool(visible))
+
+    def set_bound_morphzone_id(self, uid: Optional[str]) -> None:
+        self.roliblock_strip.set_bound_id(uid, emit=True)
 
     def set_selected_elements(self, elements: list, send_callback: Callable[[str, dict], None]):
         self.current_elements = elements
