@@ -847,6 +847,118 @@ def _make_group(
     )
 
 
+def generate_aday_vectory_vr_panel(
+    project: Project,
+    origin: Vec3 = None,
+    channel: int = 1,
+    col_spacing: float = 44.0,
+    row_spacing: float = 40.0,
+) -> List:
+    """
+    VR-oriented panel matching Vectory MIDI map: four banks of
+    Rotate (CC 3), Meter (CC 92), Knob (CC 93) on MIDI channel 1.
+
+    Each bank is one row (left to right): horizontal Rotate, vertical Meter,
+    horizontal Knob. Labels match the host UI strings.
+    """
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    triplets = (
+        ("Vectory:Rotate", 3, "rotate"),
+        ("Vectory:Meter", 92, "meter"),
+        ("Vectory:Knob", 93, "knob"),
+    )
+    c_rotate = Color(0.32, 0.72, 1.0, 1.0)
+    c_meter = Color(0.25, 0.92, 0.62, 1.0)
+    c_knob = Color(0.92, 0.45, 0.95, 1.0)
+
+    elements: List = []
+    rows = 4
+    cols = len(triplets)
+
+    title_id = project.generate_id("TextLabel_C")
+    title = TextLabel(
+        unique_id=title_id,
+        display_name="Vectory VR (aday)\nCC3 / 92 / 93  Ch1",
+        transform=Transform(
+            translation=Vec3(
+                origin.x,
+                origin.y + (rows * 0.5 + 0.85) * row_spacing,
+                origin.z + 32,
+            ),
+            scale=Vec3(0.38, 0.38, 0.38),
+        ),
+        color=LABEL_COLOR,
+    )
+    elements.append(title)
+
+    for row in range(rows):
+        for col in range(cols):
+            label, cc, kind = triplets[col]
+            bank = row + 1
+            display_name = f"{label} (bank {bank})"
+            px = origin.x + (col - 1) * col_spacing
+            py = origin.y + (1.5 - row) * row_spacing
+
+            mz_id = project.generate_id("MorphZone")
+            if kind == "meter":
+                mz = MorphZone(
+                    unique_id=mz_id,
+                    display_name=display_name,
+                    transform=Transform(
+                        translation=Vec3(px, py, origin.z),
+                        scale=Vec3(0.16, 0.85, 0.16),
+                    ),
+                    color=c_meter,
+                    is_x_axis_enabled=False,
+                    x_axis_cc_mappings=[],
+                    is_y_axis_enabled=True,
+                    y_axis_cc_mappings=[
+                        MidiCCMapping(channel=channel, control=cc, value=64)
+                    ],
+                    is_z_axis_enabled=False,
+                    z_axis_cc_mappings=[],
+                    dimensions="EDimensions::One",
+                    soloed_axis="EAxis::Y",
+                )
+            else:
+                mz = MorphZone(
+                    unique_id=mz_id,
+                    display_name=display_name,
+                    transform=Transform(
+                        translation=Vec3(px, py, origin.z),
+                        scale=Vec3(0.44, 0.36, 0.14),
+                    ),
+                    color=c_rotate if kind == "rotate" else c_knob,
+                    is_x_axis_enabled=True,
+                    x_axis_cc_mappings=[
+                        MidiCCMapping(channel=channel, control=cc, value=64)
+                    ],
+                    is_y_axis_enabled=False,
+                    y_axis_cc_mappings=[],
+                    is_z_axis_enabled=False,
+                    z_axis_cc_mappings=[],
+                    dimensions="EDimensions::One",
+                    soloed_axis="EAxis::X",
+                )
+            elements.append(mz)
+
+            tl_id = project.generate_id("TextLabel_C")
+            tl = TextLabel(
+                unique_id=tl_id,
+                display_name=f"{label}\nCC{cc}  Ch{channel}",
+                transform=Transform(
+                    translation=Vec3(px, py, origin.z + 26),
+                    scale=Vec3(0.26, 0.26, 0.26),
+                ),
+                color=LABEL_COLOR,
+            )
+            elements.append(tl)
+
+    return elements
+
+
 # ---------------------------------------------------------------------------
 # Template catalogue (used by the editor UI)
 # ---------------------------------------------------------------------------
@@ -915,6 +1027,11 @@ TEMPLATES = {
 
     # --- Mixer ---
     "Mixer (8 Faders + 8 Knobs)": None,  # special composite — handled in editor
+
+    # --- aday / Vectory VR ---
+    "aday: Vectory VR (4 banks x Rotate/Meter/Knob)": (
+        lambda p, o: generate_aday_vectory_vr_panel(p, o)
+    ),
 
     # --- Keyboards: 1 Octave (12 keys) ---
     "Keyboard 1 Octave (Row)": lambda p, o: generate_keyboard(

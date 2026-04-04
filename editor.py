@@ -1890,6 +1890,8 @@ class MainWindow(QMainWindow):
 
         def _template_category(name: str) -> str:
             n = name.lower()
+            if n.startswith("aday:"):
+                return "aday"
             if n.startswith("shape:"):
                 return "Fun Shapes"
             if "aum" in n or "ios" in n:
@@ -1937,7 +1939,7 @@ class MainWindow(QMainWindow):
             return "Other"
 
         category_order = [
-            "Faders", "Knobs", "XY Pads", "Buttons", "Drum Pads", "Keyboards", "Mixer",
+            "aday", "Faders", "Knobs", "XY Pads", "Buttons", "Drum Pads", "Keyboards", "Mixer",
             "iOS / AUM", "Ruismaker", "Renoise", "Reaktor", "Serum", "Reason", "Hardware Controllers",
             "Bitwig", "Reaper", "Resolume", "Grooveboxes", "Sugarbytes",
             "Fun Shapes", "Debug", "Other"

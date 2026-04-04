@@ -24,6 +24,7 @@ def test_new_templates_registered():
     assert "Serum: Performance + Macros" in TEMPLATES
     assert "Reason: Subtractor" in TEMPLATES
     assert "Reason: REX / OctoRex" in TEMPLATES
+    assert "aday: Vectory VR (4 banks x Rotate/Meter/Knob)" in TEMPLATES
 
 
 if __name__ == "__main__":
