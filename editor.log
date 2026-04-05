@@ -22404,3 +22404,24 @@ _rtmidi.SystemError: MidiOutWinMM::openPort: error creating Windows MM MIDI outp
 2026-04-05 16:35:24,052 INFO _on_viewport_select: None
 2026-04-05 16:35:24,055 INFO _on_viewport_select: None
 2026-04-05 16:35:34,709 INFO OpenGL initialized
+2026-04-05 18:57:52,290 INFO _on_viewport_select: MorphZone_2
+2026-04-05 18:57:52,291 INFO   tree item found: True
+2026-04-05 18:58:05,652 INFO _on_viewport_select: None
+2026-04-05 18:58:06,142 INFO _on_viewport_select: None
+2026-04-05 18:58:06,753 INFO _on_viewport_select: None
+2026-04-05 18:58:08,450 INFO _on_viewport_select: MorphZone_2
+2026-04-05 18:58:08,450 INFO   tree item found: True
+2026-04-05 18:58:10,129 INFO _on_viewport_select: None
+2026-04-05 18:58:10,259 INFO _on_viewport_select: None
+2026-04-05 18:58:11,198 INFO _on_viewport_select: None
+2026-04-05 18:58:13,400 INFO _on_viewport_select: None
+2026-04-05 18:58:13,473 INFO _on_viewport_select: None
+2026-04-05 18:58:33,853 INFO _on_viewport_select: MorphZone_2
+2026-04-05 18:58:33,853 INFO   tree item found: True
+2026-04-05 19:17:24,516 INFO OpenGL initialized
+2026-04-05 19:17:26,650 INFO _on_viewport_select: MorphZone_2
+2026-04-05 19:17:26,650 INFO   tree item found: True
+2026-04-05 19:17:30,469 INFO _on_viewport_select: None
+2026-04-05 19:17:30,560 INFO _on_viewport_select: None
+2026-04-05 19:17:33,191 INFO _on_viewport_select: MorphZone_2
+2026-04-05 19:17:33,191 INFO   tree item found: True

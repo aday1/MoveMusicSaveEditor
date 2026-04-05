@@ -1867,6 +1867,26 @@ class MainWindow(QMainWindow):
         self.action_side_view = QAction("Side", self)
         toolbar.addAction(self.action_side_view)
 
+        self.action_cam_orbit = QAction("Cam Orbit", self)
+        self.action_cam_orbit.setToolTip("Auto-fly camera: orbit around visible elements")
+        toolbar.addAction(self.action_cam_orbit)
+
+        self.action_cam_flythrough = QAction("Cam Fly", self)
+        self.action_cam_flythrough.setToolTip("Auto-fly camera: smooth flythrough path")
+        toolbar.addAction(self.action_cam_flythrough)
+
+        self.action_cam_tour = QAction("Cam Tour", self)
+        self.action_cam_tour.setToolTip("Auto-fly camera: visit each workspace")
+        toolbar.addAction(self.action_cam_tour)
+
+        self.action_cam_pause = QAction("Cam Pause", self)
+        self.action_cam_pause.setToolTip("Pause/resume camera auto-fly")
+        toolbar.addAction(self.action_cam_pause)
+
+        self.action_cam_stop = QAction("Cam Stop", self)
+        self.action_cam_stop.setToolTip("Stop camera auto-fly")
+        toolbar.addAction(self.action_cam_stop)
+
         toolbar.addSeparator()
 
         self.action_quad_view = QAction("Quad View", self)
@@ -2119,6 +2139,11 @@ class MainWindow(QMainWindow):
         self.action_top_view.triggered.connect(self._on_top_view)
         self.action_front_view.triggered.connect(self._on_front_view)
         self.action_side_view.triggered.connect(self._on_side_view)
+        self.action_cam_orbit.triggered.connect(lambda: self._on_camera_autofly("orbit"))
+        self.action_cam_flythrough.triggered.connect(lambda: self._on_camera_autofly("flythrough"))
+        self.action_cam_tour.triggered.connect(lambda: self._on_camera_autofly("tour"))
+        self.action_cam_pause.triggered.connect(self._on_camera_autofly_pause)
+        self.action_cam_stop.triggered.connect(self._on_camera_autofly_stop)
         self.action_quad_view.triggered.connect(self._on_toggle_quad_view)
         # Also connect quad viewport signals
         self.quad_viewport.element_selected.connect(self._on_viewport_select)
@@ -3817,6 +3842,28 @@ class MainWindow(QMainWindow):
     def _on_side_view(self):
         self.viewport.camera.pitch = 0.0
         self.viewport.camera.yaw = 90.0
+        self._sync_viewports()
+
+    def _on_camera_autofly(self, mode: str):
+        vp = self._active_viewport()
+        if vp is None:
+            return
+        vp.autofly_start(mode, 1.0)
+        self._sync_viewports()
+
+    def _on_camera_autofly_pause(self):
+        vp = self._active_viewport()
+        if vp is None:
+            return
+        vp.autofly_toggle_pause()
+        self._sync_viewports()
+
+    def _on_camera_autofly_stop(self):
+        vp = self._active_viewport()
+        if vp is None:
+            return
+        vp.autofly_stop()
+        self.statusbar.showMessage("Camera auto-fly stopped", 2000)
         self._sync_viewports()
 
     def _on_toggle_quad_view(self):

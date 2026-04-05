@@ -1986,206 +1986,117 @@ class SceneViewport(QOpenGLWidget):
 
     def _draw_shortcuts_overlay(self, painter: QPainter):
         """Draw context-sensitive shortcuts overlay based on current selection."""
-        # Build context-sensitive shortcuts based on selection
         shortcuts = []
-
         if len(self.selected_elements) == 0:
             shortcuts = [
-                "⚡ F5 — Performance Lock",
-                "Toggle to test MIDI/OSC without",
-                "accidentally moving elements!",
+                "HELP (no selection)",
+                "Click element to select; Shift+Click adds",
+                "Drag empty space for box select",
                 "",
-                "🔍 NO SELECTION",
-                "Click any element to select it",
-                "Shift+Click: Add to selection",
-                "Ctrl+A: Select all elements",
-                "Drag empty space: Marquee select",
+                "CAMERA:",
+                "RMB drag orbit | MMB/Shift+RMB pan",
+                "Wheel zoom | Home fit all",
+                "1/3/7 front/side/top | 5 ortho",
                 "",
-                "📂 TEMPLATES:",
-                "Templates menu → Add elements",
-                "",
-                "📷 CAMERA CONTROLS:",
-                "Bottom-left axis widget: click X/Y/Z balls",
-                "or center for perspective; drag the circle to move it",
-                "RMB drag: Orbit camera",
-                "MMB/Shift+RMB: Pan camera",
-                "Mouse wheel: Zoom",
-                "1/3/7: Front/Side/Top views",
-                "5: Ortho toggle  |  Home: Fit all",
+                "EDIT:",
+                "Ctrl+A select all | Ctrl+D duplicate",
+                "Ctrl+Delete remove | F focus selected",
             ]
         elif len(self.selected_elements) == 1:
             elem = self.selected_elements[0]
-            elem_type = type(elem).__name__
-
-            shortcuts = [f"🎯 EDITING: {elem.display_name or elem.unique_id}"]
-            shortcuts.append(f"Type: {elem_type}")
-
-            # Position info
             p = elem.transform.translation
-            shortcuts.append(f"Position: X={p.x:.1f}, Y={p.y:.1f}, Z={p.z:.1f}")
-
-            # Show available MIDI controls
-            midi_controls = []
-            if hasattr(elem, 'y_axis_cc_mappings') and elem.y_axis_cc_mappings:
-                for cc in elem.y_axis_cc_mappings:
-                    midi_controls.append(f"Y-axis: CC{cc.control} value={cc.value}")
-            if hasattr(elem, 'x_axis_cc_mappings') and elem.x_axis_cc_mappings:
-                for cc in elem.x_axis_cc_mappings:
-                    midi_controls.append(f"X-axis: CC{cc.control} value={cc.value}")
-            if hasattr(elem, 'z_axis_cc_mappings') and elem.z_axis_cc_mappings:
-                for cc in elem.z_axis_cc_mappings:
-                    midi_controls.append(f"Z-axis: CC{cc.control} value={cc.value}")
-            if hasattr(elem, 'midi_cc_mappings') and elem.midi_cc_mappings:
-                for cc in elem.midi_cc_mappings:
-                    midi_controls.append(f"Button: CC{cc.control} value={cc.value}")
-            if hasattr(elem, 'midi_note_mappings') and elem.midi_note_mappings:
-                for note in elem.midi_note_mappings:
-                    midi_controls.append(f"Note pad: n{note.note} ch{note.channel}")
-
-            if midi_controls:
-                shortcuts.append("")
-                shortcuts.extend(["🎵 MIDI MAPPINGS:"] + midi_controls[:4])
-                if elem_type == "MorphZone":
-                    shortcuts.append("Alt+↑↓: Adjust CC output values ±1")
-                elif elem_type == "HitZone" and midi_controls[0].startswith("Note pad"):
-                    shortcuts.append("Alt+Shift+↑↓: Adjust note values ±1")
-                elif elem_type == "HitZone":
-                    shortcuts.append("Alt+↑↓: Adjust CC output values ±1")
-
-            shortcuts.extend([
+            shortcuts = [
+                f"EDITING: {elem.display_name or elem.unique_id}",
+                f"Type: {type(elem).__name__}",
+                f"Position: X={p.x:.1f} Y={p.y:.1f} Z={p.z:.1f}",
                 "",
-                "ℹ️ MIDI SHORTCUT RULES:",
-                "Alt+↑↓ needs CC mappings on the selected object(s)",
-                "If you see 'No MIDI CC mappings', use Alt+Shift+↑↓ for note mappings",
-                "CC values clamp at 0..127, so values at limits will not change",
-            ])
-
-            shortcuts.extend([
+                "MOVE/ROTATE:",
+                "Drag gizmo to move/rotate selected",
+                "Ctrl+Arrows or PgUp/PgDn nudge +/-1",
+                "R/T rotate Z; Shift+R/T rotate Y",
+                "Ctrl+R/T rotate X",
                 "",
-                "⚡ MOVEMENT (Selected Element):",
-                "Pivot cross / cube: drag to move (full cube in Performance Lock; tiny cross in Desktop Play)",
-                "Drag element body: Move freely (when Performance Lock is off)",
-                "Ctrl+←→: Nudge X-axis ±1 unit",
-                "Ctrl+↑↓: Nudge Y-axis ±1 unit",
-                "Ctrl+PgUp/Dn: Nudge Z-axis ±1 unit",
+                "MIDI:",
+                "Alt+Up/Down adjusts CC values",
+                "Alt+Shift+Up/Down adjusts note values",
                 "",
-                "📐 GRID INFO:",
-                f"Grid position: ({p.x//25*25:.0f},{p.y//25*25:.0f},{p.z//25*25:.0f})",
-                f"Grid offset: {p.x%25:+.1f},{p.y%25:+.1f},{p.z%25:+.1f}",
-                "G: Toggle snap to grid",
-                "N: Toggle grid coordinate numbers",
-                "",
-                "🔄 ROTATION:",
-                "R/T: Rotate Z-axis ±15°",
-                "Shift+R/T: Rotate Y-axis ±15°",
-                "Ctrl+R/T: Rotate X-axis ±15°",
-                "Drag ring handle: Free rotate",
-                "",
-                "⚙️ ACTIONS:",
-                "Ctrl+D: Duplicate element",
-                "Ctrl+Delete: Remove element",
-                "  (Delete alone won't work here)",
-                "F: Focus camera on element",
-                "",
-                "⚡ PERFORMANCE TEST:",
-                "F5: Toggle Performance Lock",
-                "  Locks drag → click safely to",
-                "  select & test MIDI/OSC output",
-            ])
+                "ACTIONS:",
+                "Ctrl+D duplicate | Ctrl+Delete remove",
+                "F focus camera on selected",
+            ]
         else:
-            # Multiple selection
             n = len(self.selected_elements)
             shortcuts = [
-                f"🎯 EDITING: {n} Elements",
-                "Multiple elements selected",
+                f"EDITING: {n} elements selected",
                 "",
-                "⚡ BULK MOVEMENT:",
-                "Drag: Move all together",
-                "Ctrl+←→: Nudge all X-axis ±1",
-                "Ctrl+↑↓: Nudge all Y-axis ±1",
-                "Ctrl+PgUp/Dn: Nudge all Z-axis ±1",
+                "BULK:",
+                "Drag moves all selected",
+                "Ctrl+Arrows or PgUp/PgDn nudge +/-1",
+                "R/T rotate Z; Shift+R/T rotate Y",
+                "Ctrl+R/T rotate X",
                 "",
-                "🔄 BULK ROTATION:",
-                "R/T: Rotate all Z-axis ±15°",
-                "Shift+R/T: Rotate all Y-axis ±15°",
-                "Ctrl+R/T: Rotate all X-axis ±15°",
-                "",
-                "🎵 BULK MIDI EDITING:",
-                "Alt+↑↓: Adjust all CC output values ±1",
-                "Alt+Shift+↑↓: Adjust all note values ±1",
-                "",
-                "⚙️ BULK ACTIONS:",
-                "Ctrl+D: Duplicate all selected",
-                "Ctrl+Delete: Remove all selected",
-                "  (Delete alone won't work here)",
-                "Ctrl+L: Arrange in row layout",
-                "Esc: Deselect all",
-                "",
-                "⚡ PERFORMANCE TEST:",
-                "F5: Toggle Performance Lock",
-                "  Locks drag → click safely to",
-                "  select & test MIDI/OSC output",
+                "ACTIONS:",
+                "Ctrl+D duplicate | Ctrl+Delete remove",
+                "Ctrl+L row layout | Esc clear selection",
             ]
 
-        # Always show toggle option
-        shortcuts.extend([
-            "",
-            "💡 DISPLAY CONTROLS:",
-            "N: Toggle grid coordinate numbers",
-            "G: Toggle grid snap",
-            "[ / ]: Cycle snap grid preset (5/10/25/50/100)",
-            "Right-click: Context menu",
-            "",
-            "⚡ F5: Performance Lock ON/OFF",
-        ])
+        shortcuts.extend(
+            [
+                "",
+                "DISPLAY:",
+                "N grid numbers | G snap",
+                "[ / ] cycle snap preset",
+                "Right-click opens context menu",
+                "F5 toggles Performance Lock",
+            ]
+        )
 
         font_sm = QFont("Segoe UI", 9)
         painter.setFont(font_sm)
         fm_sm = QFontMetrics(font_sm)
         line_h = fm_sm.height() + 3
 
-        # Filter out empty lines for width calculation
         non_empty = [s for s in shortcuts if s.strip()]
-        block_w = min(450, max(fm_sm.horizontalAdvance(s) for s in non_empty) + 20)
+        block_w = min(420, max(fm_sm.horizontalAdvance(s) for s in non_empty) + 20)
         block_h = len(shortcuts) * line_h + 20
 
-        # Position on right side, but not at the very edge
         bx = self.width() - block_w - 15
-        by = 50  # Below toolbar
+        by = 50
 
-        # Semi-transparent dark background
+        max_h = max(100, self.height() - by - 14)
+        if block_h > max_h:
+            max_lines = max(5, (max_h - 20) // line_h)
+            shortcuts = shortcuts[: max(4, int(max_lines) - 1)] + ["..."]
+            non_empty = [s for s in shortcuts if s.strip()]
+            block_w = min(420, max(fm_sm.horizontalAdvance(s) for s in non_empty) + 20)
+            block_h = len(shortcuts) * line_h + 20
+
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(0, 0, 0, 160))
         painter.drawRoundedRect(bx, by, block_w, block_h, 8, 8)
 
-        # Border
         painter.setPen(QPen(QColor(100, 150, 200), 1))
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawRoundedRect(bx, by, block_w, block_h, 8, 8)
 
-        # Content
         painter.setPen(QColor(220, 220, 230))
         ty = by + line_h
 
         for s in shortcuts:
-            if s.strip():  # Non-empty lines
-                if s.startswith('🎯') or s.startswith('🔍'):
-                    # Main header - larger and brighter
-                    font_header = QFont("Segoe UI", 11, QFont.Weight.Bold)
+            if s.strip():
+                if s.startswith("HELP") or s.startswith("EDITING"):
+                    font_header = QFont("Segoe UI", 10, QFont.Weight.Bold)
                     painter.setFont(font_header)
                     painter.setPen(QColor(255, 255, 255))
                     painter.drawText(bx + 10, ty, s)
-                    painter.setFont(font_sm)  # Reset font
-                elif s.startswith('🎵') or s.startswith('⚡') or s.startswith('🔄') or s.startswith('⚙️') or s.startswith('📷') or s.startswith('📂') or s.startswith('💡'):
-                    # Section headers
+                    painter.setFont(font_sm)
+                elif s.endswith(":"):
                     painter.setPen(QColor(150, 200, 255))
                     painter.drawText(bx + 10, ty, s)
-                elif s.startswith('Type:') or s.startswith('Position:') or s.startswith('Y-axis:') or s.startswith('X-axis:') or s.startswith('Z-axis:') or s.startswith('Button:') or s.startswith('Note pad:'):
-                    # Data lines
+                elif s.startswith("Type:") or s.startswith("Position:"):
                     painter.setPen(QColor(180, 255, 180))
                     painter.drawText(bx + 10, ty, s)
                 else:
-                    # Regular shortcuts
                     painter.setPen(QColor(220, 220, 230))
                     painter.drawText(bx + 10, ty, s)
             ty += line_h
