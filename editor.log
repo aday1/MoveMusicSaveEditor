@@ -22370,3 +22370,37 @@ _rtmidi.SystemError: MidiOutWinMM::openPort: error creating Windows MM MIDI outp
 2026-04-05 16:13:43,629 INFO _on_viewport_select: None
 2026-04-05 16:27:08,877 INFO OpenGL initialized
 2026-04-05 16:31:03,494 INFO OpenGL initialized
+2026-04-05 16:31:26,296 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:31:26,296 INFO   tree item found: True
+2026-04-05 16:31:31,975 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:31:31,975 INFO   tree item found: True
+2026-04-05 16:31:32,354 INFO _on_viewport_select: None
+2026-04-05 16:31:32,935 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:31:32,935 INFO   tree item found: True
+2026-04-05 16:31:39,466 INFO _on_viewport_select: None
+2026-04-05 16:31:39,540 INFO _on_viewport_select: None
+2026-04-05 16:31:57,608 INFO _on_viewport_select: None
+2026-04-05 16:31:57,688 INFO _on_viewport_select: None
+2026-04-05 16:31:58,262 INFO _on_viewport_select: None
+2026-04-05 16:31:58,359 INFO _on_viewport_select: None
+2026-04-05 16:32:18,192 INFO OpenGL initialized
+2026-04-05 16:32:49,186 INFO _on_viewport_select: MorphZone_250
+2026-04-05 16:32:49,187 INFO   tree item found: True
+2026-04-05 16:32:55,231 INFO _on_viewport_select: MorphZone_254
+2026-04-05 16:32:55,232 INFO   tree item found: True
+2026-04-05 16:32:56,530 INFO _on_viewport_select: MorphZone_256
+2026-04-05 16:32:56,530 INFO   tree item found: True
+2026-04-05 16:32:57,191 INFO _on_viewport_select: None
+2026-04-05 16:32:57,402 INFO _on_viewport_select: None
+2026-04-05 16:32:57,745 INFO _on_viewport_select: None
+2026-04-05 16:32:57,923 INFO _on_viewport_select: MorphZone_260
+2026-04-05 16:32:57,924 INFO   tree item found: True
+2026-04-05 16:32:59,533 INFO _on_viewport_select: MorphZone_266
+2026-04-05 16:32:59,534 INFO   tree item found: True
+2026-04-05 16:33:03,023 INFO OpenGL initialized
+2026-04-05 16:34:06,865 INFO OpenGL initialized
+2026-04-05 16:34:28,926 INFO _on_viewport_select: None
+2026-04-05 16:34:29,521 INFO OpenGL initialized
+2026-04-05 16:35:24,052 INFO _on_viewport_select: None
+2026-04-05 16:35:24,055 INFO _on_viewport_select: None
+2026-04-05 16:35:34,709 INFO OpenGL initialized
