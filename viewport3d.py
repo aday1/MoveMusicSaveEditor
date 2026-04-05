@@ -429,6 +429,12 @@ class SceneViewport(QOpenGLWidget):
         # Overlay buttons (populated during paintEvent)
         self._overlay_buttons = []  # [(QRectF, label_str)]
 
+        # Bottom-left axis gizmo: margins from widget left / bottom; plate is draggable
+        self._axis_hud_margin_left = 60.0
+        self._axis_hud_margin_bottom = 60.0
+        self._axis_hud_dragging = False
+        self._axis_gizmo_hits: list = []
+
         # Auto-fly camera system
         self._autofly_mode = ""       # "", "orbit", "flythrough", "tour"
         self._autofly_timer = QTimer(self)
@@ -840,6 +846,15 @@ class SceneViewport(QOpenGLWidget):
 
     def _update_gizmo_hover_cursor(self, mx: int, my: int):
         """Change cursor when hovering over gizmo handles."""
+        if not self.play_mode:
+            ag = self._axis_gizmo_resolve(float(mx), float(my))
+            if ag is not None:
+                if ag == "plate":
+                    self.setCursor(Qt.CursorShape.SizeAllCursor)
+                else:
+                    self.setCursor(Qt.CursorShape.PointingHandCursor)
+                return
+
         if not self.selected_elements:
             self.setCursor(Qt.CursorShape.ArrowCursor)
             return
@@ -884,7 +899,7 @@ class SceneViewport(QOpenGLWidget):
 
     def initializeGL(self):
         try:
-            glClearColor(0.06, 0.04, 0.1, 1.0)
+            glClearColor(0.02, 0.02, 0.03, 1.0)
             glEnable(GL_DEPTH_TEST)
             glEnable(GL_BLEND)
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -900,9 +915,9 @@ class SceneViewport(QOpenGLWidget):
     def paintGL(self):
         try:
             if self.play_mode:
-                glClearColor(0.05, 0.05, 0.08, 1.0)
+                glClearColor(0.03, 0.01, 0.06, 1.0)
             else:
-                glClearColor(0.06, 0.04, 0.1, 1.0)
+                glClearColor(0.012, 0.012, 0.018, 1.0)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
             self.camera.apply(self.width(), self.height())
 
@@ -949,7 +964,7 @@ class SceneViewport(QOpenGLWidget):
             logging.exception("paintGL failed")
 
     def _draw_grid(self):
-        """Holodeck / synthwave floor: neon green + cyan/magenta accents on Z=0."""
+        """Edit mode holodeck floor: black void, white + green lattice (1 unit = 1 cm)."""
         glPushAttrib(GL_ALL_ATTRIB_BITS)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -970,18 +985,39 @@ class SceneViewport(QOpenGLWidget):
 
         cx = round(self.camera.target[0] / base_step) * base_step
         cy = round(self.camera.target[1] / base_step) * base_step
-        half = min(1000, int(distance * 8))
         step = base_step
+
+        raw_half = min(900, max(100, int(distance * 5.5)))
+        max_lines = 200
+        half = min(raw_half, max(step * 10, (max_lines * step) // 2))
 
         snap_on = self._snap_grid_enabled
         snap_sz = self._snap_grid_size
+        snap_int = max(1, int(round(snap_sz))) if (snap_on and snap_sz > 0) else 0
+
+        # Label real grid crossings (not a diagonal), thinned if huge
+        label_step = max(coord_interval, step)
         self._grid_coords = []
+        for gx in range(-half, half + 1, label_step):
+            for gy in range(-half, half + 1, label_step):
+                self._grid_coords.append((cx + float(gx), cy + float(gy)))
+        if len(self._grid_coords) > 350:
+            thin = label_step * 2
+            self._grid_coords = []
+            for gx in range(-half, half + 1, thin):
+                for gy in range(-half, half + 1, thin):
+                    self._grid_coords.append((cx + float(gx), cy + float(gy)))
+
+        self._grid_hud_step_cm = float(step)
+        self._grid_hud_major_cm = float(coord_interval)
+        self._grid_hud_snap_cm = float(snap_int) if (snap_on and snap_int > 0) else None
+        self._grid_hud_half_cm = float(half)
 
         zf = -0.4
-        big = float(half) * 1.15
+        big = float(half) * 1.12
         glDisable(GL_DEPTH_TEST)
         glBegin(GL_QUADS)
-        glColor4f(0.0, 0.14, 0.08, 0.45)
+        glColor4f(0.008, 0.01, 0.012, 0.72)
         glVertex3f(cx - big, cy - big, zf)
         glVertex3f(cx + big, cy - big, zf)
         glVertex3f(cx + big, cy + big, zf)
@@ -989,53 +1025,65 @@ class SceneViewport(QOpenGLWidget):
         glEnd()
         glEnable(GL_DEPTH_TEST)
 
+        def _fade_for(i_off: int) -> float:
+            if half <= 0:
+                return 1.0
+            dist_f = abs(i_off) / float(half + 1)
+            return 0.35 + 0.55 * (1.0 - dist_f)
+
+        def _line_color_vertical(i_off: int) -> None:
+            fade = _fade_for(i_off)
+            wx = cx + i_off
+            is_major = (i_off % coord_interval) == 0
+            on_snap = snap_int > 0 and (int(round(wx)) % snap_int) == 0
+            if snap_on and snap_int > 0 and on_snap:
+                glColor4f(0.15, 1.0, 0.42, min(0.95, 0.9 * fade))
+            elif is_major:
+                band = abs(i_off // coord_interval) % 2
+                if band == 0:
+                    glColor4f(0.92, 0.96, 0.94, 0.58 * fade)
+                else:
+                    glColor4f(0.22, 0.92, 0.38, 0.52 * fade)
+            else:
+                glColor4f(0.06, 0.32, 0.14, 0.22 * fade)
+
+        def _line_color_horizontal(i_off: int) -> None:
+            fade = _fade_for(i_off)
+            wy = cy + i_off
+            is_major = (i_off % coord_interval) == 0
+            on_snap = snap_int > 0 and (int(round(wy)) % snap_int) == 0
+            if snap_on and snap_int > 0 and on_snap:
+                glColor4f(0.15, 1.0, 0.42, min(0.95, 0.9 * fade))
+            elif is_major:
+                band = abs(i_off // coord_interval) % 2
+                if band == 0:
+                    glColor4f(0.92, 0.96, 0.94, 0.58 * fade)
+                else:
+                    glColor4f(0.22, 0.92, 0.38, 0.52 * fade)
+            else:
+                glColor4f(0.06, 0.32, 0.14, 0.22 * fade)
+
         glLineWidth(1.15)
         glBegin(GL_LINES)
-        line_idx = 0
         for i in range(-half, half + 1, step):
-            dist_f = abs(i) / float(half + 1)
-            fade = 0.35 + 0.55 * (1.0 - dist_f)
-
-            if snap_on and snap_sz > 0:
-                if (i % int(snap_sz * 10)) == 0:
-                    glColor4f(0.2, 1.0, 0.55, 0.88 * fade)
-                elif (i % coord_interval) == 0:
-                    if line_idx % 2 == 0:
-                        glColor4f(0.0, 0.95, 0.85, 0.72 * fade)
-                    else:
-                        glColor4f(0.85, 0.25, 1.0, 0.55 * fade)
-                    self._grid_coords.append((cx + i, cy + i))
-                else:
-                    glColor4f(0.0, 0.75, 0.35, 0.22 * fade)
-            else:
-                is_major = (i % coord_interval) == 0
-                if is_major:
-                    if line_idx % 2 == 0:
-                        glColor4f(0.0, 1.0, 0.72, 0.62 * fade)
-                    else:
-                        glColor4f(0.95, 0.15, 0.85, 0.45 * fade)
-                    self._grid_coords.append((cx + i, cy + i))
-                else:
-                    glColor4f(0.05, 0.55, 0.28, 0.28 * fade)
-
+            _line_color_vertical(i)
             glVertex3f(cx + i, cy - half, 0.0)
             glVertex3f(cx + i, cy + half, 0.0)
+        for i in range(-half, half + 1, step):
+            _line_color_horizontal(i)
             glVertex3f(cx - half, cy + i, 0.0)
             glVertex3f(cx + half, cy + i, 0.0)
-            line_idx += 1
         glEnd()
         glPopAttrib()
 
-        self._grid_cell_count = len(
-            [c for c in self._grid_coords if abs(c[0] - cx) <= half and abs(c[1] - cy) <= half]
-        )
+        self._grid_cell_count = len(self._grid_coords)
 
     def _draw_play_floor_hologrid(self):
-        """Neon floor grid on Z=0 for Desktop Play (subtle holographic look)."""
+        """Desktop Play holodeck floor: neon purple/violet grid on Z=0 (1 unit = 1 cm)."""
         glPushAttrib(GL_ALL_ATTRIB_BITS)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glLineWidth(1.2)
+        glLineWidth(1.35)
 
         distance = self.camera.distance
         if distance < 200:
@@ -1050,18 +1098,40 @@ class SceneViewport(QOpenGLWidget):
         half = min(900, max(200, int(distance * 8)))
         step = base_step
 
+        self._play_grid_step_cm = float(step)
+        self._play_grid_half_cm = float(half)
+
+        zf = -0.35
+        big = float(half) * 1.08
+        glDisable(GL_DEPTH_TEST)
+        glBegin(GL_QUADS)
+        glColor4f(0.05, 0.02, 0.12, 0.55)
+        glVertex3f(cx - big, cy - big, zf)
+        glVertex3f(cx + big, cy - big, zf)
+        glVertex3f(cx + big, cy + big, zf)
+        glVertex3f(cx - big, cy + big, zf)
+        glEnd()
+        glEnable(GL_DEPTH_TEST)
+
+        major_stride = 4
         glBegin(GL_LINES)
         n = 0
         for i in range(-half, half + 1, step):
             t = abs(i) / float(half + 1)
-            a = 0.12 + 0.28 * (1.0 - t)
-            if n % 2 == 0:
-                glColor4f(0.0, 0.95, 1.0, a)
+            a = 0.18 + 0.42 * (1.0 - t)
+            is_major = (i // step) % major_stride == 0
+            if is_major:
+                glColor4f(0.95, 0.45, 1.0, min(0.95, a * 1.05))
+            elif n % 2 == 0:
+                glColor4f(0.55, 0.12, 0.95, a)
             else:
-                glColor4f(0.75, 0.0, 1.0, a * 0.9)
+                glColor4f(0.75, 0.25, 1.0, a * 0.92)
             glVertex3f(cx + i, cy - half, 0.0)
             glVertex3f(cx + i, cy + half, 0.0)
-            glColor4f(0.35, 0.75, 1.0, a * 0.85)
+            if is_major:
+                glColor4f(0.85, 0.35, 1.0, min(0.9, a))
+            else:
+                glColor4f(0.4, 0.2, 0.88, a * 0.88)
             glVertex3f(cx - half, cy + i, 0.0)
             glVertex3f(cx + half, cy + i, 0.0)
             n += 1
@@ -1495,6 +1565,7 @@ class SceneViewport(QOpenGLWidget):
         try:
             painter.setRenderHint(QPainter.RenderHint.Antialiasing)
             if self.play_mode:
+                self._draw_play_grid_hud(painter)
                 self._draw_midi_quick_panel(painter)
                 self._draw_status_message(painter)
             else:
@@ -1574,91 +1645,118 @@ class SceneViewport(QOpenGLWidget):
                     painter.drawText(badge_x, badge_y, badge_text)
 
     def _draw_grid_coordinates(self, painter: QPainter):
-        """Draw grid coordinate numbers at major intersections with real-world measurements."""
-        if not self._show_grid_coords or not hasattr(self, '_grid_coords'):
+        """Draw grid coordinate numbers at major intersections; HUD uses same step as OpenGL grid."""
+        step_cm = getattr(self, '_grid_hud_step_cm', None)
+        major_cm = getattr(self, '_grid_hud_major_cm', None)
+
+        if self._show_grid_coords and hasattr(self, '_grid_coords'):
+            font = QFont("Consolas", 7)
+            painter.setFont(font)
+
+            for world_x, world_y in self._grid_coords:
+                screen_pos = self.camera.world_to_screen(world_x, world_y, 0, self.width(), self.height())
+                if not screen_pos:
+                    continue
+                sx, sy = screen_pos[0], screen_pos[1]
+                if not (20 < sx < self.width() - 100 and 20 < sy < self.height() - 30):
+                    continue
+
+                dist = self.camera.distance
+                if dist < 50:
+                    lx = f"X{world_x:.0f}cm"
+                    ly = f"Y{world_y:.0f}cm"
+                elif world_x % 100 == 0 and world_y % 100 == 0:
+                    lx = f"X{world_x/100:.1f}m"
+                    ly = f"Y{world_y/100:.1f}m"
+                else:
+                    lx = f"X{world_x:.0f}"
+                    ly = f"Y{world_y:.0f}"
+
+                coord_text = f"{lx} {ly}"
+                painter.setPen(QColor(235, 255, 240, 228))
+                painter.drawText(int(sx + 4), int(sy - 4), coord_text)
+
+        if step_cm is None:
             return
 
-        font = QFont("Consolas", 7)
-        painter.setFont(font)
+        distance = self.camera.distance
+        major_s = f"{major_cm:.0f}" if major_cm is not None else "?"
+        snap = getattr(self, '_grid_hud_snap_cm', None)
+        half_cm = getattr(self, '_grid_hud_half_cm', None)
+        snap_part = f" | snap {snap:.0f}cm" if snap else ""
+        half_part = f" | draw +/-{half_cm:.0f}cm" if half_cm else ""
+        grid_info = (
+            f"Edit holodeck | step {step_cm:.0f}cm | majors {major_s}cm | 1u=1cm{snap_part}{half_part} | cam {distance:.0f}cm"
+        )
 
-        for world_x, world_y in self._grid_coords:
-            screen_pos = self.camera.world_to_screen(world_x, world_y, 0, self.width(), self.height())
-            if not screen_pos:
-                continue
-            sx, sy = screen_pos[0], screen_pos[1]
-            if not (20 < sx < self.width() - 100 and 20 < sy < self.height() - 30):
-                continue
+        info_font = QFont("Segoe UI", 8, QFont.Weight.Bold)
+        painter.setFont(info_font)
+        painter.setPen(QColor(210, 255, 220, 240))
 
-            # Convert units to real-world (1 unit = 1 cm)
-            dist = self.camera.distance
-            if dist < 50:
-                # Very close: show cm values
-                lx = f"X{world_x:.0f}cm"
-                ly = f"Y{world_y:.0f}cm"
-            elif world_x % 100 == 0 and world_y % 100 == 0:
-                # On-metre lines: show both units
-                lx = f"X{world_x/100:.1f}m"
-                ly = f"Y{world_y/100:.1f}m"
-            else:
-                lx = f"X{world_x:.0f}"
-                ly = f"Y{world_y:.0f}"
+        metrics = painter.fontMetrics()
+        text_rect = metrics.boundingRect(grid_info)
+        bg_rect = text_rect.adjusted(-8, -4, 8, 4)
+        top_right = self.rect().topRight()
+        bg_rect.moveTopRight(QPoint(top_right.x() - 10, top_right.y() + 10))
 
-            coord_text = f"{lx} {ly}"
-            painter.setPen(QColor(0, 255, 210, 220))
-            painter.drawText(int(sx + 4), int(sy - 4), coord_text)
+        painter.fillRect(bg_rect, QColor(4, 10, 6, 215))
+        text_r = bg_rect.adjusted(8, 4, -8, -4)
+        painter.drawText(text_r.x(), text_r.y() + metrics.ascent(), grid_info)
 
-        # Grid info in top-right
-        if hasattr(self, '_grid_cell_count'):
-            distance = self.camera.distance
-            step_cm = (
-                5 if distance < 50
-                else 25 if distance < 200
-                else 25 if distance < 800
-                else 50
-            )
-            grid_info = f"Grid {step_cm}cm | Dist {distance:.0f}cm"
+        if distance < 20:
+            zoom_hint = "VERY CLOSE -- scroll out to see more"
+            hint_color = QColor(255, 160, 60, 240)
+        elif distance < 60:
+            zoom_hint = "Close up -- good for detail editing"
+            hint_color = QColor(160, 240, 190, 210)
+        elif distance > 3000:
+            zoom_hint = "VERY FAR -- scroll in or press Home"
+            hint_color = QColor(255, 160, 60, 240)
+        elif distance > 1200:
+            zoom_hint = "Zoomed out -- overview mode"
+            hint_color = QColor(180, 220, 200, 200)
+        else:
+            zoom_hint = ""
+            hint_color = QColor(0, 0, 0, 0)
 
-            info_font = QFont("Segoe UI", 9, QFont.Weight.Bold)
-            painter.setFont(info_font)
-            painter.setPen(QColor(0, 255, 180, 235))
+        if zoom_hint:
+            hint_rect = metrics.boundingRect(zoom_hint).adjusted(-8, -4, 8, 4)
+            hint_rect.moveTopRight(QPoint(top_right.x() - 10, bg_rect.bottom() + 4))
+            painter.fillRect(hint_rect, QColor(12, 8, 4, 190))
+            painter.setPen(hint_color)
+            hr = hint_rect.adjusted(8, 4, -8, -4)
+            painter.drawText(hr.x(), hr.y() + metrics.ascent(), zoom_hint)
 
-            metrics = painter.fontMetrics()
-            text_rect = metrics.boundingRect(grid_info)
-            bg_rect = text_rect.adjusted(-8, -4, 8, 4)
-            top_right = self.rect().topRight()
-            bg_rect.moveTopRight(QPoint(top_right.x() - 10, top_right.y() + 10))
+    def _draw_play_grid_hud(self, painter: QPainter):
+        """Desktop Play: floor grid step and scale (matches _draw_play_floor_hologrid)."""
+        step = getattr(self, '_play_grid_step_cm', None)
+        if step is None:
+            return
+        half_cm = getattr(self, '_play_grid_half_cm', None)
+        distance = self.camera.distance
+        half_part = f" | draw +/-{half_cm:.0f}cm" if half_cm else ""
+        text = f"Play holodeck | grid step {step:.0f}cm | majors every {step * 4:.0f}cm | 1u=1cm{half_part} | cam {distance:.0f}cm"
 
-            painter.fillRect(bg_rect, QColor(0, 20, 5, 200))
-            text_r = bg_rect.adjusted(8, 4, -8, -4)
-            painter.drawText(text_r.x(), text_r.y() + metrics.ascent(), grid_info)
+        info_font = QFont("Segoe UI", 8, QFont.Weight.Bold)
+        painter.setFont(info_font)
+        painter.setPen(QColor(230, 160, 255, 245))
 
-            if distance < 20:
-                zoom_hint = "VERY CLOSE -- scroll out to see more"
-                hint_color = QColor(255, 160, 60, 240)
-            elif distance < 60:
-                zoom_hint = "Close up -- good for detail editing"
-                hint_color = QColor(120, 220, 180, 200)
-            elif distance > 3000:
-                zoom_hint = "VERY FAR -- scroll in or press Home"
-                hint_color = QColor(255, 160, 60, 240)
-            elif distance > 1200:
-                zoom_hint = "Zoomed out -- overview mode"
-                hint_color = QColor(150, 200, 230, 200)
-            else:
-                zoom_hint = ""
-                hint_color = QColor(0, 0, 0, 0)
+        metrics = painter.fontMetrics()
+        text_rect = metrics.boundingRect(text)
+        bg_rect = text_rect.adjusted(-8, -4, 8, 4)
+        top_right = self.rect().topRight()
+        bg_rect.moveTopRight(QPoint(top_right.x() - 10, top_right.y() + 10))
 
-            if zoom_hint:
-                hint_rect = metrics.boundingRect(zoom_hint).adjusted(-8, -4, 8, 4)
-                hint_rect.moveTopRight(QPoint(top_right.x() - 10, bg_rect.bottom() + 4))
-                painter.fillRect(hint_rect, QColor(20, 10, 0, 180))
-                painter.setPen(hint_color)
-                hr = hint_rect.adjusted(8, 4, -8, -4)
-                painter.drawText(hr.x(), hr.y() + metrics.ascent(), zoom_hint)
+        painter.fillRect(bg_rect, QColor(18, 6, 28, 210))
+        text_r = bg_rect.adjusted(8, 4, -8, -4)
+        painter.drawText(text_r.x(), text_r.y() + metrics.ascent(), text)
+
+    def _axis_hud_origin_px(self) -> Tuple[float, float]:
+        return float(self._axis_hud_margin_left), float(self.height() - self._axis_hud_margin_bottom)
 
     def _draw_axis_hud(self, painter: QPainter):
-        """Blender-style clickable axis gizmo: click an axis ball to snap the camera."""
-        ox, oy = 60, self.height() - 60
+        """Blender-style axis gizmo: large hit targets; drag the circular plate to reposition."""
+        ox, oy = self._axis_hud_origin_px()
         length = 36
         hit_radius = 14
 
@@ -1679,8 +1777,9 @@ class SceneViewport(QOpenGLWidget):
             ("-Z", (0, 0, -1), QColor(50, 50, 140)),
         ]
 
-        painter.setPen(QPen(QColor(60, 60, 70, 120), 1))
-        painter.setBrush(QColor(20, 24, 32, 160))
+        plate_pen = QColor(90, 200, 255, 140) if self._axis_hud_dragging else QColor(60, 60, 70, 120)
+        painter.setPen(QPen(plate_pen, 1))
+        painter.setBrush(QColor(20, 24, 32, 175))
         painter.drawEllipse(int(ox - length - 12), int(oy - length - 12),
                             int((length + 12) * 2), int((length + 12) * 2))
 
@@ -1711,7 +1810,8 @@ class SceneViewport(QOpenGLWidget):
                 painter.setPen(QColor(255, 255, 255, alpha))
                 painter.drawText(bx - 4, by + 5, name)
 
-            self._axis_gizmo_hits.append((bx, by, ball_r + 4, name))
+            hit_px = max(ball_r + 12, 24) if not name.startswith("-") else max(ball_r + 10, 18)
+            self._axis_gizmo_hits.append((float(bx), float(by), float(hit_px), name))
 
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(200, 200, 210, 180))
@@ -1905,6 +2005,8 @@ class SceneViewport(QOpenGLWidget):
                 "Templates menu → Add elements",
                 "",
                 "📷 CAMERA CONTROLS:",
+                "Bottom-left axis widget: click X/Y/Z balls",
+                "or center for perspective; drag the circle to move it",
                 "RMB drag: Orbit camera",
                 "MMB/Shift+RMB: Pan camera",
                 "Mouse wheel: Zoom",
@@ -2125,45 +2227,84 @@ class SceneViewport(QOpenGLWidget):
 
     # -- Mouse interaction --
 
-    def _check_axis_gizmo_click(self, mx, my) -> bool:
-        """Check if click landed on a clickable axis ball. Snap camera like Blender."""
-        for bx, by, r, name in getattr(self, "_axis_gizmo_hits", []):
+    def _axis_gizmo_resolve(self, mx: float, my: float) -> Optional[str]:
+        """Return axis name, 'center', 'plate', or None. Front-most balls win."""
+        ox, oy = self._axis_hud_origin_px()
+        length = 36.0
+        for bx, by, r, name in reversed(self._axis_gizmo_hits):
             dx = mx - bx
             dy = my - by
             if dx * dx + dy * dy <= r * r:
-                if name == "X":
-                    self.camera.yaw, self.camera.pitch = 90.0, 0.0
-                elif name == "-X":
-                    self.camera.yaw, self.camera.pitch = -90.0, 0.0
-                elif name == "Y":
-                    self.camera.yaw, self.camera.pitch = 0.0, 0.0
-                elif name == "-Y":
-                    self.camera.yaw, self.camera.pitch = 180.0, 0.0
-                elif name == "Z":
-                    self.camera.yaw, self.camera.pitch = 0.0, 89.0
-                elif name == "-Z":
-                    self.camera.yaw, self.camera.pitch = 0.0, -89.0
-                self.camera.ortho = True
-                self._show_status(f"View: {name} axis (ortho)")
-                self.update()
-                return True
-        # Centre dot -> perspective home
-        gx, gy = 60, self.height() - 60
-        if (mx - gx) ** 2 + (my - gy) ** 2 <= 8 * 8:
+                return name
+        dx0 = mx - ox
+        dy0 = my - oy
+        if dx0 * dx0 + dy0 * dy0 <= 15.0 * 15.0:
+            return "center"
+        ra = length + 14.0
+        rb = length + 14.0
+        if ra > 0 and rb > 0:
+            u = dx0 / ra
+            v = dy0 / rb
+            if u * u + v * v <= 1.0:
+                return "plate"
+        return None
+
+    def _check_axis_gizmo_click(self, mx, my) -> bool:
+        """Axis ball / center: snap camera. Plate is handled by drag, not here."""
+        hit = self._axis_gizmo_resolve(float(mx), float(my))
+        if hit is None or hit == "plate":
+            return False
+        if hit == "center":
             self.camera.ortho = False
             self.camera.yaw = -45.0
             self.camera.pitch = 30.0
             self._show_status("View: Perspective home")
             self.update()
             return True
-        return False
+        if hit == "X":
+            self.camera.yaw, self.camera.pitch = 90.0, 0.0
+        elif hit == "-X":
+            self.camera.yaw, self.camera.pitch = -90.0, 0.0
+        elif hit == "Y":
+            self.camera.yaw, self.camera.pitch = 0.0, 0.0
+        elif hit == "-Y":
+            self.camera.yaw, self.camera.pitch = 180.0, 0.0
+        elif hit == "Z":
+            self.camera.yaw, self.camera.pitch = 0.0, 89.0
+        elif hit == "-Z":
+            self.camera.yaw, self.camera.pitch = 0.0, -89.0
+        else:
+            return False
+        self.camera.ortho = True
+        self._show_status(f"View: {hit} axis (ortho)")
+        self.update()
+        return True
+
+    def _try_begin_axis_hud_drag(self, mx: int, my: int) -> bool:
+        if self.play_mode:
+            return False
+        if self._axis_gizmo_resolve(float(mx), float(my)) != "plate":
+            return False
+        self._axis_hud_dragging = True
+        self.update()
+        return True
+
+    def _apply_axis_hud_drag(self, mx: int, my: int) -> None:
+        if not self._axis_hud_dragging:
+            return
+        dx = mx - self._last_mouse.x()
+        dy = my - self._last_mouse.y()
+        w, h = self.width(), self.height()
+        self._axis_hud_margin_left = max(36.0, min(float(w - 36), self._axis_hud_margin_left + dx))
+        self._axis_hud_margin_bottom = max(36.0, min(float(h - 36), self._axis_hud_margin_bottom - dy))
+        self.update()
 
     def _check_overlay_click(self, mx, my) -> bool:
         """Check if click is on an overlay button. Returns True if handled."""
         if self._check_axis_gizmo_click(mx, my):
             return True
         for rect, label in self._overlay_buttons:
-            if rect.contains(float(mx), float(my)):
+            if rect.adjusted(-8, -6, 8, 6).contains(float(mx), float(my)):
                 if label == "Grid":
                     self._snap_grid_enabled = not self._snap_grid_enabled
                     self._show_status(f"Grid snap: {'ON' if self._snap_grid_enabled else 'OFF'}")
@@ -2200,7 +2341,10 @@ class SceneViewport(QOpenGLWidget):
             try:
                 mx, my = event.pos().x(), event.pos().y()
 
-                # Check overlay buttons first
+                if not self.play_mode and self._try_begin_axis_hud_drag(mx, my):
+                    return
+
+                # Top toolbar + axis balls / center (not plate; plate uses drag above)
                 if self._check_overlay_click(mx, my):
                     return
 
@@ -2280,6 +2424,8 @@ class SceneViewport(QOpenGLWidget):
         elif event.buttons() & Qt.MouseButton.LeftButton and self._play_morph_drag and self._play_morph_elem:
             self._update_morph_drag_from_screen(self._play_morph_elem, event.pos().x(), event.pos().y())
             self.update()
+        elif event.buttons() & Qt.MouseButton.LeftButton and self._axis_hud_dragging:
+            self._apply_axis_hud_drag(event.pos().x(), event.pos().y())
         elif (
             self.play_mode
             and event.buttons() & Qt.MouseButton.LeftButton
@@ -2311,6 +2457,10 @@ class SceneViewport(QOpenGLWidget):
         self._last_mouse = event.pos()
 
     def mouseReleaseEvent(self, event: QMouseEvent):
+        if event.button() == Qt.MouseButton.LeftButton and self._axis_hud_dragging:
+            self._axis_hud_dragging = False
+            self.update()
+            return
         if event.button() == Qt.MouseButton.LeftButton and self._play_morph_drag:
             self._play_morph_drag = False
             self._play_morph_elem = None
@@ -3020,6 +3170,42 @@ class SceneViewport(QOpenGLWidget):
             act = qh.addAction(label)
             act.setData(key)
         menu.addSeparator()
+        create_group_action = None
+        add_to_group_menu = None
+        remove_from_group_menu = None
+        if self.project and self.selected_elements:
+            if len(self.selected_elements) > 1:
+                n = len(self.selected_elements)
+                create_group_action = menu.addAction(f"Create Group from {n} elements")
+                existing_groups = [e for e in self.project.elements if hasattr(e, 'group_items')]
+                if existing_groups:
+                    add_to_group_menu = menu.addMenu(f"Add {n} elements to Group")
+                    for group in existing_groups:
+                        display_name = group.display_name or group.unique_id
+                        ga = add_to_group_menu.addAction(display_name)
+                        ga.setData(("add_to_group", group.unique_id))
+            elif len(self.selected_elements) == 1:
+                elem = self.selected_elements[0]
+                element_groups = []
+                for group in self.project.elements:
+                    if hasattr(group, 'group_items') and elem.unique_id in group.group_items:
+                        element_groups.append(group)
+                create_group_action = menu.addAction(f"Create Group from {elem.unique_id}")
+                other_groups = [g for g in self.project.elements
+                                if hasattr(g, 'group_items') and elem.unique_id not in g.group_items]
+                if other_groups:
+                    add_to_group_menu = menu.addMenu("Add to Group")
+                    for group in other_groups:
+                        display_name = group.display_name or group.unique_id
+                        ga = add_to_group_menu.addAction(display_name)
+                        ga.setData(("add_to_group", group.unique_id))
+                if element_groups:
+                    remove_from_group_menu = menu.addMenu("Remove from Group")
+                    for group in element_groups:
+                        display_name = group.display_name or group.unique_id
+                        ga = remove_from_group_menu.addAction(display_name)
+                        ga.setData(("remove_from_group", group.unique_id))
+        menu.addSeparator()
         dup_action = None
         del_action = None
         midi_edit_action = None
@@ -3047,7 +3233,18 @@ class SceneViewport(QOpenGLWidget):
         if action == exit_a:
             self.play_mode_exit_requested.emit()
             return
+        if action is not None and action == create_group_action:
+            self.create_group_requested.emit(list(self.selected_elements))
+            return
         data = action.data()
+        if isinstance(data, tuple) and len(data) == 2:
+            action_type, target_id = data
+            if action_type == "add_to_group":
+                self.add_to_group_requested.emit(list(self.selected_elements), target_id)
+                return
+            if action_type == "remove_from_group":
+                self.remove_from_group_requested.emit(list(self.selected_elements), target_id)
+                return
         if isinstance(data, str) and (
             data.startswith("MorphZone_") or data.startswith("HitZone_")
         ):

@@ -22361,3 +22361,12 @@ _rtmidi.SystemError: MidiOutWinMM::openPort: error creating Windows MM MIDI outp
 2026-04-05 16:09:25,641 INFO _on_viewport_select: None
 2026-04-05 16:09:30,020 INFO _on_viewport_select: None
 2026-04-05 16:09:30,128 INFO _on_viewport_select: None
+2026-04-05 16:10:39,098 INFO OpenGL initialized
+2026-04-05 16:11:05,453 INFO _on_viewport_select: None
+2026-04-05 16:11:05,521 INFO _on_viewport_select: None
+2026-04-05 16:11:06,279 INFO _on_viewport_select: None
+2026-04-05 16:11:06,356 INFO _on_viewport_select: None
+2026-04-05 16:13:43,470 INFO _on_viewport_select: None
+2026-04-05 16:13:43,629 INFO _on_viewport_select: None
+2026-04-05 16:27:08,877 INFO OpenGL initialized
+2026-04-05 16:31:03,494 INFO OpenGL initialized

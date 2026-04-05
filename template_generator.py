@@ -998,7 +998,7 @@ def generate_workspace_library_pack(
     if origin is None:
         origin = Vec3(0, 0, 0)
 
-    SPREAD = 600.0
+    SPREAD = 760.0
     nw = Vec3(origin.x - SPREAD, origin.y + SPREAD, origin.z)
     ne = Vec3(origin.x + SPREAD, origin.y + SPREAD, origin.z)
     sw = Vec3(origin.x - SPREAD, origin.y - SPREAD, origin.z)
@@ -1061,21 +1061,21 @@ def generate_workspace_library_pack(
         Color(0.85, 0.92, 1.0, 1.0), 0.38))
 
     # -- Section A: Keyboards (Row, Circle, Triangle) --
-    sec_a = Vec3(nw.x - 320, nw.y + 140, nw.z)
+    sec_a = Vec3(nw.x - 380, nw.y + 165, nw.z)
     lib.append(_section_label(project, sec_a.x, sec_a.y + 50, sec_a.z + 30,
         "KEYBOARDS", Color(1.0, 0.9, 0.3, 1.0), 0.32))
 
     lib.extend(generate_keyboard(project, "Row", 11, Vec3(sec_a.x, sec_a.y, sec_a.z),
         channel=ch, base_note=48, max_note=72, label_prefix="RowKey"))
 
-    lib.extend(generate_keyboard(project, "Circle", 14, Vec3(sec_a.x + 360, sec_a.y - 40, sec_a.z),
+    lib.extend(generate_keyboard(project, "Circle", 14, Vec3(sec_a.x + 420, sec_a.y - 40, sec_a.z),
         channel=ch, base_note=60, max_note=71, label_prefix="CircleKey"))
 
-    lib.extend(generate_keyboard(project, "Triangle", 12, Vec3(sec_a.x + 180, sec_a.y - 200, sec_a.z),
+    lib.extend(generate_keyboard(project, "Triangle", 12, Vec3(sec_a.x + 210, sec_a.y - 240, sec_a.z),
         channel=ch, base_note=36, max_note=59, label_prefix="TriKey"))
 
     # -- Section B: Drum kits --
-    sec_b = Vec3(nw.x + 280, nw.y + 120, nw.z)
+    sec_b = Vec3(nw.x + 360, nw.y + 135, nw.z)
     lib.append(_section_label(project, sec_b.x, sec_b.y + 60, sec_b.z + 30,
         "DRUM KITS", Color(1.0, 0.45, 0.3, 1.0), 0.32))
 
@@ -1100,7 +1100,7 @@ def generate_workspace_library_pack(
         base_note=48, channel=drum_ch, label_prefix="DiaDrum"))
 
     # -- Section C: Faders & knobs --
-    sec_c = Vec3(nw.x - 350, nw.y - 180, nw.z)
+    sec_c = Vec3(nw.x - 420, nw.y - 270, nw.z)
     lib.append(_section_label(project, sec_c.x, sec_c.y + 50, sec_c.z + 30,
         "FADERS & KNOBS", Color(0.3, 0.85, 1.0, 1.0), 0.30))
 
@@ -1109,7 +1109,7 @@ def generate_workspace_library_pack(
         base_cc=1, channel=ch, label_prefix="Fader", color_mode="Rainbow"))
 
     lib.extend(generate_faders(project, 8, "Circle", 34,
-        Vec3(sec_c.x + 300, sec_c.y - 20, sec_c.z),
+        Vec3(sec_c.x + 340, sec_c.y - 20, sec_c.z),
         base_cc=1, channel=ch, label_prefix="CircF", color_mode="Neon"))
 
     lib.extend(generate_knobs(project, 8, "Row", 30,
@@ -1117,15 +1117,15 @@ def generate_workspace_library_pack(
         base_cc=16, channel=ch, label_prefix="Knob", color_mode="Cool"))
 
     lib.extend(generate_knobs(project, 8, "Arc", 32,
-        Vec3(sec_c.x + 300, sec_c.y - 130, sec_c.z),
+        Vec3(sec_c.x + 340, sec_c.y - 130, sec_c.z),
         base_cc=16, channel=ch, label_prefix="ArcK", color_mode="Warm"))
 
     lib.extend(generate_knobs(project, 8, "Spiral", 80,
-        Vec3(sec_c.x + 140, sec_c.y - 280, sec_c.z),
+        Vec3(sec_c.x + 170, sec_c.y - 320, sec_c.z),
         base_cc=24, channel=ch, label_prefix="SpiralK", color_mode="Neon"))
 
     # -- Section D: XY / XYZ pads --
-    sec_d = Vec3(nw.x - 100, nw.y - 380, nw.z)
+    sec_d = Vec3(nw.x - 120, nw.y - 510, nw.z)
     lib.append(_section_label(project, sec_d.x, sec_d.y + 50, sec_d.z + 30,
         "XY / XYZ PADS", Color(0.5, 1.0, 0.7, 1.0), 0.30))
 
@@ -1138,7 +1138,7 @@ def generate_workspace_library_pack(
         base_cc_x=40, base_cc_y=50, channel=ch, label_prefix="DiaXY"))
 
     lib.extend(generate_xy_pads(project, 4, "Circle", 50,
-        Vec3(sec_d.x + 380, sec_d.y - 20, sec_d.z),
+        Vec3(sec_d.x + 440, sec_d.y - 20, sec_d.z),
         base_cc_x=32, base_cc_y=48, channel=ch, label_prefix="CXY"))
 
     lib.extend(_generate_xyz_pad(project, Vec3(sec_d.x, sec_d.y - 160, sec_d.z),
@@ -1147,7 +1147,7 @@ def generate_workspace_library_pack(
         ch, 23, 24, 25))
 
     # -- Section E: Buttons & toggles --
-    sec_e = Vec3(nw.x + 350, nw.y - 280, nw.z)
+    sec_e = Vec3(nw.x + 400, nw.y - 400, nw.z)
     lib.append(_section_label(project, sec_e.x, sec_e.y + 50, sec_e.z + 30,
         "BUTTONS & TOGGLES", Color(1.0, 0.65, 0.9, 1.0), 0.30))
 
@@ -1164,14 +1164,14 @@ def generate_workspace_library_pack(
         base_cc=64, channel=ch, label_prefix="GBtn"))
 
     # -- Section F: X-only macros --
-    sec_f = Vec3(nw.x + 200, nw.y - 520, nw.z)
+    sec_f = Vec3(nw.x + 240, nw.y - 660, nw.z)
     lib.append(_section_label(project, sec_f.x, sec_f.y + 30, sec_f.z + 24,
         "X MACROS", Color(0.6, 0.75, 1.0, 1.0), 0.26))
     lib.extend(_generate_x_macro_row(project, sec_f, 6, ch, 80))
 
     # -- Section G: Sacred geometry clusters --
-    sec_g = Vec3(nw.x - 350, nw.y - 580, nw.z)
-    lib.append(_section_label(project, sec_g.x + 200, sec_g.y + 70, sec_g.z + 32,
+    sec_g = Vec3(nw.x - 380, nw.y - 760, nw.z)
+    lib.append(_section_label(project, sec_g.x + 220, sec_g.y + 70, sec_g.z + 32,
         "SACRED GEOMETRY LAYOUTS\nHexagonal, flower-of-life, star, golden spiral\n"
         "Copy these grouped clusters into Performance Area.",
         Color(0.95, 0.85, 1.0, 1.0), 0.28))
@@ -1202,7 +1202,7 @@ def generate_workspace_library_pack(
     # Flower of life fader ring
     flower_pts = _flower_of_life_positions(6, 30.0)
     flower_colors = _get_colors(len(flower_pts), "Warm")
-    fol_center = Vec3(sec_g.x + 220, sec_g.y, sec_g.z)
+    fol_center = Vec3(sec_g.x + 260, sec_g.y, sec_g.z)
     for i, (fx, fy) in enumerate(flower_pts):
         mz_id = project.generate_id("MorphZone")
         mz = MorphZone(
@@ -1226,7 +1226,7 @@ def generate_workspace_library_pack(
     # Star polygon XY ring
     star_pts = _star_polygon_positions(5, 55.0, 25.0)
     star_colors = _get_colors(len(star_pts), "Neon")
-    star_center = Vec3(sec_g.x + 460, sec_g.y, sec_g.z)
+    star_center = Vec3(sec_g.x + 540, sec_g.y, sec_g.z)
     for i, (sx, sy) in enumerate(star_pts):
         mz_id = project.generate_id("MorphZone")
         mz = MorphZone(
@@ -1251,7 +1251,7 @@ def generate_workspace_library_pack(
     # Golden spiral buttons
     gspi_pts = _golden_spiral_positions(16, 7.0)
     gspi_colors = _get_colors(16, "Rainbow")
-    gspi_center = Vec3(sec_g.x + 140, sec_g.y - 180, sec_g.z)
+    gspi_center = Vec3(sec_g.x + 160, sec_g.y - 220, sec_g.z)
     for i, (gx, gy) in enumerate(gspi_pts):
         hz_id = project.generate_id("HitZone")
         hz = HitZone(
@@ -1339,18 +1339,18 @@ def generate_workspace_library_pack(
         Color(1.0, 0.75, 0.85, 1.0), 0.34))
 
     shape_jobs = [
-        ("Shape: Heart",       sw.x - 350,  sw.y + 40),
-        ("Shape: Music Note",  sw.x - 140,  sw.y + 20),
-        ("Shape: Star",        sw.x + 80,   sw.y + 40),
-        ("Shape: Spiral",      sw.x + 280,  sw.y + 20),
-        ("Shape: Lightning",   sw.x - 350,  sw.y - 150),
-        ("Shape: Crown",       sw.x - 140,  sw.y - 170),
-        ("Shape: Skull",       sw.x + 80,   sw.y - 150),
-        ("Shape: Piano",       sw.x + 280,  sw.y - 170),
-        ("Shape: Headphones",  sw.x - 350,  sw.y - 350),
-        ("Shape: EQ Bars",     sw.x - 140,  sw.y - 370),
-        ("Shape: Gamepad",     sw.x + 80,   sw.y - 350),
-        ("Shape: Smiley",      sw.x + 280,  sw.y - 370),
+        ("Shape: Heart",       sw.x - 400,  sw.y + 55),
+        ("Shape: Music Note",  sw.x - 170,  sw.y + 32),
+        ("Shape: Star",        sw.x + 100,  sw.y + 55),
+        ("Shape: Spiral",      sw.x + 330,  sw.y + 32),
+        ("Shape: Lightning",   sw.x - 400,  sw.y - 190),
+        ("Shape: Crown",       sw.x - 170,  sw.y - 210),
+        ("Shape: Skull",       sw.x + 100,  sw.y - 190),
+        ("Shape: Piano",       sw.x + 330,  sw.y - 210),
+        ("Shape: Headphones",  sw.x - 400,  sw.y - 420),
+        ("Shape: EQ Bars",     sw.x - 170,  sw.y - 440),
+        ("Shape: Gamepad",     sw.x + 100,  sw.y - 420),
+        ("Shape: Smiley",      sw.x + 330,  sw.y - 440),
     ]
     for tpl_name, sx, sy in shape_jobs:
         gen = TEMPLATES.get(tpl_name)
