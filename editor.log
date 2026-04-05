@@ -21949,3 +21949,415 @@ NameError: name 'cols' is not defined
 2026-04-04 19:05:32,692 INFO _on_viewport_select: None
 2026-04-04 20:05:45,828 INFO _on_viewport_select: None
 2026-04-04 20:05:45,953 INFO _on_viewport_select: None
+2026-04-05 14:31:34,921 INFO OpenGL initialized
+2026-04-05 14:33:09,110 INFO OpenGL initialized
+2026-04-05 14:33:12,515 INFO _on_viewport_select: MorphZone_17
+2026-04-05 14:33:12,516 INFO   tree item found: True
+2026-04-05 14:33:15,665 INFO _on_viewport_select: None
+2026-04-05 14:33:27,059 INFO _on_viewport_select: None
+2026-04-05 14:33:27,484 INFO _on_viewport_select: MorphZone_11
+2026-04-05 14:33:27,484 INFO   tree item found: True
+2026-04-05 14:33:32,295 INFO _on_viewport_select: MorphZone_9
+2026-04-05 14:33:32,295 INFO   tree item found: True
+2026-04-05 14:33:37,134 INFO _on_viewport_select: MorphZone_9
+2026-04-05 14:33:37,134 INFO   tree item found: True
+2026-04-05 14:34:46,042 INFO _on_viewport_select: MorphZone_9
+2026-04-05 14:34:46,042 INFO   tree item found: True
+2026-04-05 14:34:51,460 INFO _on_viewport_select: MorphZone_9
+2026-04-05 14:34:51,460 INFO   tree item found: True
+2026-04-05 14:35:29,602 INFO _on_viewport_select: MorphZone_13
+2026-04-05 14:35:29,602 INFO   tree item found: True
+2026-04-05 14:36:09,083 INFO _on_viewport_select: None
+2026-04-05 14:36:10,411 INFO _on_viewport_select: MorphZone_9
+2026-04-05 14:36:10,411 INFO   tree item found: True
+2026-04-05 14:37:14,181 INFO _on_viewport_select: MorphZone_11
+2026-04-05 14:37:14,181 INFO   tree item found: True
+2026-04-05 14:37:20,327 INFO _on_viewport_select: None
+2026-04-05 14:37:21,151 INFO _on_viewport_select: None
+2026-04-05 14:37:21,550 INFO _on_viewport_select: None
+2026-04-05 14:37:21,940 INFO _on_viewport_select: None
+2026-04-05 14:37:22,431 INFO _on_viewport_select: None
+2026-04-05 14:37:22,828 INFO _on_viewport_select: None
+2026-04-05 14:37:23,143 INFO _on_viewport_select: None
+2026-04-05 14:37:23,462 INFO _on_viewport_select: None
+2026-04-05 14:37:23,785 INFO _on_viewport_select: None
+2026-04-05 14:37:24,087 INFO _on_viewport_select: None
+2026-04-05 14:37:24,353 INFO _on_viewport_select: None
+2026-04-05 14:37:26,059 INFO _on_viewport_select: MorphZone_9
+2026-04-05 14:37:26,059 INFO   tree item found: True
+2026-04-05 14:37:34,848 INFO _on_viewport_select: MorphZone_17
+2026-04-05 14:37:34,848 INFO   tree item found: True
+2026-04-05 14:37:41,326 INFO _on_viewport_select: MorphZone_9
+2026-04-05 14:37:41,327 INFO   tree item found: True
+2026-04-05 14:37:45,195 INFO _on_viewport_select: MorphZone_3
+2026-04-05 14:37:45,195 INFO   tree item found: True
+2026-04-05 14:37:46,491 INFO _on_viewport_select: None
+2026-04-05 14:37:46,932 INFO _on_viewport_select: None
+2026-04-05 14:37:47,294 INFO _on_viewport_select: None
+2026-04-05 14:37:47,637 INFO _on_viewport_select: None
+2026-04-05 14:37:48,710 INFO _on_viewport_select: None
+2026-04-05 14:37:49,745 INFO _on_viewport_select: None
+2026-04-05 14:37:50,078 INFO _on_viewport_select: None
+2026-04-05 14:37:50,817 INFO _on_viewport_select: None
+2026-04-05 14:37:51,146 INFO _on_viewport_select: None
+2026-04-05 14:37:51,689 INFO _on_viewport_select: None
+2026-04-05 14:37:52,247 INFO _on_viewport_select: MorphZone_17
+2026-04-05 14:37:52,247 INFO   tree item found: True
+2026-04-05 14:37:53,078 INFO _on_viewport_select: MorphZone_17
+2026-04-05 14:37:53,078 INFO   tree item found: True
+2026-04-05 14:37:54,727 INFO _on_viewport_select: None
+2026-04-05 14:37:56,272 INFO _on_viewport_select: MorphZone_13
+2026-04-05 14:37:56,272 INFO   tree item found: True
+2026-04-05 14:38:03,012 INFO _on_viewport_select: MorphZone_3
+2026-04-05 14:38:03,013 INFO   tree item found: True
+2026-04-05 14:38:06,087 INFO _on_viewport_select: MorphZone_7
+2026-04-05 14:38:06,087 INFO   tree item found: True
+2026-04-05 14:38:08,026 INFO _on_viewport_select: MorphZone_19
+2026-04-05 14:38:08,026 INFO   tree item found: True
+2026-04-05 14:38:17,019 INFO _on_viewport_select: None
+2026-04-05 14:38:19,114 INFO _on_viewport_select: MorphZone_19
+2026-04-05 14:38:19,115 INFO   tree item found: True
+2026-04-05 14:38:21,384 INFO _on_viewport_select: MorphZone_19
+2026-04-05 14:38:21,384 INFO   tree item found: True
+2026-04-05 14:38:49,932 INFO _on_viewport_select: MorphZone_7
+2026-04-05 14:38:49,932 INFO   tree item found: True
+2026-04-05 14:38:59,219 INFO _on_viewport_select: MorphZone_25
+2026-04-05 14:38:59,219 INFO   tree item found: True
+2026-04-05 14:39:01,133 INFO _on_viewport_select: None
+2026-04-05 14:39:02,606 INFO _on_viewport_select: None
+2026-04-05 14:39:02,802 INFO _on_viewport_select: None
+2026-04-05 14:39:03,460 INFO _on_viewport_select: None
+2026-04-05 14:39:04,197 INFO _on_viewport_select: MorphZone_23
+2026-04-05 14:39:04,197 INFO   tree item found: True
+2026-04-05 14:39:08,127 INFO _on_viewport_select: MorphZone_15
+2026-04-05 14:39:08,127 INFO   tree item found: True
+2026-04-05 14:39:10,967 INFO _on_viewport_select: None
+2026-04-05 14:39:11,060 INFO _on_viewport_select: None
+2026-04-05 14:39:12,879 INFO _on_viewport_select: None
+2026-04-05 14:39:13,448 INFO _on_viewport_select: MorphZone_9
+2026-04-05 14:39:13,448 INFO   tree item found: True
+2026-04-05 14:39:16,670 INFO _on_viewport_select: MorphZone_3
+2026-04-05 14:39:16,671 INFO   tree item found: True
+2026-04-05 14:39:19,134 INFO _on_viewport_select: MorphZone_15
+2026-04-05 14:39:19,134 INFO   tree item found: True
+2026-04-05 14:39:20,777 INFO _on_viewport_select: MorphZone_9
+2026-04-05 14:39:20,777 INFO   tree item found: True
+2026-04-05 14:39:21,270 INFO _on_viewport_select: MorphZone_9
+2026-04-05 14:39:21,270 INFO   tree item found: True
+2026-04-05 14:39:22,176 INFO _on_viewport_select: MorphZone_21
+2026-04-05 14:39:22,176 INFO   tree item found: True
+2026-04-05 14:39:22,999 INFO _on_viewport_select: None
+2026-04-05 14:39:23,744 INFO _on_viewport_select: MorphZone_23
+2026-04-05 14:39:23,744 INFO   tree item found: True
+2026-04-05 14:39:25,386 INFO _on_viewport_select: MorphZone_25
+2026-04-05 14:39:25,386 INFO   tree item found: True
+2026-04-05 14:39:27,020 INFO _on_viewport_select: MorphZone_7
+2026-04-05 14:39:27,020 INFO   tree item found: True
+2026-04-05 14:39:29,382 INFO _on_viewport_select: None
+2026-04-05 14:39:29,568 INFO OpenGL initialized
+2026-04-05 14:43:38,915 INFO _on_viewport_select: None
+2026-04-05 14:43:38,999 INFO _on_viewport_select: None
+2026-04-05 14:43:39,766 INFO _on_viewport_select: MorphZone_12
+2026-04-05 14:43:39,766 INFO   tree item found: True
+2026-04-05 14:43:44,013 INFO _on_viewport_select: MorphZone_14
+2026-04-05 14:43:44,014 INFO   tree item found: True
+2026-04-05 14:43:45,026 INFO _on_viewport_select: None
+2026-04-05 14:43:45,077 INFO _on_viewport_select: None
+2026-04-05 14:45:38,696 INFO _on_viewport_select: None
+2026-04-05 14:47:25,098 INFO _on_viewport_select: MorphZone_18
+2026-04-05 14:47:25,098 INFO   tree item found: True
+2026-04-05 14:48:00,516 INFO _on_viewport_select: TextLabel_C_7
+2026-04-05 14:48:00,517 INFO   tree item found: True
+2026-04-05 14:48:01,296 INFO _on_viewport_select: None
+2026-04-05 14:48:01,402 INFO _on_viewport_select: None
+2026-04-05 14:48:02,177 INFO _on_viewport_select: None
+2026-04-05 14:48:02,255 INFO _on_viewport_select: None
+2026-04-05 14:48:06,453 INFO OpenGL initialized
+2026-04-05 14:48:07,466 INFO _on_viewport_select: MorphZone_8
+2026-04-05 14:48:07,466 INFO   tree item found: True
+2026-04-05 14:48:11,274 INFO _on_viewport_select: MorphZone_6
+2026-04-05 14:48:11,274 INFO   tree item found: True
+2026-04-05 14:48:13,536 INFO _on_viewport_select: MorphZone_4
+2026-04-05 14:48:13,536 INFO   tree item found: True
+2026-04-05 14:48:16,103 INFO _on_viewport_select: MorphZone_2
+2026-04-05 14:48:16,104 INFO   tree item found: True
+2026-04-05 14:48:17,917 INFO _on_viewport_select: MorphZone_4
+2026-04-05 14:48:17,917 INFO   tree item found: True
+2026-04-05 14:48:19,483 INFO _on_viewport_select: MorphZone_6
+2026-04-05 14:48:19,483 INFO   tree item found: True
+2026-04-05 14:48:20,822 INFO _on_viewport_select: MorphZone_8
+2026-04-05 14:48:20,823 INFO   tree item found: True
+2026-04-05 14:48:24,297 INFO _on_viewport_select: None
+2026-04-05 14:48:24,798 INFO _on_viewport_select: None
+2026-04-05 14:48:25,361 INFO _on_viewport_select: None
+2026-04-05 14:48:25,888 INFO OpenGL initialized
+2026-04-05 14:49:23,932 INFO _on_viewport_select: MorphZone_8
+2026-04-05 14:49:23,932 INFO   tree item found: True
+2026-04-05 14:49:31,310 INFO _on_viewport_select: MorphZone_6
+2026-04-05 14:49:31,310 INFO   tree item found: True
+2026-04-05 14:49:33,923 INFO _on_viewport_select: MorphZone_4
+2026-04-05 14:49:33,923 INFO   tree item found: True
+2026-04-05 14:50:03,387 INFO OpenGL initialized
+2026-04-05 14:50:04,629 INFO _on_viewport_select: MorphZone_8
+2026-04-05 14:50:04,629 INFO   tree item found: True
+2026-04-05 14:50:07,064 INFO _on_viewport_select: MorphZone_6
+2026-04-05 14:50:07,064 INFO   tree item found: True
+2026-04-05 14:50:08,157 INFO _on_viewport_select: MorphZone_4
+2026-04-05 14:50:08,157 INFO   tree item found: True
+2026-04-05 14:50:09,661 INFO _on_viewport_select: MorphZone_2
+2026-04-05 14:50:09,661 INFO   tree item found: True
+2026-04-05 14:50:17,959 INFO _on_viewport_select: None
+2026-04-05 14:50:18,174 INFO _on_viewport_select: None
+2026-04-05 14:50:19,466 INFO _on_viewport_select: MorphZone_6
+2026-04-05 14:50:19,466 INFO   tree item found: True
+2026-04-05 14:50:19,871 INFO _on_viewport_select: MorphZone_4
+2026-04-05 14:50:19,872 INFO   tree item found: True
+2026-04-05 14:50:21,830 INFO _on_viewport_select: MorphZone_2
+2026-04-05 14:50:21,830 INFO   tree item found: True
+2026-04-05 14:50:22,794 INFO _on_viewport_select: MorphZone_4
+2026-04-05 14:50:22,794 INFO   tree item found: True
+2026-04-05 14:50:24,170 INFO _on_viewport_select: MorphZone_6
+2026-04-05 14:50:24,171 INFO   tree item found: True
+2026-04-05 14:50:25,911 INFO _on_viewport_select: MorphZone_8
+2026-04-05 14:50:25,911 INFO   tree item found: True
+2026-04-05 14:50:26,510 INFO _on_viewport_select: MorphZone_8
+2026-04-05 14:50:26,510 INFO   tree item found: True
+2026-04-05 14:50:27,492 INFO _on_viewport_select: MorphZone_10
+2026-04-05 14:50:27,492 INFO   tree item found: True
+2026-04-05 14:50:28,668 INFO _on_viewport_select: MorphZone_12
+2026-04-05 14:50:28,668 INFO   tree item found: True
+2026-04-05 14:50:30,038 INFO _on_viewport_select: MorphZone_12
+2026-04-05 14:50:30,038 INFO   tree item found: True
+2026-04-05 14:50:31,298 INFO _on_viewport_select: MorphZone_14
+2026-04-05 14:50:31,298 INFO   tree item found: True
+2026-04-05 14:50:33,307 INFO _on_viewport_select: MorphZone_16
+2026-04-05 14:50:33,307 INFO   tree item found: True
+2026-04-05 14:50:39,670 INFO _on_viewport_select: MorphZone_2
+2026-04-05 14:50:39,670 INFO   tree item found: True
+2026-04-05 14:50:39,804 INFO OpenGL initialized
+2026-04-05 14:54:18,382 INFO _on_viewport_select: None
+2026-04-05 14:54:18,475 INFO _on_viewport_select: None
+2026-04-05 15:08:48,535 INFO OpenGL initialized
+2026-04-05 15:08:52,748 INFO _on_viewport_select: None
+2026-04-05 15:08:52,919 INFO _on_viewport_select: None
+2026-04-05 15:08:53,282 INFO _on_viewport_select: None
+2026-04-05 15:08:54,494 INFO _on_viewport_select: None
+2026-04-05 15:08:55,454 INFO _on_viewport_select: None
+2026-04-05 15:08:56,110 INFO _on_viewport_select: MorphZone_2
+2026-04-05 15:08:56,111 INFO   tree item found: True
+2026-04-05 15:08:57,033 INFO _on_viewport_select: None
+2026-04-05 15:08:57,597 INFO _on_viewport_select: None
+2026-04-05 15:08:57,828 INFO _on_viewport_select: MorphZone_2
+2026-04-05 15:08:57,828 INFO   tree item found: True
+2026-04-05 15:08:58,531 INFO _on_viewport_select: None
+2026-04-05 15:09:03,354 INFO _on_viewport_select: None
+2026-04-05 15:09:03,757 INFO _on_viewport_select: None
+2026-04-05 15:09:04,089 INFO _on_viewport_select: None
+2026-04-05 15:09:31,642 INFO OpenGL initialized
+2026-04-05 15:09:32,934 INFO _on_viewport_select: None
+2026-04-05 15:09:33,483 INFO _on_viewport_select: MorphZone_2
+2026-04-05 15:09:33,483 INFO   tree item found: True
+2026-04-05 15:09:33,873 INFO _on_viewport_select: MorphZone_2
+2026-04-05 15:09:33,873 INFO   tree item found: True
+2026-04-05 15:09:44,773 INFO OpenGL initialized
+2026-04-05 15:10:00,857 ERROR MIDI output open failed
+Traceback (most recent call last):
+  File "C:\aday.repo\MoveMusicSaveEditor\editor.py", line 5891, in _send_test_midi_only
+    port = mido.open_output(port_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\backend.py", line 117, in open_output
+    return self.module.Output(name, **self._add_api(kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 269, in __init__
+    BasePort.__init__(self, name, **kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\ports.py", line 90, in __init__
+    self._open(**kwargs)
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 204, in _open
+    self.name = _open_port(self._rt, self.name, client_name=client_name,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aday\AppData\Local\Programs\Python\Python312\Lib\site-packages\mido\backends\rtmidi.py", line 105, in _open_port
+    rt.open_port(port_id)
+  File "_rtmidi.pyx", line 581, in _rtmidi.MidiBase.open_port
+  File "_rtmidi.pyx", line 218, in _rtmidi._cb_error_func
+  File "_rtmidi.pyx", line 403, in _rtmidi._default_error_handler
+_rtmidi.SystemError: MidiOutWinMM::openPort: error creating Windows MM MIDI output port.
+2026-04-05 15:13:53,898 INFO _on_viewport_select: None
+2026-04-05 15:32:08,128 INFO OpenGL initialized
+2026-04-05 15:32:30,140 INFO _on_viewport_select: None
+2026-04-05 15:32:30,210 INFO _on_viewport_select: None
+2026-04-05 15:32:35,327 INFO _on_viewport_select: None
+2026-04-05 15:32:35,595 INFO _on_viewport_select: None
+2026-04-05 15:32:48,950 INFO _on_viewport_select: None
+2026-04-05 15:32:49,030 INFO _on_viewport_select: None
+2026-04-05 16:00:02,671 INFO OpenGL initialized
+2026-04-05 16:00:06,423 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:00:06,423 INFO   tree item found: True
+2026-04-05 16:00:09,612 INFO _on_viewport_select: None
+2026-04-05 16:00:09,703 INFO _on_viewport_select: None
+2026-04-05 16:00:10,020 INFO _on_viewport_select: None
+2026-04-05 16:00:10,084 INFO _on_viewport_select: None
+2026-04-05 16:00:10,673 INFO _on_viewport_select: None
+2026-04-05 16:00:10,772 INFO _on_viewport_select: None
+2026-04-05 16:00:11,396 INFO _on_viewport_select: None
+2026-04-05 16:00:11,502 INFO _on_viewport_select: None
+2026-04-05 16:00:11,855 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:00:11,855 INFO   tree item found: True
+2026-04-05 16:00:13,554 INFO _on_viewport_select: None
+2026-04-05 16:00:13,769 INFO _on_viewport_select: None
+2026-04-05 16:00:14,479 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:00:14,479 INFO   tree item found: True
+2026-04-05 16:00:50,023 INFO OpenGL initialized
+2026-04-05 16:00:51,730 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:00:51,730 INFO   tree item found: True
+2026-04-05 16:00:58,173 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:00:58,174 INFO   tree item found: True
+2026-04-05 16:00:59,882 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:00:59,883 INFO   tree item found: True
+2026-04-05 16:01:08,114 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:01:08,115 INFO   tree item found: True
+2026-04-05 16:01:12,392 INFO _on_viewport_select: None
+2026-04-05 16:01:13,146 INFO _on_viewport_select: None
+2026-04-05 16:01:15,166 INFO OpenGL initialized
+2026-04-05 16:01:25,398 INFO OpenGL initialized
+2026-04-05 16:01:26,007 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:01:26,008 INFO   tree item found: True
+2026-04-05 16:01:32,041 INFO _on_viewport_select: MorphZone_3
+2026-04-05 16:01:32,041 INFO   tree item found: True
+2026-04-05 16:01:32,767 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:01:32,767 INFO   tree item found: True
+2026-04-05 16:01:33,555 INFO _on_viewport_select: MorphZone_3
+2026-04-05 16:01:33,555 INFO   tree item found: True
+2026-04-05 16:01:33,764 INFO _on_viewport_select: MorphZone_3
+2026-04-05 16:01:33,764 INFO   tree item found: True
+2026-04-05 16:01:34,613 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:01:34,613 INFO   tree item found: True
+2026-04-05 16:01:35,508 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:01:35,508 INFO   tree item found: True
+2026-04-05 16:01:36,056 INFO _on_viewport_select: MorphZone_3
+2026-04-05 16:01:36,056 INFO   tree item found: True
+2026-04-05 16:01:37,133 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:01:37,133 INFO   tree item found: True
+2026-04-05 16:01:38,191 INFO _on_viewport_select: MorphZone_3
+2026-04-05 16:01:38,191 INFO   tree item found: True
+2026-04-05 16:01:39,517 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:01:39,518 INFO   tree item found: True
+2026-04-05 16:01:46,851 INFO _on_viewport_select: MorphZone_3
+2026-04-05 16:01:46,851 INFO   tree item found: True
+2026-04-05 16:01:47,130 INFO _on_viewport_select: MorphZone_3
+2026-04-05 16:01:47,131 INFO   tree item found: True
+2026-04-05 16:01:47,445 INFO _on_viewport_select: MorphZone_3
+2026-04-05 16:01:47,446 INFO   tree item found: True
+2026-04-05 16:01:48,725 INFO _on_viewport_select: None
+2026-04-05 16:01:56,174 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:01:56,174 INFO   tree item found: True
+2026-04-05 16:01:56,639 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:01:56,639 INFO   tree item found: True
+2026-04-05 16:01:57,616 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:01:57,617 INFO   tree item found: True
+2026-04-05 16:01:58,131 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:01:58,131 INFO   tree item found: True
+2026-04-05 16:01:59,334 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:01:59,335 INFO   tree item found: True
+2026-04-05 16:01:59,723 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:01:59,723 INFO   tree item found: True
+2026-04-05 16:01:59,952 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:01:59,953 INFO   tree item found: True
+2026-04-05 16:02:00,623 INFO _on_viewport_select: None
+2026-04-05 16:02:01,806 INFO _on_viewport_select: MorphZone_2
+2026-04-05 16:02:01,806 INFO   tree item found: True
+2026-04-05 16:02:03,076 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:03,076 INFO   tree item found: True
+2026-04-05 16:02:04,031 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:04,031 INFO   tree item found: True
+2026-04-05 16:02:04,424 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:04,425 INFO   tree item found: True
+2026-04-05 16:02:04,626 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:04,626 INFO   tree item found: True
+2026-04-05 16:02:04,952 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:04,952 INFO   tree item found: True
+2026-04-05 16:02:05,259 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:05,260 INFO   tree item found: True
+2026-04-05 16:02:08,681 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:08,681 INFO   tree item found: True
+2026-04-05 16:02:09,023 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:09,023 INFO   tree item found: True
+2026-04-05 16:02:09,333 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:09,333 INFO   tree item found: True
+2026-04-05 16:02:09,697 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:09,697 INFO   tree item found: True
+2026-04-05 16:02:10,365 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:10,365 INFO   tree item found: True
+2026-04-05 16:02:11,177 INFO _on_viewport_select: HitZone_5
+2026-04-05 16:02:11,177 INFO   tree item found: True
+2026-04-05 16:05:05,144 INFO _on_viewport_select: None
+2026-04-05 16:05:05,569 INFO _on_viewport_select: None
+2026-04-05 16:05:05,738 INFO _on_viewport_select: None
+2026-04-05 16:05:06,030 INFO _on_viewport_select: None
+2026-04-05 16:05:13,638 INFO _on_viewport_select: None
+2026-04-05 16:05:13,778 INFO _on_viewport_select: None
+2026-04-05 16:06:22,275 INFO OpenGL initialized
+2026-04-05 16:06:34,695 INFO OpenGL initialized
+2026-04-05 16:06:45,746 INFO OpenGL initialized
+2026-04-05 16:06:48,142 INFO _on_viewport_select: TextLabel_C_4
+2026-04-05 16:06:48,142 INFO   tree item found: True
+2026-04-05 16:06:48,508 INFO _on_viewport_select: TextLabel_C_5
+2026-04-05 16:06:48,508 INFO   tree item found: True
+2026-04-05 16:06:49,022 INFO _on_viewport_select: TextLabel_C_6
+2026-04-05 16:06:49,022 INFO   tree item found: True
+2026-04-05 16:06:49,557 INFO _on_viewport_select: TextLabel_C_8
+2026-04-05 16:06:49,558 INFO   tree item found: True
+2026-04-05 16:06:50,163 INFO _on_viewport_select: TextLabel_C_10
+2026-04-05 16:06:50,164 INFO   tree item found: True
+2026-04-05 16:06:50,577 INFO _on_viewport_select: TextLabel_C_9
+2026-04-05 16:06:50,578 INFO   tree item found: True
+2026-04-05 16:06:51,005 INFO _on_viewport_select: TextLabel_C_8
+2026-04-05 16:06:51,005 INFO   tree item found: True
+2026-04-05 16:06:51,387 INFO _on_viewport_select: TextLabel_C_7
+2026-04-05 16:06:51,387 INFO   tree item found: True
+2026-04-05 16:06:51,727 INFO _on_viewport_select: TextLabel_C_6
+2026-04-05 16:06:51,727 INFO   tree item found: True
+2026-04-05 16:06:52,649 INFO _on_viewport_select: TextLabel_C_5
+2026-04-05 16:06:52,649 INFO   tree item found: True
+2026-04-05 16:06:54,371 INFO _on_viewport_select: TextLabel_C_4
+2026-04-05 16:06:54,371 INFO   tree item found: True
+2026-04-05 16:07:00,540 INFO _on_viewport_select: HitZone_17
+2026-04-05 16:07:00,541 INFO   tree item found: True
+2026-04-05 16:07:01,338 INFO _on_viewport_select: HitZone_20
+2026-04-05 16:07:01,338 INFO   tree item found: True
+2026-04-05 16:07:02,270 INFO _on_viewport_select: TextLabel_C_13
+2026-04-05 16:07:02,271 INFO   tree item found: True
+2026-04-05 16:07:24,782 INFO _on_viewport_select: MorphZone_272
+2026-04-05 16:07:24,783 INFO   tree item found: True
+2026-04-05 16:07:25,123 INFO _on_viewport_select: MorphZone_272
+2026-04-05 16:07:25,124 INFO   tree item found: True
+2026-04-05 16:07:52,963 INFO _on_viewport_select: TextLabel_C_411
+2026-04-05 16:07:52,964 INFO   tree item found: True
+2026-04-05 16:07:53,944 INFO _on_viewport_select: TextLabel_C_410
+2026-04-05 16:07:53,946 INFO   tree item found: True
+2026-04-05 16:07:55,112 INFO _on_viewport_select: TextLabel_C_410
+2026-04-05 16:07:55,113 INFO   tree item found: True
+2026-04-05 16:07:56,064 INFO _on_viewport_select: TextLabel_C_410
+2026-04-05 16:07:56,069 INFO   tree item found: True
+2026-04-05 16:07:56,470 INFO _on_viewport_select: TextLabel_C_409
+2026-04-05 16:07:56,475 INFO   tree item found: True
+2026-04-05 16:08:01,397 INFO _on_viewport_select: TextLabel_C_414
+2026-04-05 16:08:01,398 INFO   tree item found: True
+2026-04-05 16:08:05,022 INFO _on_viewport_select: TextLabel_C_420
+2026-04-05 16:08:05,024 INFO   tree item found: True
+2026-04-05 16:08:59,231 INFO OpenGL initialized
+2026-04-05 16:09:07,139 INFO _on_viewport_select: None
+2026-04-05 16:09:07,254 INFO _on_viewport_select: None
+2026-04-05 16:09:08,331 INFO _on_viewport_select: None
+2026-04-05 16:09:08,554 INFO _on_viewport_select: None
+2026-04-05 16:09:16,630 INFO _on_viewport_select: None
+2026-04-05 16:09:16,730 INFO _on_viewport_select: None
+2026-04-05 16:09:17,017 INFO _on_viewport_select: None
+2026-04-05 16:09:17,127 INFO _on_viewport_select: None
+2026-04-05 16:09:24,132 INFO _on_viewport_select: None
+2026-04-05 16:09:24,215 INFO _on_viewport_select: None
+2026-04-05 16:09:24,912 INFO _on_viewport_select: None
+2026-04-05 16:09:24,953 INFO _on_viewport_select: None
+2026-04-05 16:09:25,547 INFO _on_viewport_select: None
+2026-04-05 16:09:25,641 INFO _on_viewport_select: None
+2026-04-05 16:09:30,020 INFO _on_viewport_select: None
+2026-04-05 16:09:30,128 INFO _on_viewport_select: None

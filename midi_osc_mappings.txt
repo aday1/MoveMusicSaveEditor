@@ -1,0 +1,2086 @@
+MoveMusic MIDI/OSC Mapping Export
+
+OSC Host: 127.0.0.1
+OSC Port: 9001
+OSC CC Address: /mmc/midi/cc
+OSC Note Address: /mmc/midi/note
+
+Element: MorphZone_2
+Type: MorphZone
+Workspace: Main Workspace
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 70 Value 0 | OSC: /mmc/midi/cc [1, 70, 0]
+Y Axis CC:
+  Ch 1 CC 71 Value 0 | OSC: /mmc/midi/cc [1, 71, 0]
+Z Axis CC:
+  Ch 1 CC 72 Value 0 | OSC: /mmc/midi/cc [1, 72, 0]
+
+Element: LIBRARY
+Pick controls here, switch to a Drop Zone workspace,
+then move or duplicate items into that zone.
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Library: keys (row+circle) | 4+8 drums | XY + XY diamond | XYZ | X macros | Help + Shapes + Mix palettes | Drop zones +X
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Key C4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 60 Vel 127 | OSC: /mmc/midi/note [1, 60, 127]
+Main CC:
+  Ch 1 CC 60 Value 127 | OSC: /mmc/midi/cc [1, 60, 127]
+
+Element: C4 #60 Ch1
+CC60=127
+Note On/Off (Hold)
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Key C#4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 61 Vel 127 | OSC: /mmc/midi/note [1, 61, 127]
+Main CC:
+  Ch 1 CC 61 Value 127 | OSC: /mmc/midi/cc [1, 61, 127]
+
+Element: Key D4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 62 Vel 127 | OSC: /mmc/midi/note [1, 62, 127]
+Main CC:
+  Ch 1 CC 62 Value 127 | OSC: /mmc/midi/cc [1, 62, 127]
+
+Element: Key D#4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 63 Vel 127 | OSC: /mmc/midi/note [1, 63, 127]
+Main CC:
+  Ch 1 CC 63 Value 127 | OSC: /mmc/midi/cc [1, 63, 127]
+
+Element: Key E4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 64 Vel 127 | OSC: /mmc/midi/note [1, 64, 127]
+Main CC:
+  Ch 1 CC 64 Value 127 | OSC: /mmc/midi/cc [1, 64, 127]
+
+Element: Key F4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 65 Vel 127 | OSC: /mmc/midi/note [1, 65, 127]
+Main CC:
+  Ch 1 CC 65 Value 127 | OSC: /mmc/midi/cc [1, 65, 127]
+
+Element: Key F#4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 66 Vel 127 | OSC: /mmc/midi/note [1, 66, 127]
+Main CC:
+  Ch 1 CC 66 Value 127 | OSC: /mmc/midi/cc [1, 66, 127]
+
+Element: Key G4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 67 Vel 127 | OSC: /mmc/midi/note [1, 67, 127]
+Main CC:
+  Ch 1 CC 67 Value 127 | OSC: /mmc/midi/cc [1, 67, 127]
+
+Element: Key G#4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 68 Vel 127 | OSC: /mmc/midi/note [1, 68, 127]
+Main CC:
+  Ch 1 CC 68 Value 127 | OSC: /mmc/midi/cc [1, 68, 127]
+
+Element: Key A4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 69 Vel 127 | OSC: /mmc/midi/note [1, 69, 127]
+Main CC:
+  Ch 1 CC 69 Value 127 | OSC: /mmc/midi/cc [1, 69, 127]
+
+Element: Key A#4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 70 Vel 127 | OSC: /mmc/midi/note [1, 70, 127]
+Main CC:
+  Ch 1 CC 70 Value 127 | OSC: /mmc/midi/cc [1, 70, 127]
+
+Element: Key B4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 71 Vel 127 | OSC: /mmc/midi/note [1, 71, 127]
+Main CC:
+  Ch 1 CC 71 Value 127 | OSC: /mmc/midi/cc [1, 71, 127]
+
+Element: B4 #71 Ch1
+CC71=127
+Note On/Off (Hold)
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: ArcKey C5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 72 Vel 127 | OSC: /mmc/midi/note [1, 72, 127]
+Main CC:
+  Ch 1 CC 72 Value 127 | OSC: /mmc/midi/cc [1, 72, 127]
+
+Element: C5 #72 Ch1
+CC72=127
+Note On/Off (Hold)
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: ArcKey C#5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 73 Vel 127 | OSC: /mmc/midi/note [1, 73, 127]
+Main CC:
+  Ch 1 CC 73 Value 127 | OSC: /mmc/midi/cc [1, 73, 127]
+
+Element: ArcKey D5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 74 Vel 127 | OSC: /mmc/midi/note [1, 74, 127]
+Main CC:
+  Ch 1 CC 74 Value 127 | OSC: /mmc/midi/cc [1, 74, 127]
+
+Element: ArcKey D#5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 75 Vel 127 | OSC: /mmc/midi/note [1, 75, 127]
+Main CC:
+  Ch 1 CC 75 Value 127 | OSC: /mmc/midi/cc [1, 75, 127]
+
+Element: ArcKey E5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 76 Vel 127 | OSC: /mmc/midi/note [1, 76, 127]
+Main CC:
+  Ch 1 CC 76 Value 127 | OSC: /mmc/midi/cc [1, 76, 127]
+
+Element: ArcKey F5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 77 Vel 127 | OSC: /mmc/midi/note [1, 77, 127]
+Main CC:
+  Ch 1 CC 77 Value 127 | OSC: /mmc/midi/cc [1, 77, 127]
+
+Element: ArcKey F#5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 78 Vel 127 | OSC: /mmc/midi/note [1, 78, 127]
+Main CC:
+  Ch 1 CC 78 Value 127 | OSC: /mmc/midi/cc [1, 78, 127]
+
+Element: ArcKey G5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 79 Vel 127 | OSC: /mmc/midi/note [1, 79, 127]
+Main CC:
+  Ch 1 CC 79 Value 127 | OSC: /mmc/midi/cc [1, 79, 127]
+
+Element: ArcKey G#5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 80 Vel 127 | OSC: /mmc/midi/note [1, 80, 127]
+Main CC:
+  Ch 1 CC 80 Value 127 | OSC: /mmc/midi/cc [1, 80, 127]
+
+Element: ArcKey A5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 81 Vel 127 | OSC: /mmc/midi/note [1, 81, 127]
+Main CC:
+  Ch 1 CC 81 Value 127 | OSC: /mmc/midi/cc [1, 81, 127]
+
+Element: ArcKey A#5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 82 Vel 127 | OSC: /mmc/midi/note [1, 82, 127]
+Main CC:
+  Ch 1 CC 82 Value 127 | OSC: /mmc/midi/cc [1, 82, 127]
+
+Element: ArcKey B5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 83 Vel 127 | OSC: /mmc/midi/note [1, 83, 127]
+Main CC:
+  Ch 1 CC 83 Value 127 | OSC: /mmc/midi/cc [1, 83, 127]
+
+Element: ArcKey C6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 84 Vel 127 | OSC: /mmc/midi/note [1, 84, 127]
+Main CC:
+  Ch 1 CC 84 Value 127 | OSC: /mmc/midi/cc [1, 84, 127]
+
+Element: C6 #84 Ch1
+CC84=127
+Note On/Off (Hold)
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: ArcKey C#6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 85 Vel 127 | OSC: /mmc/midi/note [1, 85, 127]
+Main CC:
+  Ch 1 CC 85 Value 127 | OSC: /mmc/midi/cc [1, 85, 127]
+
+Element: ArcKey D6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 86 Vel 127 | OSC: /mmc/midi/note [1, 86, 127]
+Main CC:
+  Ch 1 CC 86 Value 127 | OSC: /mmc/midi/cc [1, 86, 127]
+
+Element: ArcKey D#6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 87 Vel 127 | OSC: /mmc/midi/note [1, 87, 127]
+Main CC:
+  Ch 1 CC 87 Value 127 | OSC: /mmc/midi/cc [1, 87, 127]
+
+Element: ArcKey E6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 88 Vel 127 | OSC: /mmc/midi/note [1, 88, 127]
+Main CC:
+  Ch 1 CC 88 Value 127 | OSC: /mmc/midi/cc [1, 88, 127]
+
+Element: ArcKey F6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 89 Vel 127 | OSC: /mmc/midi/note [1, 89, 127]
+Main CC:
+  Ch 1 CC 89 Value 127 | OSC: /mmc/midi/cc [1, 89, 127]
+
+Element: ArcKey F#6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 90 Vel 127 | OSC: /mmc/midi/note [1, 90, 127]
+Main CC:
+  Ch 1 CC 90 Value 127 | OSC: /mmc/midi/cc [1, 90, 127]
+
+Element: ArcKey G6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 91 Vel 127 | OSC: /mmc/midi/note [1, 91, 127]
+Main CC:
+  Ch 1 CC 91 Value 127 | OSC: /mmc/midi/cc [1, 91, 127]
+
+Element: ArcKey G#6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 92 Vel 127 | OSC: /mmc/midi/note [1, 92, 127]
+Main CC:
+  Ch 1 CC 92 Value 127 | OSC: /mmc/midi/cc [1, 92, 127]
+
+Element: ArcKey A6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 93 Vel 127 | OSC: /mmc/midi/note [1, 93, 127]
+Main CC:
+  Ch 1 CC 93 Value 127 | OSC: /mmc/midi/cc [1, 93, 127]
+
+Element: ArcKey A#6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 94 Vel 127 | OSC: /mmc/midi/note [1, 94, 127]
+Main CC:
+  Ch 1 CC 94 Value 127 | OSC: /mmc/midi/cc [1, 94, 127]
+
+Element: ArcKey B6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 1 Note 95 Vel 127 | OSC: /mmc/midi/note [1, 95, 127]
+Main CC:
+  Ch 1 CC 95 Value 127 | OSC: /mmc/midi/cc [1, 95, 127]
+
+Element: B6 #95 Ch1
+CC95=127
+Note On/Off (Hold)
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum 1
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 36 Vel 127 | OSC: /mmc/midi/note [10, 36, 127]
+
+Element: Drum 1
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum 2
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 37 Vel 127 | OSC: /mmc/midi/note [10, 37, 127]
+
+Element: Drum 2
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum 3
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 38 Vel 127 | OSC: /mmc/midi/note [10, 38, 127]
+
+Element: Drum 3
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum 4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 39 Vel 127 | OSC: /mmc/midi/note [10, 39, 127]
+
+Element: Drum 4
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum8 1
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 44 Vel 127 | OSC: /mmc/midi/note [10, 44, 127]
+
+Element: Drum8 1
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum8 2
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 45 Vel 127 | OSC: /mmc/midi/note [10, 45, 127]
+
+Element: Drum8 2
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum8 3
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 46 Vel 127 | OSC: /mmc/midi/note [10, 46, 127]
+
+Element: Drum8 3
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum8 4
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 47 Vel 127 | OSC: /mmc/midi/note [10, 47, 127]
+
+Element: Drum8 4
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum8 5
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 48 Vel 127 | OSC: /mmc/midi/note [10, 48, 127]
+
+Element: Drum8 5
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum8 6
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 49 Vel 127 | OSC: /mmc/midi/note [10, 49, 127]
+
+Element: Drum8 6
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum8 7
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 50 Vel 127 | OSC: /mmc/midi/note [10, 50, 127]
+
+Element: Drum8 7
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: Drum8 8
+Type: HitZone
+Workspace: Library
+Message Type: EMidiMessageType::Note
+Note Mappings:
+  Ch 10 Note 51 Vel 127 | OSC: /mmc/midi/note [10, 51, 127]
+
+Element: Drum8 8
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: XY 1
+Type: MorphZone
+Workspace: Library
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 32 Value 0 | OSC: /mmc/midi/cc [1, 32, 0]
+Y Axis CC:
+  Ch 1 CC 48 Value 0 | OSC: /mmc/midi/cc [1, 48, 0]
+
+Element: XY 1
+X:CC32
+Y:CC48
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: XY 2
+Type: MorphZone
+Workspace: Library
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 33 Value 0 | OSC: /mmc/midi/cc [1, 33, 0]
+Y Axis CC:
+  Ch 1 CC 49 Value 0 | OSC: /mmc/midi/cc [1, 49, 0]
+
+Element: XY 2
+X:CC33
+Y:CC49
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: XY4 1
+Type: MorphZone
+Workspace: Library
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 50 Value 0 | OSC: /mmc/midi/cc [1, 50, 0]
+Y Axis CC:
+  Ch 1 CC 56 Value 0 | OSC: /mmc/midi/cc [1, 56, 0]
+
+Element: XY4 1
+X:CC50
+Y:CC56
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: XY4 2
+Type: MorphZone
+Workspace: Library
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 51 Value 0 | OSC: /mmc/midi/cc [1, 51, 0]
+Y Axis CC:
+  Ch 1 CC 57 Value 0 | OSC: /mmc/midi/cc [1, 57, 0]
+
+Element: XY4 2
+X:CC51
+Y:CC57
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: XY4 3
+Type: MorphZone
+Workspace: Library
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 52 Value 0 | OSC: /mmc/midi/cc [1, 52, 0]
+Y Axis CC:
+  Ch 1 CC 58 Value 0 | OSC: /mmc/midi/cc [1, 58, 0]
+
+Element: XY4 3
+X:CC52
+Y:CC58
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: XY4 4
+Type: MorphZone
+Workspace: Library
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 53 Value 0 | OSC: /mmc/midi/cc [1, 53, 0]
+Y Axis CC:
+  Ch 1 CC 59 Value 0 | OSC: /mmc/midi/cc [1, 59, 0]
+
+Element: XY4 4
+X:CC53
+Y:CC59
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: XYZ Pad
+Type: MorphZone
+Workspace: Library
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 60 Value 0 | OSC: /mmc/midi/cc [1, 60, 0]
+Y Axis CC:
+  Ch 1 CC 61 Value 0 | OSC: /mmc/midi/cc [1, 61, 0]
+Z Axis CC:
+  Ch 1 CC 62 Value 0 | OSC: /mmc/midi/cc [1, 62, 0]
+
+Element: XYZ
+X:CC60 Y:CC61 Z:CC62 Ch1
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: X Macro 1
+Type: MorphZone
+Workspace: Library
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 73 Value 0 | OSC: /mmc/midi/cc [1, 73, 0]
+
+Element: X Macro 1
+CC73
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: X Macro 2
+Type: MorphZone
+Workspace: Library
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 74 Value 0 | OSC: /mmc/midi/cc [1, 74, 0]
+
+Element: X Macro 2
+CC74
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: X Macro 3
+Type: MorphZone
+Workspace: Library
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 75 Value 0 | OSC: /mmc/midi/cc [1, 75, 0]
+
+Element: X Macro 3
+CC75
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: X Macro 4
+Type: MorphZone
+Workspace: Library
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 76 Value 0 | OSC: /mmc/midi/cc [1, 76, 0]
+
+Element: X Macro 4
+CC76
+Type: TextLabel
+Workspace: Library
+Message Type: N/A
+No MIDI mappings
+
+Element: MOVEMUSIC QUICK REF (from official user guide)
+Hit Zone: hit with controller; Note or CC; Hold / Timed / Toggle.
+Morph Zone: hold trigger, move in space; 1D slider / 2D XY / 3D cube; CC per axis.
+Text Label: 3D labels for your layout.
+Inspector: X button on left controller in VR.
+Type: TextLabel
+Workspace: Help: MoveMusic docs
+Message Type: N/A
+No MIDI mappings
+
+Element: Support hub (articles, MIDI mapping, Wi-Fi, troubleshooting):
+https://movemusic.com/support
+Type: TextLabel
+Workspace: Help: MoveMusic docs
+Message Type: N/A
+No MIDI mappings
+
+Element: Objects & Inspector (Hit Zones, Morph Zones, Text Labels):
+https://movemusic.com/support/user-guide/objects-and-inspector
+Type: TextLabel
+Workspace: Help: MoveMusic docs
+Message Type: N/A
+No MIDI mappings
+
+Element: Copy any text from this workspace into your own labels, or open URLs on desktop.
+Type: TextLabel
+Workspace: Help: MoveMusic docs
+Message Type: N/A
+No MIDI mappings
+
+Element: FUN SHAPES (TextLabel clusters)
+Duplicate or move into your performance workspaces.
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: █
+Type: TextLabel
+Workspace: Palette: Fun shapes
+Message Type: N/A
+No MIDI mappings
+
+Element: Faders + knobs + XY + toggles — grab into Drop Zones or your sets.
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibF 1
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+Y Axis CC:
+  Ch 1 CC 77 Value 0 | OSC: /mmc/midi/cc [1, 77, 0]
+
+Element: LibF 1
+CC77
+Ch1
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibF 2
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+Y Axis CC:
+  Ch 1 CC 78 Value 0 | OSC: /mmc/midi/cc [1, 78, 0]
+
+Element: LibF 2
+CC78
+Ch1
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibF 3
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+Y Axis CC:
+  Ch 1 CC 79 Value 0 | OSC: /mmc/midi/cc [1, 79, 0]
+
+Element: LibF 3
+CC79
+Ch1
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibF 4
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+Y Axis CC:
+  Ch 1 CC 80 Value 0 | OSC: /mmc/midi/cc [1, 80, 0]
+
+Element: LibF 4
+CC80
+Ch1
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibF 5
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+Y Axis CC:
+  Ch 1 CC 81 Value 0 | OSC: /mmc/midi/cc [1, 81, 0]
+
+Element: LibF 5
+CC81
+Ch1
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibF 6
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+Y Axis CC:
+  Ch 1 CC 82 Value 0 | OSC: /mmc/midi/cc [1, 82, 0]
+
+Element: LibF 6
+CC82
+Ch1
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibK 1
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 83 Value 0 | OSC: /mmc/midi/cc [1, 83, 0]
+
+Element: LibK 1
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibK 2
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 84 Value 0 | OSC: /mmc/midi/cc [1, 84, 0]
+
+Element: LibK 2
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibK 3
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 85 Value 0 | OSC: /mmc/midi/cc [1, 85, 0]
+
+Element: LibK 3
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibK 4
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 86 Value 0 | OSC: /mmc/midi/cc [1, 86, 0]
+
+Element: LibK 4
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibK 5
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 87 Value 0 | OSC: /mmc/midi/cc [1, 87, 0]
+
+Element: LibK 5
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibK 6
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 88 Value 0 | OSC: /mmc/midi/cc [1, 88, 0]
+
+Element: LibK 6
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibXY 1
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 89 Value 0 | OSC: /mmc/midi/cc [1, 89, 0]
+Y Axis CC:
+  Ch 1 CC 91 Value 0 | OSC: /mmc/midi/cc [1, 91, 0]
+
+Element: LibXY 1
+X:CC89
+Y:CC91
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibXY 2
+Type: MorphZone
+Workspace: Palette: Mix strips
+Message Type: N/A
+X Axis CC:
+  Ch 1 CC 90 Value 0 | OSC: /mmc/midi/cc [1, 90, 0]
+Y Axis CC:
+  Ch 1 CC 92 Value 0 | OSC: /mmc/midi/cc [1, 92, 0]
+
+Element: LibXY 2
+X:CC90
+Y:CC92
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibBtn 1
+Type: HitZone
+Workspace: Palette: Mix strips
+Message Type: EMidiMessageType::CC
+Main CC:
+  Ch 1 CC 93 Value 127 | OSC: /mmc/midi/cc [1, 93, 127]
+
+Element: LibBtn 1
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibBtn 2
+Type: HitZone
+Workspace: Palette: Mix strips
+Message Type: EMidiMessageType::CC
+Main CC:
+  Ch 1 CC 94 Value 127 | OSC: /mmc/midi/cc [1, 94, 127]
+
+Element: LibBtn 2
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibBtn 3
+Type: HitZone
+Workspace: Palette: Mix strips
+Message Type: EMidiMessageType::CC
+Main CC:
+  Ch 1 CC 95 Value 127 | OSC: /mmc/midi/cc [1, 95, 127]
+
+Element: LibBtn 3
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibBtn 4
+Type: HitZone
+Workspace: Palette: Mix strips
+Message Type: EMidiMessageType::CC
+Main CC:
+  Ch 1 CC 96 Value 127 | OSC: /mmc/midi/cc [1, 96, 127]
+
+Element: LibBtn 4
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibBtn 5
+Type: HitZone
+Workspace: Palette: Mix strips
+Message Type: EMidiMessageType::CC
+Main CC:
+  Ch 1 CC 97 Value 127 | OSC: /mmc/midi/cc [1, 97, 127]
+
+Element: LibBtn 5
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: LibBtn 6
+Type: HitZone
+Workspace: Palette: Mix strips
+Message Type: EMidiMessageType::CC
+Main CC:
+  Ch 1 CC 98 Value 127 | OSC: /mmc/midi/cc [1, 98, 127]
+
+Element: LibBtn 6
+Type: TextLabel
+Workspace: Palette: Mix strips
+Message Type: N/A
+No MIDI mappings
+
+Element: DROP ZONE A
+Staging — switch workspace, then move or duplicate
+from Library / Palettes / Help.
+Type: TextLabel
+Workspace: Drop Zone A
+Message Type: N/A
+No MIDI mappings
+
+Element: Corner marker | Snap: View menu or [ ] in viewport
+Type: TextLabel
+Workspace: Drop Zone A
+Message Type: N/A
+No MIDI mappings
+
+Element: DROP ZONE B
+Staging — switch workspace, then move or duplicate
+from Library / Palettes / Help.
+Type: TextLabel
+Workspace: Drop Zone B
+Message Type: N/A
+No MIDI mappings
+
+Element: Corner marker | Snap: View menu or [ ] in viewport
+Type: TextLabel
+Workspace: Drop Zone B
+Message Type: N/A
+No MIDI mappings
+
+Element: DROP ZONE C
+Staging — switch workspace, then move or duplicate
+from Library / Palettes / Help.
+Type: TextLabel
+Workspace: Drop Zone C
+Message Type: N/A
+No MIDI mappings
+
+Element: Corner marker | Snap: View menu or [ ] in viewport
+Type: TextLabel
+Workspace: Drop Zone C
+Message Type: N/A
+No MIDI mappings
+
+Element: DROP ZONE D
+Staging — switch workspace, then move or duplicate
+from Library / Palettes / Help.
+Type: TextLabel
+Workspace: Drop Zone D
+Message Type: N/A
+No MIDI mappings
+
+Element: Corner marker | Snap: View menu or [ ] in viewport
+Type: TextLabel
+Workspace: Drop Zone D
+Message Type: N/A
+No MIDI mappings
+
+Element: DROP ZONE E
+Staging — switch workspace, then move or duplicate
+from Library / Palettes / Help.
+Type: TextLabel
+Workspace: Drop Zone E
+Message Type: N/A
+No MIDI mappings
+
+Element: Corner marker | Snap: View menu or [ ] in viewport
+Type: TextLabel
+Workspace: Drop Zone E
+Message Type: N/A
+No MIDI mappings

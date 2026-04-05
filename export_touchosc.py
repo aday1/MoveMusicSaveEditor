@@ -1,14 +1,20 @@
 """TouchOSC export helpers for MoveMusic projects.
 
-This exporter writes a JSON layout blueprint that mirrors MoveMusic element
-MIDI/OSC mappings with page grouping for drums/notes, CC controls, and XY/XYZ
-MorphZones.
+Writes:
+1) movemusic.touchosc.blueprint.v1 JSON (OSC args per control; use as a build sheet).
+2) Companion .touchosc_mk1_gen.json for martinwittmann/touchosc-generator (produces .touchosc).
+
+Hexler TouchOSC Editor does not open the blueprint JSON as a layout file. Use the blueprint
+to configure OSC messages in the editor, or run touchosc.py on the *_mk1_gen.json file.
+See TouchOSCExample/README.txt in this repo.
 """
 
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 
 @dataclass
@@ -26,11 +32,6 @@ def _norm_namespace(namespace: str) -> str:
 
 
 def _osc_addresses(namespace: str) -> tuple[str, str]:
-    """Build CC/note addresses from a base namespace.
-
-    Supports both base namespaces ("/mmc" -> "/mmc/midi/cc") and
-    already-midi namespaces ("/mmc/midi" -> "/mmc/midi/cc").
-    """
     if namespace.endswith("/midi"):
         base = namespace
     else:
@@ -70,14 +71,217 @@ def _chunk(items: list, chunk_size: int) -> list[list]:
     return [items[i:i + chunk_size] for i in range(0, len(items), chunk_size)]
 
 
-def export_touchosc_layout(project, file_path: str, osc_host: str = "127.0.0.1", osc_port: int = 57121, osc_namespace: str = "/mmc") -> dict:
-    """Export a TouchOSC-oriented multi-page layout blueprint as JSON.
+def _scrub_nones(obj: Any) -> Any:
+    if isinstance(obj, dict):
+        return {k: _scrub_nones(v) for k, v in obj.items() if v is not None}
+    if isinstance(obj, list):
+        return [_scrub_nones(v) for v in obj if v is not None]
+    return obj
 
-    The resulting JSON is intended as an easy-to-build TouchOSC page guide:
-    each page includes positioned controls and explicit OSC address/arguments.
-    """
+
+def _json_write(path: Path, obj: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    safe = _scrub_nones(obj)
+    with open(path, "w", encoding="utf-8", newline="\n") as handle:
+        json.dump(safe, handle, indent=2, allow_nan=False)
+
+
+def ensure_json_extension(file_path: str) -> Path:
+    p = Path(file_path)
+    if p.suffix.lower() != ".json":
+        p = p.with_suffix(".json")
+    return p
+
+
+def _note_velocity_for_export(note) -> int:
+    try:
+        raw = float(getattr(note, "velocity", 1.0))
+        if raw <= 1.0:
+            return int(max(0, min(127, round(raw * 127))))
+        return int(max(0, min(127, round(raw))))
+    except (TypeError, ValueError):
+        return 127
+
+
+def build_touchosc_mk1_generator_json(project, cc_addr: str, note_addr: str) -> dict[str, Any]:
+    """JSON input for github.com/martinwittmann/touchosc-generator touchosc.py."""
+    ws_map = _element_workspace_map(project)
+    lines: list[str] = [
+        "MoveMusic bridge OSC:",
+        f"  {cc_addr}  -> 3 ints: channel, cc, value 0-127",
+        f"  {note_addr} -> 3 ints: channel, note, velocity 0-127",
+        "",
+        "Bindings:",
+        "",
+    ]
+
+    fader_specs: list[dict[str, Any]] = []
+    pad_idx = 0
+
+    for elem in getattr(project, "elements", []):
+        elem_type = type(elem).__name__
+        name = getattr(elem, "display_name", "") or getattr(elem, "unique_id", "Element")
+        uid = getattr(elem, "unique_id", "")
+        workspace = ws_map.get(uid, "(none)")
+        note_maps = list(getattr(elem, "midi_note_mappings", []) or [])
+        cc_maps = list(getattr(elem, "midi_cc_mappings", []) or [])
+        x_maps = list(getattr(elem, "x_axis_cc_mappings", []) or [])
+        y_maps = list(getattr(elem, "y_axis_cc_mappings", []) or [])
+        z_maps = list(getattr(elem, "z_axis_cc_mappings", []) or [])
+        msg_type = getattr(elem, "midi_message_type", "")
+
+        if x_maps or y_maps or z_maps:
+            x_map = x_maps[0] if x_maps else None
+            y_map = y_maps[0] if y_maps else None
+            z_map = z_maps[0] if z_maps else None
+            parts = [f"[{workspace}] {name} ({elem_type}) -> {cc_addr}"]
+            if x_map:
+                parts.append(f"  X Ch{x_map.channel} CC{x_map.control}")
+            if y_map:
+                parts.append(f"  Y Ch{y_map.channel} CC{y_map.control}")
+            if z_map:
+                parts.append(f"  Z Ch{z_map.channel} CC{z_map.control}")
+            lines.append("\n".join(parts))
+            for m, tag in ((x_map, "X"), (y_map, "Y"), (z_map, "Z")):
+                if m:
+                    fader_specs.append(
+                        {
+                            "type": "faderv",
+                            "osc": cc_addr,
+                            "x": str(2 + (pad_idx % 5) * 18) + "%",
+                            "y": str(8 + (pad_idx // 5) * 11) + "%",
+                            "width": "14%",
+                            "height": "28%",
+                            "inverted": "true",
+                            "label": f"{name[:12]} {tag}",
+                        }
+                    )
+                    pad_idx += 1
+            continue
+
+        if note_maps and msg_type != "EMidiMessageType::CC":
+            note = note_maps[0]
+            vel = _note_velocity_for_export(note)
+            lines.append(
+                f"[{workspace}] {name} note {note_addr} ch{note.channel} n{note.note} v{vel}/0"
+            )
+            continue
+
+        if cc_maps:
+            cc = cc_maps[0]
+            lines.append(
+                f"[{workspace}] {name} CC {cc_addr} ch{cc.channel} cc{cc.control}"
+            )
+            fader_specs.append(
+                {
+                    "type": "faderv",
+                    "osc": cc_addr,
+                    "x": str(2 + (pad_idx % 5) * 18) + "%",
+                    "y": str(8 + (pad_idx // 5) * 11) + "%",
+                    "width": "14%",
+                    "height": "28%",
+                    "inverted": "true",
+                    "label": (name or "CC")[:14],
+                }
+            )
+            pad_idx += 1
+
+    fader_specs = fader_specs[:40]
+    max_lines = 120
+    if len(lines) > max_lines:
+        lines = lines[: max_lines - 1] + [f"... ({len(lines) - max_lines + 1} more lines omitted)"]
+
+    tabpages: list[dict[str, Any]] = [
+        {
+            "type": "tabpage",
+            "name": "about",
+            "text": "About",
+            "components": [
+                {
+                    "type": "labelh",
+                    "text": "For TouchOSC Mk1: run python touchosc.py on this JSON (touchosc-generator).",
+                    "text_size": 20,
+                    "x": "0%",
+                    "y": "0%",
+                    "width": "100%",
+                    "height": "10%",
+                },
+                {
+                    "type": "labelh",
+                    "text": "TouchOSC Editor (hexler) uses .tosc layouts from the app, not this file.",
+                    "text_size": 18,
+                    "x": "0%",
+                    "y": "10%",
+                    "width": "100%",
+                    "height": "8%",
+                },
+            ],
+        },
+        {
+            "type": "tabpage",
+            "name": "bindings",
+            "text": "Bindings",
+            "components": [
+                {
+                    "type": "repeat",
+                    "count": len(lines),
+                    "columns": 1,
+                    "width": "94%",
+                    "height": "90%",
+                    "x": "3%",
+                    "y": "5%",
+                    "spacer_y": "0.3%",
+                    "component": {
+                        "type": "labelh",
+                        "text": "{{data.mm_lines.@index}}",
+                        "text_size": 13,
+                        "width": "100%",
+                        "height": "5%",
+                        "outline": "true",
+                    },
+                }
+            ],
+        },
+    ]
+
+    if fader_specs:
+        tabpages.append(
+            {
+                "type": "tabpage",
+                "name": "faderv",
+                "text": "Faders",
+                "components": fader_specs,
+            }
+        )
+
+    return {
+        "type": "layout",
+        "mode": 3,
+        "version": 17,
+        "width": 2000,
+        "height": 1200,
+        "orientation": "horizontal",
+        "data": {"mm_lines": lines},
+        "tabpages": tabpages,
+    }
+
+
+def export_touchosc_layout(
+    project,
+    file_path: str,
+    osc_host: str = "127.0.0.1",
+    osc_port: int = 57121,
+    osc_namespace: str = "/mmc",
+) -> dict:
+    """Write blueprint JSON and sibling *_touchosc_mk1_gen.json."""
     if not project:
         raise ValueError("No project is loaded.")
+
+    main_path = ensure_json_extension(file_path)
+    stem = main_path.name
+    if stem.lower().endswith(".json"):
+        stem = stem[:-5]
+    mk1_path = main_path.with_name(stem + "_touchosc_mk1_gen.json")
 
     namespace = _norm_namespace(osc_namespace)
     cc_addr, note_addr = _osc_addresses(namespace)
@@ -95,7 +299,6 @@ def export_touchosc_layout(project, file_path: str, osc_host: str = "127.0.0.1",
 
         note_maps = list(getattr(elem, "midi_note_mappings", []) or [])
         cc_maps = list(getattr(elem, "midi_cc_mappings", []) or [])
-
         x_maps = list(getattr(elem, "x_axis_cc_mappings", []) or [])
         y_maps = list(getattr(elem, "y_axis_cc_mappings", []) or [])
         z_maps = list(getattr(elem, "z_axis_cc_mappings", []) or [])
@@ -132,7 +335,7 @@ def export_touchosc_layout(project, file_path: str, osc_host: str = "127.0.0.1",
         msg_type = getattr(elem, "midi_message_type", "")
         if note_maps and msg_type != "EMidiMessageType::CC":
             note = note_maps[0]
-            vel = int(max(0, min(127, round(float(getattr(note, "velocity", 1.0)) * 127)))) if float(getattr(note, "velocity", 1.0)) <= 1.0 else int(max(0, min(127, round(float(getattr(note, "velocity", 127))))))
+            vel = _note_velocity_for_export(note)
             note_controls.append(
                 {
                     "id": uid,
@@ -214,25 +417,28 @@ def export_touchosc_layout(project, file_path: str, osc_host: str = "127.0.0.1",
         "touchosc": {
             "target": {
                 "host": str(osc_host or "127.0.0.1"),
-                "port": int(osc_port or 9001),
+                "port": int(osc_port or 57121),
                 "namespace": namespace,
                 "addresses": {"cc": cc_addr, "note": note_addr},
             },
             "notes": [
-                "Import this JSON in your workflow as a build sheet for TouchOSC pages.",
-                "For pad controls, bind press and release messages.",
-                "For faders/XY, map value 0..1 to MIDI 0..127 where value placeholders are present.",
+                "This file is a blueprint (build sheet), not a TouchOSC Editor layout import.",
+                "A sibling *_touchosc_mk1_gen.json is written for martinwittmann/touchosc-generator.",
+                "For pads bind press/release; for faders/XY map 0..1 to MIDI 0..127 where noted.",
             ],
             "pages": [{"name": p.name, "controls": p.controls} for p in pages],
         },
     }
 
-    with open(file_path, "w", encoding="utf-8") as handle:
-        json.dump(payload, handle, indent=2)
+    _json_write(main_path, payload)
+    mk1_layout = build_touchosc_mk1_generator_json(project, cc_addr, note_addr)
+    _json_write(mk1_path, mk1_layout)
 
     return {
         "page_count": len(pages),
         "note_controls": len(note_controls),
         "cc_controls": len(cc_controls),
         "morph_controls": len(morph_controls),
+        "blueprint_path": str(main_path.resolve()),
+        "mk1_generator_path": str(mk1_path.resolve()),
     }

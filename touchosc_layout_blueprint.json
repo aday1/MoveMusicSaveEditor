@@ -1,0 +1,2396 @@
+{
+  "schema": "movemusic.touchosc.blueprint.v1",
+  "project": {
+    "name": "Untitled",
+    "elements": 307
+  },
+  "touchosc": {
+    "target": {
+      "host": "127.0.0.1",
+      "port": 9001,
+      "namespace": "/mmc/midi",
+      "addresses": {
+        "cc": "/mmc/midi/cc",
+        "note": "/mmc/midi/note"
+      }
+    },
+    "notes": [
+      "This file is a blueprint (build sheet), not a TouchOSC Editor layout import.",
+      "A sibling *_touchosc_mk1_gen.json is written for martinwittmann/touchosc-generator.",
+      "For pads bind press/release; for faders/XY map 0..1 to MIDI 0..127 where noted."
+    ],
+    "pages": [
+      {
+        "name": "Drums Notes 1",
+        "controls": [
+          {
+            "id": "HitZone_6",
+            "label": "Key C4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  60,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  60,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_8",
+            "label": "Key C#4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  61,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  61,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_9",
+            "label": "Key D4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  62,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  62,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_10",
+            "label": "Key D#4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  63,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  63,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_11",
+            "label": "Key E4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  64,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  64,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_12",
+            "label": "Key F4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  65,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  65,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_13",
+            "label": "Key F#4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  66,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  66,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_14",
+            "label": "Key G4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  67,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  67,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_15",
+            "label": "Key G#4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  68,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  68,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_16",
+            "label": "Key A4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  69,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  69,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_17",
+            "label": "Key A#4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  70,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  70,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_18",
+            "label": "Key B4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  71,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  71,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_20",
+            "label": "ArcKey C5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  72,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  72,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_22",
+            "label": "ArcKey C#5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  73,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  73,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_23",
+            "label": "ArcKey D5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  74,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  74,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_24",
+            "label": "ArcKey D#5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  75,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  75,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          }
+        ]
+      },
+      {
+        "name": "Drums Notes 2",
+        "controls": [
+          {
+            "id": "HitZone_25",
+            "label": "ArcKey E5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  76,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  76,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_26",
+            "label": "ArcKey F5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  77,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  77,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_27",
+            "label": "ArcKey F#5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  78,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  78,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_28",
+            "label": "ArcKey G5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  79,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  79,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_29",
+            "label": "ArcKey G#5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  80,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  80,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_30",
+            "label": "ArcKey A5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  81,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  81,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_31",
+            "label": "ArcKey A#5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  82,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  82,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_32",
+            "label": "ArcKey B5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  83,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  83,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_33",
+            "label": "ArcKey C6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  84,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  84,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_35",
+            "label": "ArcKey C#6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  85,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  85,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_36",
+            "label": "ArcKey D6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  86,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  86,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_37",
+            "label": "ArcKey D#6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  87,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  87,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_38",
+            "label": "ArcKey E6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  88,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  88,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_39",
+            "label": "ArcKey F6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  89,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  89,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_40",
+            "label": "ArcKey F#6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  90,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  90,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_41",
+            "label": "ArcKey G6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  91,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  91,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          }
+        ]
+      },
+      {
+        "name": "Drums Notes 3",
+        "controls": [
+          {
+            "id": "HitZone_42",
+            "label": "ArcKey G#6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  92,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  92,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_43",
+            "label": "ArcKey A6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  93,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  93,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_44",
+            "label": "ArcKey A#6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  94,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  94,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_45",
+            "label": "ArcKey B6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  95,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  1,
+                  95,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_47",
+            "label": "Drum 1",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  36,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  36,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_49",
+            "label": "Drum 2",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  37,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  37,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_51",
+            "label": "Drum 3",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  38,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  38,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_53",
+            "label": "Drum 4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  39,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  39,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.28,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_55",
+            "label": "Drum8 1",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  44,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  44,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_57",
+            "label": "Drum8 2",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  45,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  45,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_59",
+            "label": "Drum8 3",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  46,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  46,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_61",
+            "label": "Drum8 4",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  47,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  47,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.52,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_63",
+            "label": "Drum8 5",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  48,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  48,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_65",
+            "label": "Drum8 6",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  49,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  49,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_67",
+            "label": "Drum8 7",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  50,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  50,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          },
+          {
+            "id": "HitZone_69",
+            "label": "Drum8 8",
+            "type": "pad",
+            "workspace": "Library",
+            "element_type": "HitZone",
+            "osc": {
+              "press": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  51,
+                  127
+                ]
+              },
+              "release": {
+                "address": "/mmc/midi/note",
+                "args": [
+                  10,
+                  51,
+                  0
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.76,
+              "w": 0.225,
+              "h": 0.2
+            }
+          }
+        ]
+      },
+      {
+        "name": "CC Controls 1",
+        "controls": [
+          {
+            "id": "HitZone_291",
+            "label": "LibBtn 1",
+            "type": "fader",
+            "workspace": "Palette: Mix strips",
+            "element_type": "HitZone",
+            "default_value": 127,
+            "osc": {
+              "change": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  93,
+                  "$value_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.28
+            }
+          },
+          {
+            "id": "HitZone_293",
+            "label": "LibBtn 2",
+            "type": "fader",
+            "workspace": "Palette: Mix strips",
+            "element_type": "HitZone",
+            "default_value": 127,
+            "osc": {
+              "change": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  94,
+                  "$value_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.28
+            }
+          },
+          {
+            "id": "HitZone_295",
+            "label": "LibBtn 3",
+            "type": "fader",
+            "workspace": "Palette: Mix strips",
+            "element_type": "HitZone",
+            "default_value": 127,
+            "osc": {
+              "change": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  95,
+                  "$value_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.51,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.28
+            }
+          },
+          {
+            "id": "HitZone_297",
+            "label": "LibBtn 4",
+            "type": "fader",
+            "workspace": "Palette: Mix strips",
+            "element_type": "HitZone",
+            "default_value": 127,
+            "osc": {
+              "change": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  96,
+                  "$value_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.755,
+              "y": 0.04,
+              "w": 0.225,
+              "h": 0.28
+            }
+          },
+          {
+            "id": "HitZone_299",
+            "label": "LibBtn 5",
+            "type": "fader",
+            "workspace": "Palette: Mix strips",
+            "element_type": "HitZone",
+            "default_value": 127,
+            "osc": {
+              "change": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  97,
+                  "$value_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.36,
+              "w": 0.225,
+              "h": 0.28
+            }
+          },
+          {
+            "id": "HitZone_301",
+            "label": "LibBtn 6",
+            "type": "fader",
+            "workspace": "Palette: Mix strips",
+            "element_type": "HitZone",
+            "default_value": 127,
+            "osc": {
+              "change": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  98,
+                  "$value_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.265,
+              "y": 0.36,
+              "w": 0.225,
+              "h": 0.28
+            }
+          }
+        ]
+      },
+      {
+        "name": "XY Morph 1",
+        "controls": [
+          {
+            "id": "MorphZone_2",
+            "label": "MorphZone_2",
+            "type": "xy",
+            "workspace": "Main Workspace",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  70,
+                  "$x_0_127"
+                ]
+              },
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  71,
+                  "$y_0_127"
+                ]
+              },
+              "z": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  72,
+                  "$z_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_71",
+            "label": "XY 1",
+            "type": "xy",
+            "workspace": "Library",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  32,
+                  "$x_0_127"
+                ]
+              },
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  48,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.3467,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_73",
+            "label": "XY 2",
+            "type": "xy",
+            "workspace": "Library",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  33,
+                  "$x_0_127"
+                ]
+              },
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  49,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.6733,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_75",
+            "label": "XY4 1",
+            "type": "xy",
+            "workspace": "Library",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  50,
+                  "$x_0_127"
+                ]
+              },
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  56,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_77",
+            "label": "XY4 2",
+            "type": "xy",
+            "workspace": "Library",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  51,
+                  "$x_0_127"
+                ]
+              },
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  57,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.3467,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_79",
+            "label": "XY4 3",
+            "type": "xy",
+            "workspace": "Library",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  52,
+                  "$x_0_127"
+                ]
+              },
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  58,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.6733,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          }
+        ]
+      },
+      {
+        "name": "XY Morph 2",
+        "controls": [
+          {
+            "id": "MorphZone_81",
+            "label": "XY4 4",
+            "type": "xy",
+            "workspace": "Library",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  53,
+                  "$x_0_127"
+                ]
+              },
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  59,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_83",
+            "label": "XYZ Pad",
+            "type": "xy",
+            "workspace": "Library",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  60,
+                  "$x_0_127"
+                ]
+              },
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  61,
+                  "$y_0_127"
+                ]
+              },
+              "z": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  62,
+                  "$z_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.3467,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_85",
+            "label": "X Macro 1",
+            "type": "xy",
+            "workspace": "Library",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  73,
+                  "$x_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.6733,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_87",
+            "label": "X Macro 2",
+            "type": "xy",
+            "workspace": "Library",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  74,
+                  "$x_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_89",
+            "label": "X Macro 3",
+            "type": "xy",
+            "workspace": "Library",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  75,
+                  "$x_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.3467,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_91",
+            "label": "X Macro 4",
+            "type": "xy",
+            "workspace": "Library",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  76,
+                  "$x_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.6733,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          }
+        ]
+      },
+      {
+        "name": "XY Morph 3",
+        "controls": [
+          {
+            "id": "MorphZone_263",
+            "label": "LibF 1",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  77,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_265",
+            "label": "LibF 2",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  78,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.3467,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_267",
+            "label": "LibF 3",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  79,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.6733,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_269",
+            "label": "LibF 4",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  80,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_271",
+            "label": "LibF 5",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  81,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.3467,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_273",
+            "label": "LibF 6",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  82,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.6733,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          }
+        ]
+      },
+      {
+        "name": "XY Morph 4",
+        "controls": [
+          {
+            "id": "MorphZone_275",
+            "label": "LibK 1",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  83,
+                  "$x_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_277",
+            "label": "LibK 2",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  84,
+                  "$x_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.3467,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_279",
+            "label": "LibK 3",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  85,
+                  "$x_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.6733,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_281",
+            "label": "LibK 4",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  86,
+                  "$x_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_283",
+            "label": "LibK 5",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  87,
+                  "$x_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.3467,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_285",
+            "label": "LibK 6",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  88,
+                  "$x_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.6733,
+              "y": 0.52,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          }
+        ]
+      },
+      {
+        "name": "XY Morph 5",
+        "controls": [
+          {
+            "id": "MorphZone_287",
+            "label": "LibXY 1",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  89,
+                  "$x_0_127"
+                ]
+              },
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  91,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.02,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          },
+          {
+            "id": "MorphZone_289",
+            "label": "LibXY 2",
+            "type": "xy",
+            "workspace": "Palette: Mix strips",
+            "element_type": "MorphZone",
+            "osc": {
+              "x": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  90,
+                  "$x_0_127"
+                ]
+              },
+              "y": {
+                "address": "/mmc/midi/cc",
+                "args": [
+                  1,
+                  92,
+                  "$y_0_127"
+                ]
+              }
+            },
+            "layout": {
+              "x": 0.3467,
+              "y": 0.04,
+              "w": 0.3067,
+              "h": 0.44
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

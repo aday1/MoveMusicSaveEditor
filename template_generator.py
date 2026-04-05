@@ -791,6 +791,580 @@ def generate_keyboard(
 
 
 # ---------------------------------------------------------------------------
+# Multi-workspace "Performance Area + Library" template
+# ---------------------------------------------------------------------------
+WorkspaceElementSpec = Tuple[Workspace, List]
+
+# Sacred geometry / decorative layout helpers
+
+def _hexagon_positions(count: int, radius: float) -> List[Tuple[float, float]]:
+    """Place count items in concentric hexagonal rings."""
+    if count <= 0:
+        return []
+    pts: List[Tuple[float, float]] = [(0.0, 0.0)]
+    ring = 1
+    while len(pts) < count:
+        for side in range(6):
+            angle_start = math.radians(60 * side + 30)
+            for step in range(ring):
+                if len(pts) >= count:
+                    break
+                a = angle_start + math.radians(60) * step / ring
+                pts.append((radius * ring * math.cos(a), radius * ring * math.sin(a)))
+        ring += 1
+    return pts[:count]
+
+
+def _flower_of_life_positions(petals: int, radius: float) -> List[Tuple[float, float]]:
+    """One centre + petals evenly spaced at *radius*, then a second ring at 2*radius offset 30 deg."""
+    pts = [(0.0, 0.0)]
+    for i in range(petals):
+        a = math.radians(360 * i / petals)
+        pts.append((radius * math.cos(a), radius * math.sin(a)))
+    for i in range(petals):
+        a = math.radians(360 * i / petals + 360 / petals / 2)
+        pts.append((2 * radius * math.cos(a), 2 * radius * math.sin(a)))
+    return pts
+
+
+def _star_polygon_positions(points: int, outer_r: float, inner_r: float) -> List[Tuple[float, float]]:
+    """Alternating outer/inner vertices of a star polygon (2*points vertices)."""
+    pts = []
+    for i in range(2 * points):
+        r = outer_r if i % 2 == 0 else inner_r
+        a = math.radians(360 * i / (2 * points) - 90)
+        pts.append((r * math.cos(a), r * math.sin(a)))
+    return pts
+
+
+def _golden_spiral_positions(count: int, base_r: float = 8.0) -> List[Tuple[float, float]]:
+    phi = (1 + math.sqrt(5)) / 2
+    pts = []
+    for i in range(count):
+        angle = i * 2.39996323  # golden angle in radians
+        r = base_r * math.sqrt(i + 1)
+        pts.append((r * math.cos(angle), r * math.sin(angle)))
+    return pts
+
+
+def _section_label(project: Project, x: float, y: float, z: float, text: str,
+                   color: Color = None, scale: float = 0.28) -> TextLabel:
+    return TextLabel(
+        unique_id=project.generate_id("TextLabel_C"),
+        display_name=text,
+        transform=Transform(
+            translation=Vec3(x, y, z),
+            scale=Vec3(scale, scale, scale),
+        ),
+        color=color or LABEL_COLOR,
+    )
+
+
+def _library_banner_labels(project: Project, center: Vec3) -> List:
+    """Large hints for the Library workspace (Z-up: labels sit above the floor)."""
+    els = []
+    els.append(
+        TextLabel(
+            unique_id=project.generate_id("TextLabel_C"),
+            display_name=(
+                "LIBRARY\n"
+                "Pick controls here, switch to Performance Area,\n"
+                "then paste or move items into your set."
+            ),
+            transform=Transform(
+                translation=Vec3(center.x, center.y, center.z + 52),
+                scale=Vec3(0.42, 0.42, 0.42),
+            ),
+            color=Color(0.88, 0.94, 1.0, 1.0),
+        )
+    )
+    els.append(
+        TextLabel(
+            unique_id=project.generate_id("TextLabel_C"),
+            display_name="Library: keys (row+circle) | 4+8 drums | XY + XY diamond | XYZ | X macros | Help + Shapes + Mix palettes | Drop zones +X",
+            transform=Transform(
+                translation=Vec3(center.x, center.y, center.z + 38),
+                scale=Vec3(0.26, 0.26, 0.26),
+            ),
+            color=Color(0.62, 0.74, 0.9, 1.0),
+        )
+    )
+    return els
+
+
+def _generate_xyz_pad(
+    project: Project,
+    origin: Vec3,
+    channel: int,
+    cc_x: int,
+    cc_y: int,
+    cc_z: int,
+) -> List:
+    mz_id = project.generate_id("MorphZone")
+    mz = MorphZone(
+        unique_id=mz_id,
+        display_name="XYZ Pad",
+        transform=Transform(
+            translation=Vec3(origin.x, origin.y, origin.z),
+            scale=Vec3(0.52, 0.52, 0.52),
+        ),
+        color=Color(0.25, 0.82, 0.95, 1.0),
+        is_x_axis_enabled=True,
+        x_axis_cc_mappings=[MidiCCMapping(channel=channel, control=cc_x, value=0)],
+        is_y_axis_enabled=True,
+        y_axis_cc_mappings=[MidiCCMapping(channel=channel, control=cc_y, value=0)],
+        is_z_axis_enabled=True,
+        z_axis_cc_mappings=[MidiCCMapping(channel=channel, control=cc_z, value=0)],
+        dimensions="EDimensions::Three",
+        soloed_axis="EAxis::None",
+    )
+    tl = TextLabel(
+        unique_id=project.generate_id("TextLabel_C"),
+        display_name=f"XYZ\nX:CC{cc_x} Y:CC{cc_y} Z:CC{cc_z} Ch{channel}",
+        transform=Transform(
+            translation=Vec3(origin.x, origin.y, origin.z + 28),
+            scale=Vec3(0.28, 0.28, 0.28),
+        ),
+        color=LABEL_COLOR,
+    )
+    return [mz, tl]
+
+
+def _generate_x_macro_row(
+    project: Project,
+    origin: Vec3,
+    count: int,
+    channel: int,
+    base_cc: int,
+) -> List:
+    positions = _row_positions(count, 24.0)
+    colors = _get_colors(count, "Cool")
+    out = []
+    for i, (px, py) in enumerate(positions):
+        mz_id = project.generate_id("MorphZone")
+        name = f"X Macro {i + 1}"
+        mz = MorphZone(
+            unique_id=mz_id,
+            display_name=name,
+            transform=Transform(
+                translation=Vec3(origin.x + px, origin.y + py, origin.z),
+                scale=Vec3(0.65, 0.14, 0.14),
+            ),
+            color=colors[i],
+            is_x_axis_enabled=True,
+            x_axis_cc_mappings=[MidiCCMapping(channel=channel, control=base_cc + i, value=0)],
+            is_y_axis_enabled=False,
+            y_axis_cc_mappings=[],
+            is_z_axis_enabled=False,
+            z_axis_cc_mappings=[],
+            dimensions="EDimensions::One",
+            soloed_axis="EAxis::X",
+        )
+        out.append(mz)
+        out.append(
+            TextLabel(
+                unique_id=project.generate_id("TextLabel_C"),
+                display_name=f"{name}\nCC{base_cc + i}",
+                transform=Transform(
+                    translation=Vec3(origin.x + px, origin.y + py, origin.z + 20),
+                    scale=Vec3(0.24, 0.24, 0.24),
+                ),
+                color=LABEL_COLOR,
+            )
+        )
+    return out
+
+
+def generate_workspace_library_pack(
+    project: Project,
+    origin: Vec3,
+    *,
+    ch: int = 1,
+    drum_ch: int = 10,
+) -> List[WorkspaceElementSpec]:
+    """
+    Four workspaces laid out to the four corners of the map:
+
+      SE (origin area): PERFORMANCE AREA  (main workspace 1 -- starts active)
+      NW: LIBRARY (instruments, sacred geometry, cool layouts)
+      NE: HELP (MoveMusic docs + tips)
+      SW: SHAPES & DECORATIONS (fun shapes, letters)
+
+    Performance Area is first in the list so the editor activates it.
+    Users copy/move items from the other three workspaces into here.
+    CCs and notes reuse values freely inside the library so every instrument
+    type is complete on its own.
+    """
+    if origin is None:
+        origin = Vec3(0, 0, 0)
+
+    SPREAD = 600.0
+    nw = Vec3(origin.x - SPREAD, origin.y + SPREAD, origin.z)
+    ne = Vec3(origin.x + SPREAD, origin.y + SPREAD, origin.z)
+    sw = Vec3(origin.x - SPREAD, origin.y - SPREAD, origin.z)
+    se = Vec3(origin.x + SPREAD, origin.y - SPREAD, origin.z)
+
+    specs: List[WorkspaceElementSpec] = []
+
+    # ====== SE (near origin): PERFORMANCE AREA -- first so it becomes active ======
+    perf_ws = Workspace(
+        unique_id=project.generate_id("Workspace"),
+        display_name="Performance Area",
+        enabled=True,
+    )
+    perf: List = []
+    perf.append(_section_label(project, se.x, se.y + 140, se.z + 42,
+        "PERFORMANCE AREA\n"
+        "This is your stage. Copy instruments from Library (NW),\n"
+        "shapes from Decorations (SW), or tips from Help (NE)\n"
+        "and arrange them here for your set.",
+        Color(0.2, 1.0, 0.6, 1.0), 0.36))
+
+    perf.append(_section_label(project, se.x - 160, se.y + 40, se.z + 22,
+        "How to build your set:\n"
+        "1. Switch to Library workspace\n"
+        "2. Select the controls you want\n"
+        "3. Edit > Copy (Ctrl+C)\n"
+        "4. Switch back here\n"
+        "5. Edit > Paste (Ctrl+V)\n"
+        "6. Arrange with drag, snap (G), grid ([ ])",
+        Color(0.65, 0.85, 0.95, 1.0), 0.22))
+
+    perf.append(_section_label(project, se.x + 160, se.y + 40, se.z + 22,
+        "Quick tips:\n"
+        "- Right-click element > Move to workspace\n"
+        "- F5 or View > Desktop Play to test\n"
+        "- G toggles grid snap, [ ] cycles size\n"
+        "- F focuses camera on selection\n"
+        "- Ctrl+M opens MIDI overview",
+        Color(0.65, 0.95, 0.85, 1.0), 0.22))
+
+    for tag, tx, ty in (("NW", -140, -30), ("NE", 140, -30), ("SW", -140, -130), ("SE", 140, -130)):
+        perf.append(_section_label(project, se.x + tx, se.y + ty, se.z + 3,
+            f"--- {tag} ---", Color(0.35, 0.48, 0.42, 1.0), 0.14))
+
+    specs.append((perf_ws, perf))
+
+    # ====== NW: LIBRARY ======
+    lib_ws = Workspace(
+        unique_id=project.generate_id("Workspace"),
+        display_name="Library",
+        enabled=True,
+    )
+    lib: List = []
+
+    lib.append(_section_label(project, nw.x, nw.y + 280, nw.z + 50,
+        "LIBRARY\n"
+        "Instruments, controls, sacred geometry.\n"
+        "Select items, then Edit > Copy, switch workspace, Edit > Paste.\n"
+        "Or right-click > Move to workspace.",
+        Color(0.85, 0.92, 1.0, 1.0), 0.38))
+
+    # -- Section A: Keyboards (Row, Circle, Triangle) --
+    sec_a = Vec3(nw.x - 320, nw.y + 140, nw.z)
+    lib.append(_section_label(project, sec_a.x, sec_a.y + 50, sec_a.z + 30,
+        "KEYBOARDS", Color(1.0, 0.9, 0.3, 1.0), 0.32))
+
+    lib.extend(generate_keyboard(project, "Row", 11, Vec3(sec_a.x, sec_a.y, sec_a.z),
+        channel=ch, base_note=48, max_note=72, label_prefix="RowKey"))
+
+    lib.extend(generate_keyboard(project, "Circle", 14, Vec3(sec_a.x + 360, sec_a.y - 40, sec_a.z),
+        channel=ch, base_note=60, max_note=71, label_prefix="CircleKey"))
+
+    lib.extend(generate_keyboard(project, "Triangle", 12, Vec3(sec_a.x + 180, sec_a.y - 200, sec_a.z),
+        channel=ch, base_note=36, max_note=59, label_prefix="TriKey"))
+
+    # -- Section B: Drum kits --
+    sec_b = Vec3(nw.x + 280, nw.y + 120, nw.z)
+    lib.append(_section_label(project, sec_b.x, sec_b.y + 60, sec_b.z + 30,
+        "DRUM KITS", Color(1.0, 0.45, 0.3, 1.0), 0.32))
+
+    lib.extend(generate_drum_pads(project, 4, "Square", 32,
+        Vec3(sec_b.x - 80, sec_b.y, sec_b.z),
+        base_note=36, channel=drum_ch, label_prefix="Kit4"))
+
+    lib.extend(generate_drum_pads(project, 8, "Grid", 28,
+        Vec3(sec_b.x + 100, sec_b.y - 10, sec_b.z),
+        base_note=36, channel=drum_ch, label_prefix="Kit8"))
+
+    lib.extend(generate_drum_pads(project, 16, "Grid", 24,
+        Vec3(sec_b.x + 10, sec_b.y - 160, sec_b.z),
+        base_note=36, channel=drum_ch, label_prefix="Kit16"))
+
+    lib.extend(generate_drum_pads(project, 6, "Circle", 30,
+        Vec3(sec_b.x + 280, sec_b.y - 60, sec_b.z),
+        base_note=60, channel=drum_ch, label_prefix="CircDrum"))
+
+    lib.extend(generate_drum_pads(project, 8, "Diamond", 26,
+        Vec3(sec_b.x + 280, sec_b.y - 220, sec_b.z),
+        base_note=48, channel=drum_ch, label_prefix="DiaDrum"))
+
+    # -- Section C: Faders & knobs --
+    sec_c = Vec3(nw.x - 350, nw.y - 180, nw.z)
+    lib.append(_section_label(project, sec_c.x, sec_c.y + 50, sec_c.z + 30,
+        "FADERS & KNOBS", Color(0.3, 0.85, 1.0, 1.0), 0.30))
+
+    lib.extend(generate_faders(project, 8, "Row", 30,
+        Vec3(sec_c.x, sec_c.y, sec_c.z),
+        base_cc=1, channel=ch, label_prefix="Fader", color_mode="Rainbow"))
+
+    lib.extend(generate_faders(project, 8, "Circle", 34,
+        Vec3(sec_c.x + 300, sec_c.y - 20, sec_c.z),
+        base_cc=1, channel=ch, label_prefix="CircF", color_mode="Neon"))
+
+    lib.extend(generate_knobs(project, 8, "Row", 30,
+        Vec3(sec_c.x, sec_c.y - 110, sec_c.z),
+        base_cc=16, channel=ch, label_prefix="Knob", color_mode="Cool"))
+
+    lib.extend(generate_knobs(project, 8, "Arc", 32,
+        Vec3(sec_c.x + 300, sec_c.y - 130, sec_c.z),
+        base_cc=16, channel=ch, label_prefix="ArcK", color_mode="Warm"))
+
+    lib.extend(generate_knobs(project, 8, "Spiral", 80,
+        Vec3(sec_c.x + 140, sec_c.y - 280, sec_c.z),
+        base_cc=24, channel=ch, label_prefix="SpiralK", color_mode="Neon"))
+
+    # -- Section D: XY / XYZ pads --
+    sec_d = Vec3(nw.x - 100, nw.y - 380, nw.z)
+    lib.append(_section_label(project, sec_d.x, sec_d.y + 50, sec_d.z + 30,
+        "XY / XYZ PADS", Color(0.5, 1.0, 0.7, 1.0), 0.30))
+
+    lib.extend(generate_xy_pads(project, 2, "Row", 52,
+        Vec3(sec_d.x - 80, sec_d.y, sec_d.z),
+        base_cc_x=32, base_cc_y=48, channel=ch, label_prefix="XY"))
+
+    lib.extend(generate_xy_pads(project, 4, "Diamond", 44,
+        Vec3(sec_d.x + 160, sec_d.y - 10, sec_d.z),
+        base_cc_x=40, base_cc_y=50, channel=ch, label_prefix="DiaXY"))
+
+    lib.extend(generate_xy_pads(project, 4, "Circle", 50,
+        Vec3(sec_d.x + 380, sec_d.y - 20, sec_d.z),
+        base_cc_x=32, base_cc_y=48, channel=ch, label_prefix="CXY"))
+
+    lib.extend(_generate_xyz_pad(project, Vec3(sec_d.x, sec_d.y - 160, sec_d.z),
+        ch, 20, 21, 22))
+    lib.extend(_generate_xyz_pad(project, Vec3(sec_d.x + 120, sec_d.y - 160, sec_d.z),
+        ch, 23, 24, 25))
+
+    # -- Section E: Buttons & toggles --
+    sec_e = Vec3(nw.x + 350, nw.y - 280, nw.z)
+    lib.append(_section_label(project, sec_e.x, sec_e.y + 50, sec_e.z + 30,
+        "BUTTONS & TOGGLES", Color(1.0, 0.65, 0.9, 1.0), 0.30))
+
+    lib.extend(generate_buttons(project, 8, "Row", 25,
+        Vec3(sec_e.x, sec_e.y, sec_e.z),
+        base_cc=64, channel=ch, label_prefix="Btn"))
+
+    lib.extend(generate_buttons(project, 8, "Circle", 28,
+        Vec3(sec_e.x + 10, sec_e.y - 120, sec_e.z),
+        base_cc=64, channel=ch, label_prefix="CBtn"))
+
+    lib.extend(generate_buttons(project, 16, "Grid", 22,
+        Vec3(sec_e.x + 10, sec_e.y - 280, sec_e.z),
+        base_cc=64, channel=ch, label_prefix="GBtn"))
+
+    # -- Section F: X-only macros --
+    sec_f = Vec3(nw.x + 200, nw.y - 520, nw.z)
+    lib.append(_section_label(project, sec_f.x, sec_f.y + 30, sec_f.z + 24,
+        "X MACROS", Color(0.6, 0.75, 1.0, 1.0), 0.26))
+    lib.extend(_generate_x_macro_row(project, sec_f, 6, ch, 80))
+
+    # -- Section G: Sacred geometry clusters --
+    sec_g = Vec3(nw.x - 350, nw.y - 580, nw.z)
+    lib.append(_section_label(project, sec_g.x + 200, sec_g.y + 70, sec_g.z + 32,
+        "SACRED GEOMETRY LAYOUTS\nHexagonal, flower-of-life, star, golden spiral\n"
+        "Copy these grouped clusters into Performance Area.",
+        Color(0.95, 0.85, 1.0, 1.0), 0.28))
+
+    # Hexagonal drum grid
+    hex_pts = _hexagon_positions(12, 24.0)
+    hex_colors = _get_colors(12, "Neon")
+    for i, (hx, hy) in enumerate(hex_pts):
+        hz_id = project.generate_id("HitZone")
+        hz = HitZone(
+            unique_id=hz_id,
+            display_name=f"HexDrum {i+1}",
+            transform=Transform(
+                translation=Vec3(sec_g.x + hx, sec_g.y + hy, sec_g.z),
+                scale=Vec3(0.35, 0.35, 0.12),
+            ),
+            color=hex_colors[i],
+            should_use_velocity_sensitivity=True,
+            midi_note_mappings=[MidiNoteMapping(channel=drum_ch, note=36 + i, velocity=1.0)],
+            midi_cc_mappings=[],
+            behavior="EHitZoneBehavior::Hold",
+            midi_message_type="EMidiMessageType::Note",
+        )
+        lib.append(hz)
+    lib.append(_section_label(project, sec_g.x, sec_g.y - 80, sec_g.z + 16,
+        "Hex Grid (12 pads)", Color(0.7, 0.5, 1.0, 1.0), 0.22))
+
+    # Flower of life fader ring
+    flower_pts = _flower_of_life_positions(6, 30.0)
+    flower_colors = _get_colors(len(flower_pts), "Warm")
+    fol_center = Vec3(sec_g.x + 220, sec_g.y, sec_g.z)
+    for i, (fx, fy) in enumerate(flower_pts):
+        mz_id = project.generate_id("MorphZone")
+        mz = MorphZone(
+            unique_id=mz_id,
+            display_name=f"FlowerFader {i+1}",
+            transform=Transform(
+                translation=Vec3(fol_center.x + fx, fol_center.y + fy, fol_center.z),
+                scale=Vec3(0.15, 0.7, 0.15),
+            ),
+            color=flower_colors[i],
+            is_x_axis_enabled=False, x_axis_cc_mappings=[],
+            is_y_axis_enabled=True,
+            y_axis_cc_mappings=[MidiCCMapping(channel=ch, control=1 + (i % 8), value=0)],
+            is_z_axis_enabled=False, z_axis_cc_mappings=[],
+            dimensions="EDimensions::One", soloed_axis="EAxis::Y",
+        )
+        lib.append(mz)
+    lib.append(_section_label(project, fol_center.x, fol_center.y - 56, fol_center.z + 16,
+        "Flower of Life (13 faders)", Color(1.0, 0.65, 0.3, 1.0), 0.22))
+
+    # Star polygon XY ring
+    star_pts = _star_polygon_positions(5, 55.0, 25.0)
+    star_colors = _get_colors(len(star_pts), "Neon")
+    star_center = Vec3(sec_g.x + 460, sec_g.y, sec_g.z)
+    for i, (sx, sy) in enumerate(star_pts):
+        mz_id = project.generate_id("MorphZone")
+        mz = MorphZone(
+            unique_id=mz_id,
+            display_name=f"StarXY {i+1}",
+            transform=Transform(
+                translation=Vec3(star_center.x + sx, star_center.y + sy, star_center.z),
+                scale=Vec3(0.35, 0.35, 0.12),
+            ),
+            color=star_colors[i],
+            is_x_axis_enabled=True,
+            x_axis_cc_mappings=[MidiCCMapping(channel=ch, control=32 + (i % 8), value=0)],
+            is_y_axis_enabled=True,
+            y_axis_cc_mappings=[MidiCCMapping(channel=ch, control=48 + (i % 8), value=0)],
+            is_z_axis_enabled=False, z_axis_cc_mappings=[],
+            dimensions="EDimensions::Two", soloed_axis="EAxis::None",
+        )
+        lib.append(mz)
+    lib.append(_section_label(project, star_center.x, star_center.y - 72, star_center.z + 16,
+        "Star Polygon (10 XY pads)", Color(0.0, 1.0, 1.0, 1.0), 0.22))
+
+    # Golden spiral buttons
+    gspi_pts = _golden_spiral_positions(16, 7.0)
+    gspi_colors = _get_colors(16, "Rainbow")
+    gspi_center = Vec3(sec_g.x + 140, sec_g.y - 180, sec_g.z)
+    for i, (gx, gy) in enumerate(gspi_pts):
+        hz_id = project.generate_id("HitZone")
+        hz = HitZone(
+            unique_id=hz_id,
+            display_name=f"SpiralBtn {i+1}",
+            transform=Transform(
+                translation=Vec3(gspi_center.x + gx, gspi_center.y + gy, gspi_center.z),
+                scale=Vec3(0.22, 0.22, 0.22),
+            ),
+            color=gspi_colors[i],
+            should_use_velocity_sensitivity=False,
+            midi_note_mappings=[],
+            midi_cc_mappings=[MidiCCMapping(channel=ch, control=64 + (i % 16), value=127)],
+            behavior="EHitZoneBehavior::Toggle",
+            midi_message_type="EMidiMessageType::CC",
+        )
+        lib.append(hz)
+    lib.append(_section_label(project, gspi_center.x, gspi_center.y - 80, gspi_center.z + 16,
+        "Golden Spiral (16 toggle buttons)", Color(0.9, 0.8, 0.2, 1.0), 0.22))
+
+    specs.append((lib_ws, lib))
+
+    # ====== NE: HELP ======
+    help_ws = Workspace(
+        unique_id=project.generate_id("Workspace"),
+        display_name="Help / Docs",
+        enabled=True,
+    )
+    hlp: List = []
+    hlp.append(_section_label(project, ne.x, ne.y + 160, ne.z + 44,
+        "MOVEMUSIC HELP\n"
+        "Abridged from the official user guide.",
+        Color(0.9, 0.95, 1.0, 1.0), 0.38))
+
+    hlp.append(_section_label(project, ne.x - 200, ne.y + 40, ne.z + 30,
+        "HIT ZONE\n"
+        "Hit with VR controller to send Note or CC.\n"
+        "Behaviors: Hold, Timed, Toggle.\n"
+        "Note mode: velocity-sensitive; CC mode: on/off.\n"
+        "Inspector: X button on left controller.",
+        Color(0.3, 0.8, 1.0, 1.0), 0.26))
+
+    hlp.append(_section_label(project, ne.x + 200, ne.y + 40, ne.z + 30,
+        "MORPH ZONE\n"
+        "Hold trigger, move controller through space.\n"
+        "1D = slider/fader, 2D = XY pad, 3D = cube.\n"
+        "CC value maps to handle position per axis.\n"
+        "Release: Stop (stays) or Return (snaps back).",
+        Color(0.3, 1.0, 0.7, 1.0), 0.26))
+
+    hlp.append(_section_label(project, ne.x - 200, ne.y - 120, ne.z + 26,
+        "TEXT LABEL\n"
+        "3D labels for your layout. Set text via Inspector.\n"
+        "Use to annotate sections, name controls, etc.",
+        Color(1.0, 1.0, 0.6, 1.0), 0.24))
+
+    hlp.append(_section_label(project, ne.x + 200, ne.y - 120, ne.z + 26,
+        "SUPPORT LINKS\n"
+        "https://movemusic.com/support\n"
+        "https://movemusic.com/support/user-guide/objects-and-inspector\n"
+        "Discord community: see support page.",
+        Color(0.55, 0.85, 1.0, 1.0), 0.24))
+
+    hlp.append(_section_label(project, ne.x, ne.y - 260, ne.z + 22,
+        "EDITOR TIPS\n"
+        "G: toggle snap  |  [ ]: cycle grid size  |  F: focus selection\n"
+        "1/3/7: front/side/top  |  5: ortho  |  0: perspective home\n"
+        "R/T: rotate CW/CCW  |  Arrow keys: nudge\n"
+        "View > Desktop Play: resizable (not fullscreen), Esc exits.",
+        Color(0.8, 0.8, 0.9, 1.0), 0.24))
+
+    specs.append((help_ws, hlp))
+
+    # ====== SW: SHAPES & DECORATIONS ======
+    shape_ws = Workspace(
+        unique_id=project.generate_id("Workspace"),
+        display_name="Shapes & Decor",
+        enabled=True,
+    )
+    shp: List = []
+    shp.append(_section_label(project, sw.x, sw.y + 200, sw.z + 42,
+        "SHAPES & DECORATIONS\n"
+        "TextLabel pixel art. Select all in a shape, duplicate,\n"
+        "and drop into your performance workspace.",
+        Color(1.0, 0.75, 0.85, 1.0), 0.34))
+
+    shape_jobs = [
+        ("Shape: Heart",       sw.x - 350,  sw.y + 40),
+        ("Shape: Music Note",  sw.x - 140,  sw.y + 20),
+        ("Shape: Star",        sw.x + 80,   sw.y + 40),
+        ("Shape: Spiral",      sw.x + 280,  sw.y + 20),
+        ("Shape: Lightning",   sw.x - 350,  sw.y - 150),
+        ("Shape: Crown",       sw.x - 140,  sw.y - 170),
+        ("Shape: Skull",       sw.x + 80,   sw.y - 150),
+        ("Shape: Piano",       sw.x + 280,  sw.y - 170),
+        ("Shape: Headphones",  sw.x - 350,  sw.y - 350),
+        ("Shape: EQ Bars",     sw.x - 140,  sw.y - 370),
+        ("Shape: Gamepad",     sw.x + 80,   sw.y - 350),
+        ("Shape: Smiley",      sw.x + 280,  sw.y - 370),
+    ]
+    for tpl_name, sx, sy in shape_jobs:
+        gen = TEMPLATES.get(tpl_name)
+        if gen:
+            shp.extend(gen(project, Vec3(sx, sy, sw.z)))
+        shp.append(_section_label(project, sx, sy - 70, sw.z + 14,
+            tpl_name.replace("Shape: ", ""), Color(0.7, 0.7, 0.8, 1.0), 0.18))
+
+    specs.append((shape_ws, shp))
+
+    return specs
+
+
+# ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 

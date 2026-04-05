@@ -13,7 +13,7 @@ import logging
 import math
 from typing import List, Optional, Tuple
 
-from PyQt6.QtCore import Qt, pyqtSignal, QPoint, QRectF, QRect
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QPoint, QRectF, QRect
 from PyQt6.QtGui import (
     QMouseEvent, QWheelEvent, QPainter, QFont, QFontMetrics,
     QColor, QPen, QBrush, QPainterPath, QKeySequence, QShortcut,
@@ -416,6 +416,7 @@ class SceneViewport(QOpenGLWidget):
         # Snap grid
         self._snap_grid_enabled = False
         self._snap_grid_size = 5.0
+        self.SNAP_GRID_PRESETS = (5.0, 10.0, 25.0, 50.0, 100.0)
 
         # UI state
         self._show_shortcuts = True  # Always show shortcuts by default
@@ -427,6 +428,18 @@ class SceneViewport(QOpenGLWidget):
 
         # Overlay buttons (populated during paintEvent)
         self._overlay_buttons = []  # [(QRectF, label_str)]
+
+        # Auto-fly camera system
+        self._autofly_mode = ""       # "", "orbit", "flythrough", "tour"
+        self._autofly_timer = QTimer(self)
+        self._autofly_timer.setInterval(33)  # ~30 fps
+        self._autofly_timer.timeout.connect(self._autofly_tick)
+        self._autofly_t = 0.0         # progress [0..1] or angle accumulator
+        self._autofly_speed = 1.0     # multiplier
+        self._autofly_waypoints: List[tuple] = []  # [(cx, cy, cz, dist, yaw, pitch), ...]
+        self._autofly_wp_index = 0
+        self._autofly_wp_blend = 0.0
+        self._autofly_paused = False
 
         # Cached screen positions for picking & labels
         self._screen_positions = {}  # id(elem) -> (sx, sy, depth, elem)
@@ -459,6 +472,235 @@ class SceneViewport(QOpenGLWidget):
     def selected_element(self):
         """Returns the primary (last-clicked) element or None."""
         return self.selected_elements[-1] if self.selected_elements else None
+
+    def set_snap_grid_size(self, size: float) -> None:
+        """Set snap distance in world units (used when grid snap is enabled)."""
+        self._snap_grid_size = max(0.1, float(size))
+        self.update()
+
+    def cycle_snap_grid_preset(self, direction: int) -> None:
+        """Cycle through SNAP_GRID_PRESETS (direction +1 or -1)."""
+        presets = list(self.SNAP_GRID_PRESETS)
+        cur = self._snap_grid_size
+        closest = min(range(len(presets)), key=lambda j: abs(presets[j] - cur))
+        nxt = (closest + direction) % len(presets)
+        self._snap_grid_size = presets[nxt]
+        self._show_status(f"Snap grid preset: {self._snap_grid_size:g} units (G toggles snap)")
+        self.update()
+
+    def fit_workspace_bounds(self, ws_index: int) -> bool:
+        """Frame camera to the bounding region of all elements in workspace ws_index."""
+        if not self.project or not self.project.workspaces:
+            return False
+        if not (0 <= ws_index < len(self.project.workspaces)):
+            return False
+        ws = self.project.workspaces[ws_index]
+        id_to_el = {e.unique_id: e for e in self.project.elements}
+        visible = [id_to_el[uid] for uid in ws.element_ids if uid in id_to_el]
+        if not visible:
+            return False
+        min_pt = [1e30, 1e30, 1e30]
+        max_pt = [-1e30, -1e30, -1e30]
+        for e in visible:
+            p = e.transform.translation
+            for i, v in enumerate([p.x, p.y, p.z]):
+                min_pt[i] = min(min_pt[i], v - 30)
+                max_pt[i] = max(max_pt[i], v + 30)
+        self.camera.fit_to_bounds(min_pt, max_pt)
+        self.camera.ortho = False
+        self.camera.yaw = 48.0
+        self.camera.pitch = 32.0
+        self.update()
+        return True
+
+    # ---- Auto-fly camera ----
+
+    def autofly_start(self, mode: str, speed: float = 1.0) -> None:
+        """Start an auto-fly camera mode: 'orbit', 'flythrough', or 'tour'."""
+        self.autofly_stop()
+        elems = self._active_workspace_elements()
+        if not elems and self.project:
+            elems = list(self.project.elements)
+        if not elems:
+            self._show_status("No elements to fly around")
+            return
+
+        self._autofly_mode = mode
+        self._autofly_speed = max(0.1, float(speed))
+        self._autofly_t = 0.0
+        self._autofly_paused = False
+
+        if mode == "orbit":
+            self._autofly_setup_orbit(elems)
+        elif mode == "flythrough":
+            self._autofly_setup_flythrough(elems)
+        elif mode == "tour":
+            self._autofly_setup_tour()
+        else:
+            self._autofly_mode = ""
+            return
+
+        self._autofly_timer.start()
+        self._show_status(f"Auto-fly: {mode} (any mouse drag or Esc to stop)")
+
+    def autofly_stop(self) -> None:
+        if self._autofly_timer.isActive():
+            self._autofly_timer.stop()
+        self._autofly_mode = ""
+        self._autofly_waypoints = []
+
+    def autofly_toggle_pause(self) -> None:
+        if not self._autofly_mode:
+            return
+        self._autofly_paused = not self._autofly_paused
+        self._show_status(
+            f"Auto-fly {'paused' if self._autofly_paused else 'resumed'} -- Esc or drag to stop"
+        )
+
+    @property
+    def autofly_active(self) -> bool:
+        return bool(self._autofly_mode)
+
+    def _autofly_bounds(self, elems) -> tuple:
+        min_pt = [1e30, 1e30, 1e30]
+        max_pt = [-1e30, -1e30, -1e30]
+        for e in elems:
+            p = e.transform.translation
+            for i, v in enumerate([p.x, p.y, p.z]):
+                min_pt[i] = min(min_pt[i], v - 20)
+                max_pt[i] = max(max_pt[i], v + 20)
+        cx = (min_pt[0] + max_pt[0]) / 2
+        cy = (min_pt[1] + max_pt[1]) / 2
+        cz = (min_pt[2] + max_pt[2]) / 2
+        extent = max(max_pt[0] - min_pt[0], max_pt[1] - min_pt[1], max_pt[2] - min_pt[2], 60.0)
+        return cx, cy, cz, extent
+
+    def _autofly_setup_orbit(self, elems) -> None:
+        cx, cy, cz, extent = self._autofly_bounds(elems)
+        self.camera.target = [cx, cy, cz]
+        self.camera.distance = extent * 1.4
+        self.camera.pitch = 28.0
+        self.camera.ortho = False
+
+    def _autofly_setup_flythrough(self, elems) -> None:
+        clusters = self._autofly_cluster_elements(elems, max_clusters=12)
+        if len(clusters) < 2:
+            cx, cy, cz, extent = self._autofly_bounds(elems)
+            clusters = [
+                (cx - extent * 0.6, cy, cz),
+                (cx, cy + extent * 0.6, cz),
+                (cx + extent * 0.6, cy, cz),
+                (cx, cy - extent * 0.6, cz),
+            ]
+        wps = []
+        for (px, py, pz) in clusters:
+            dist = 120.0
+            yaw = math.degrees(math.atan2(py - self.camera.target[1], px - self.camera.target[0]))
+            wps.append((px, py, pz, dist, yaw, 22.0))
+        wps.append(wps[0])
+        self._autofly_waypoints = wps
+        self._autofly_wp_index = 0
+        self._autofly_wp_blend = 0.0
+        self.camera.ortho = False
+
+    def _autofly_setup_tour(self) -> None:
+        if not self.project or not self.project.workspaces:
+            self._autofly_mode = ""
+            return
+        wps = []
+        for ws in self.project.workspaces:
+            id_to_el = {e.unique_id: e for e in self.project.elements}
+            ws_elems = [id_to_el[uid] for uid in ws.element_ids if uid in id_to_el]
+            if not ws_elems:
+                continue
+            cx, cy, cz, extent = self._autofly_bounds(ws_elems)
+            dist = extent * 1.3
+            yaw = 45.0 + len(wps) * 60.0
+            wps.append((cx, cy, cz, dist, yaw, 30.0))
+        if len(wps) < 2:
+            self._autofly_mode = ""
+            self._show_status("Need at least 2 workspaces with elements for tour")
+            return
+        wps.append(wps[0])
+        self._autofly_waypoints = wps
+        self._autofly_wp_index = 0
+        self._autofly_wp_blend = 0.0
+        self.camera.ortho = False
+
+    def _autofly_cluster_elements(self, elems, max_clusters: int = 12) -> List[tuple]:
+        """Simple spatial clustering: sort by angle from centroid, sample evenly."""
+        if not elems:
+            return []
+        xs = [e.transform.translation.x for e in elems]
+        ys = [e.transform.translation.y for e in elems]
+        zs = [e.transform.translation.z for e in elems]
+        cx = sum(xs) / len(xs)
+        cy = sum(ys) / len(ys)
+        cz = sum(zs) / len(zs)
+        angled = []
+        for e in elems:
+            p = e.transform.translation
+            a = math.atan2(p.y - cy, p.x - cx)
+            angled.append((a, p.x, p.y, p.z))
+        angled.sort()
+        step = max(1, len(angled) // max_clusters)
+        pts = []
+        for i in range(0, len(angled), step):
+            _, px, py, pz = angled[i]
+            pts.append((px, py, pz))
+        if len(pts) > max_clusters:
+            pts = pts[:max_clusters]
+        return pts
+
+    def _autofly_tick(self) -> None:
+        if self._autofly_paused:
+            return
+        dt = 0.033 * self._autofly_speed
+
+        if self._autofly_mode == "orbit":
+            self.camera.yaw += dt * 18.0
+            if self.camera.yaw > 360.0:
+                self.camera.yaw -= 360.0
+            bobble = math.sin(self._autofly_t * 0.4) * 4.0
+            self.camera.pitch = 28.0 + bobble
+            self._autofly_t += dt
+            self.update()
+            return
+
+        if self._autofly_mode in ("flythrough", "tour"):
+            wps = self._autofly_waypoints
+            if len(wps) < 2:
+                self.autofly_stop()
+                return
+            idx = self._autofly_wp_index
+            nxt = (idx + 1) % len(wps)
+            a = wps[idx]
+            b = wps[nxt]
+
+            seg_speed = 0.25 if self._autofly_mode == "tour" else 0.4
+            self._autofly_wp_blend += dt * seg_speed
+            t = min(1.0, self._autofly_wp_blend)
+            st = t * t * (3 - 2 * t)
+
+            self.camera.target[0] = a[0] + (b[0] - a[0]) * st
+            self.camera.target[1] = a[1] + (b[1] - a[1]) * st
+            self.camera.target[2] = a[2] + (b[2] - a[2]) * st
+            self.camera.distance = a[3] + (b[3] - a[3]) * st
+            yaw_diff = b[4] - a[4]
+            if yaw_diff > 180:
+                yaw_diff -= 360
+            elif yaw_diff < -180:
+                yaw_diff += 360
+            self.camera.yaw = a[4] + yaw_diff * st
+            self.camera.pitch = a[5] + (b[5] - a[5]) * st
+
+            if t >= 1.0:
+                self._autofly_wp_blend = 0.0
+                self._autofly_wp_index = nxt
+                if nxt == 0:
+                    pass
+            self.update()
+            return
 
     def set_project(self, project: Optional[Project]):
         self.project = project
@@ -1390,9 +1632,35 @@ class SceneViewport(QOpenGLWidget):
             text_r = bg_rect.adjusted(8, 4, -8, -4)
             painter.drawText(text_r.x(), text_r.y() + metrics.ascent(), grid_info)
 
+            if distance < 20:
+                zoom_hint = "VERY CLOSE -- scroll out to see more"
+                hint_color = QColor(255, 160, 60, 240)
+            elif distance < 60:
+                zoom_hint = "Close up -- good for detail editing"
+                hint_color = QColor(120, 220, 180, 200)
+            elif distance > 3000:
+                zoom_hint = "VERY FAR -- scroll in or press Home"
+                hint_color = QColor(255, 160, 60, 240)
+            elif distance > 1200:
+                zoom_hint = "Zoomed out -- overview mode"
+                hint_color = QColor(150, 200, 230, 200)
+            else:
+                zoom_hint = ""
+                hint_color = QColor(0, 0, 0, 0)
+
+            if zoom_hint:
+                hint_rect = metrics.boundingRect(zoom_hint).adjusted(-8, -4, 8, 4)
+                hint_rect.moveTopRight(QPoint(top_right.x() - 10, bg_rect.bottom() + 4))
+                painter.fillRect(hint_rect, QColor(20, 10, 0, 180))
+                painter.setPen(hint_color)
+                hr = hint_rect.adjusted(8, 4, -8, -4)
+                painter.drawText(hr.x(), hr.y() + metrics.ascent(), zoom_hint)
+
     def _draw_axis_hud(self, painter: QPainter):
-        ox, oy = 50, self.height() - 50
-        length = 30
+        """Blender-style clickable axis gizmo: click an axis ball to snap the camera."""
+        ox, oy = 60, self.height() - 60
+        length = 36
+        hit_radius = 14
 
         yr = math.radians(self.camera.yaw)
         pr = math.radians(self.camera.pitch)
@@ -1405,22 +1673,49 @@ class SceneViewport(QOpenGLWidget):
         axes = [
             ("X", (1, 0, 0), QColor(230, 70, 70)),
             ("Y", (0, 1, 0), QColor(70, 230, 70)),
-            ("Z", (0, 0, 1), QColor(70, 70, 230)),
+            ("Z", (0, 0, 1), QColor(70, 100, 230)),
+            ("-X", (-1, 0, 0), QColor(140, 50, 50)),
+            ("-Y", (0, -1, 0), QColor(50, 140, 50)),
+            ("-Z", (0, 0, -1), QColor(50, 50, 140)),
         ]
+
+        painter.setPen(QPen(QColor(60, 60, 70, 120), 1))
+        painter.setBrush(QColor(20, 24, 32, 160))
+        painter.drawEllipse(int(ox - length - 12), int(oy - length - 12),
+                            int((length + 12) * 2), int((length + 12) * 2))
 
         font = QFont("Segoe UI", 9, QFont.Weight.Bold)
         painter.setFont(font)
 
-        for name, (wx, wy, wz), color in axes:
+        self._axis_gizmo_hits = []
+
+        sorted_axes = sorted(axes, key=lambda a: project_axis(*a[1])[1], reverse=True)
+
+        for name, (wx, wy, wz), color in sorted_axes:
             ex, ey = project_axis(wx, wy, wz)
-            pen = QPen(color, 2.5)
-            painter.setPen(pen)
+            is_front = (ex * ex + ey * ey) > (length * 0.3) ** 2
+            alpha = 220 if is_front else 90
+            lc = QColor(color.red(), color.green(), color.blue(), alpha)
+
+            painter.setPen(QPen(lc, 2.0))
             painter.drawLine(int(ox), int(oy), int(ox + ex), int(oy + ey))
-            painter.setBrush(QBrush(color))
+
+            ball_r = hit_radius if not name.startswith("-") else 8
+            bc = QColor(color.red(), color.green(), color.blue(), alpha)
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawEllipse(int(ox + ex - 5), int(oy + ey - 5), 10, 10)
-            painter.setPen(QColor(255, 255, 255))
-            painter.drawText(int(ox + ex - 4), int(oy + ey + 4), name)
+            painter.setBrush(bc)
+            bx, by = int(ox + ex), int(oy + ey)
+            painter.drawEllipse(bx - ball_r, by - ball_r, ball_r * 2, ball_r * 2)
+
+            if not name.startswith("-"):
+                painter.setPen(QColor(255, 255, 255, alpha))
+                painter.drawText(bx - 4, by + 5, name)
+
+            self._axis_gizmo_hits.append((bx, by, ball_r + 4, name))
+
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(200, 200, 210, 180))
+        painter.drawEllipse(int(ox - 5), int(oy - 5), 10, 10)
 
     def _draw_info_hud(self, painter: QPainter):
         # View label in top-right with background pill
@@ -1546,16 +1841,20 @@ class SceneViewport(QOpenGLWidget):
             ("Top", False),
             ("Front", False),
             ("Side", False),
+            ("Home", False),
+            ("Fit", False),
+            ("Z+", False),
+            ("Z-", False),
         ]
 
-        btn_w, btn_h = 52, 24
-        gap = 4
+        btn_w, btn_h = 48, 28
+        gap = 3
         total_w = len(buttons) * (btn_w + gap) - gap
         start_x = (self.width() - total_w) / 2
-        start_y = 8
+        start_y = 6
 
         self._overlay_buttons = []
-        font = QFont("Segoe UI", 8, QFont.Weight.Bold)
+        font = QFont("Segoe UI", 9, QFont.Weight.Bold)
         painter.setFont(font)
 
         for i, (label, active) in enumerate(buttons):
@@ -1563,17 +1862,17 @@ class SceneViewport(QOpenGLWidget):
             rect = QRectF(x, start_y, btn_w, btn_h)
 
             if active:
-                bg = QColor(60, 130, 200, 220)
-                border = QColor(100, 170, 240)
+                bg = QColor(50, 120, 190, 220)
+                border = QColor(90, 160, 230)
             else:
-                bg = QColor(40, 40, 50, 200)
-                border = QColor(80, 80, 90)
+                bg = QColor(30, 34, 44, 210)
+                border = QColor(70, 75, 85)
 
             painter.setPen(QPen(border, 1))
             painter.setBrush(bg)
-            painter.drawRoundedRect(rect, 4, 4)
+            painter.drawRoundedRect(rect, 5, 5)
 
-            painter.setPen(QColor(240, 240, 240) if active else QColor(180, 180, 190))
+            painter.setPen(QColor(240, 240, 240) if active else QColor(180, 185, 195))
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, label)
 
             self._overlay_buttons.append((rect, label))
@@ -1732,6 +2031,7 @@ class SceneViewport(QOpenGLWidget):
             "💡 DISPLAY CONTROLS:",
             "N: Toggle grid coordinate numbers",
             "G: Toggle grid snap",
+            "[ / ]: Cycle snap grid preset (5/10/25/50/100)",
             "Right-click: Context menu",
             "",
             "⚡ F5: Performance Lock ON/OFF",
@@ -1825,12 +2125,48 @@ class SceneViewport(QOpenGLWidget):
 
     # -- Mouse interaction --
 
+    def _check_axis_gizmo_click(self, mx, my) -> bool:
+        """Check if click landed on a clickable axis ball. Snap camera like Blender."""
+        for bx, by, r, name in getattr(self, "_axis_gizmo_hits", []):
+            dx = mx - bx
+            dy = my - by
+            if dx * dx + dy * dy <= r * r:
+                if name == "X":
+                    self.camera.yaw, self.camera.pitch = 90.0, 0.0
+                elif name == "-X":
+                    self.camera.yaw, self.camera.pitch = -90.0, 0.0
+                elif name == "Y":
+                    self.camera.yaw, self.camera.pitch = 0.0, 0.0
+                elif name == "-Y":
+                    self.camera.yaw, self.camera.pitch = 180.0, 0.0
+                elif name == "Z":
+                    self.camera.yaw, self.camera.pitch = 0.0, 89.0
+                elif name == "-Z":
+                    self.camera.yaw, self.camera.pitch = 0.0, -89.0
+                self.camera.ortho = True
+                self._show_status(f"View: {name} axis (ortho)")
+                self.update()
+                return True
+        # Centre dot -> perspective home
+        gx, gy = 60, self.height() - 60
+        if (mx - gx) ** 2 + (my - gy) ** 2 <= 8 * 8:
+            self.camera.ortho = False
+            self.camera.yaw = -45.0
+            self.camera.pitch = 30.0
+            self._show_status("View: Perspective home")
+            self.update()
+            return True
+        return False
+
     def _check_overlay_click(self, mx, my) -> bool:
         """Check if click is on an overlay button. Returns True if handled."""
+        if self._check_axis_gizmo_click(mx, my):
+            return True
         for rect, label in self._overlay_buttons:
             if rect.contains(float(mx), float(my)):
                 if label == "Grid":
                     self._snap_grid_enabled = not self._snap_grid_enabled
+                    self._show_status(f"Grid snap: {'ON' if self._snap_grid_enabled else 'OFF'}")
                 elif label in ("Ortho", "Persp"):
                     self.camera.ortho = not self.camera.ortho
                 elif label == "Top":
@@ -1842,6 +2178,16 @@ class SceneViewport(QOpenGLWidget):
                 elif label == "Side":
                     self.camera.yaw, self.camera.pitch = 90.0, 0.0
                     self.camera.ortho = True
+                elif label == "Home":
+                    self.camera.ortho = False
+                    self.camera.yaw = -45.0
+                    self.camera.pitch = 30.0
+                elif label == "Fit":
+                    self._fit_all()
+                elif label == "Z+":
+                    self.camera.zoom(300)
+                elif label == "Z-":
+                    self.camera.zoom(-300)
                 self.update()
                 return True
         return False
@@ -1917,12 +2263,18 @@ class SceneViewport(QOpenGLWidget):
         self._mouse_moved = True
 
         if event.buttons() & Qt.MouseButton.RightButton:
+            if self.autofly_active:
+                self.autofly_stop()
+                self._show_status("Auto-fly stopped (manual camera)")
             if not self.lock_orbit:
                 self.camera.orbit(dx, dy)
             else:
                 self.camera.pan(dx, dy)
             self.update()
         elif event.buttons() & Qt.MouseButton.MiddleButton:
+            if self.autofly_active:
+                self.autofly_stop()
+                self._show_status("Auto-fly stopped (manual camera)")
             self.camera.pan(dx, dy)
             self.update()
         elif event.buttons() & Qt.MouseButton.LeftButton and self._play_morph_drag and self._play_morph_elem:
@@ -2069,12 +2421,21 @@ class SceneViewport(QOpenGLWidget):
             super().mouseDoubleClickEvent(event)
 
     def wheelEvent(self, event: QWheelEvent):
+        if self.autofly_active:
+            self.autofly_stop()
+            self._show_status("Auto-fly stopped (manual camera)")
         self.camera.zoom(event.angleDelta().y())
         self.update()
 
     def keyPressEvent(self, event):
         key = event.key()
         mods = event.modifiers()
+
+        if self.autofly_active and key == Qt.Key.Key_Escape:
+            self.autofly_stop()
+            self._show_status("Auto-fly stopped")
+            self.update()
+            return
 
         if key == Qt.Key.Key_Home:
             self._fit_all()
@@ -2188,6 +2549,10 @@ class SceneViewport(QOpenGLWidget):
             self._snap_grid_enabled = not self._snap_grid_enabled
             self._show_status(f"Grid snap: {'ON' if self._snap_grid_enabled else 'OFF'} ({self._snap_grid_size:.0f} units)")
             self.update()
+        elif key == Qt.Key.Key_BracketLeft:
+            self.cycle_snap_grid_preset(-1)
+        elif key == Qt.Key.Key_BracketRight:
+            self.cycle_snap_grid_preset(1)
         elif key == Qt.Key.Key_H:
             # Keep shortcut help pinned visible to avoid losing the on-screen guide.
             self._show_shortcuts = True

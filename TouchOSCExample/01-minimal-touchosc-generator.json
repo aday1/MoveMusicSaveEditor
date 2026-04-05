@@ -1,0 +1,25 @@
+{
+  "type": "layout",
+  "mode": 3,
+  "version": 17,
+  "width": 2000,
+  "height": 1200,
+  "orientation": "horizontal",
+  "tabpages": [
+    {
+      "type": "tabpage",
+      "name": "demo",
+      "text": "Demo",
+      "components": [
+        {
+          "type": "labelh",
+          "text": "Minimal touchosc-generator example. Run: python touchosc.py 01-minimal-touchosc-generator.json",
+          "x": "0",
+          "y": "0",
+          "width": "100%",
+          "height": "80"
+        }
+      ]
+    }
+  ]
+}

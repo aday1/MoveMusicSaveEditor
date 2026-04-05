@@ -7,6 +7,7 @@ Tree view + property panel with add/duplicate/delete/mass-edit and undo/redo.
 from __future__ import annotations
 
 import copy
+import csv
 import json
 import hashlib
 import logging
@@ -107,8 +108,10 @@ def _pick_loopback_midi_port(port_names: list[str]) -> Optional[str]:
                 return original
     return None
 
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QAction, QActionGroup, QColor, QKeySequence, QShortcut, QUndoCommand, QUndoStack
+from PyQt6.QtCore import QByteArray, Qt, QTimer, QUrl, pyqtSignal
+from PyQt6.QtGui import (
+    QAction, QActionGroup, QColor, QDesktopServices, QKeySequence, QShortcut, QUndoCommand, QUndoStack,
+)
 from PyQt6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox,
     QDialog, QTabWidget,
@@ -129,7 +132,14 @@ from model import (
 from viewport3d import SceneViewport, QuadViewport
 from play_mode_window import PlayModeWindow
 from desktop_play_midi_in import DesktopPlayMidiInThread, resolve_midi_input_port
-from template_generator import TEMPLATES, _row_positions, _grid_positions, _circle_positions, _make_group
+from template_generator import (
+    TEMPLATES,
+    _row_positions,
+    _grid_positions,
+    _circle_positions,
+    _make_group,
+    generate_workspace_library_pack,
+)
 from performance_panel import PerformancePanel
 from roliblock_led import default_mirror
 from theme import STYLESHEET
@@ -283,6 +293,48 @@ class AddTemplateCommand(QUndoCommand):
                 self.project.elements.remove(elem)
             if elem.unique_id in self.workspace.element_ids:
                 self.workspace.element_ids.remove(elem.unique_id)
+
+
+WORKSPACE_LIBRARY_TEMPLATE_NAME = "Workspace Library + Drop Zones (Multi-WS)"
+
+
+class AddMultiWorkspaceTemplateCommand(QUndoCommand):
+    """Append workspaces and their elements in one undo step (library pack, etc.)."""
+
+    def __init__(
+        self,
+        project: Project,
+        workspace_element_specs: list,
+        description: str = "",
+        active_workspace_index_after: Optional[int] = None,
+    ):
+        super().__init__(description or "Add workspaces")
+        self.project = project
+        self.specs = workspace_element_specs  # list of (Workspace, [elements])
+        self._old_active = project.active_workspace_index
+        self._active_after = active_workspace_index_after
+
+    def redo(self):
+        for ws, elems in self.specs:
+            self.project.workspaces.append(ws)
+            for elem in elems:
+                self.project.elements.append(elem)
+                ws.element_ids.append(elem.unique_id)
+        if self._active_after is not None and 0 <= self._active_after < len(self.project.workspaces):
+            self.project.active_workspace_index = self._active_after
+        else:
+            self.project.active_workspace_index = len(self.project.workspaces) - 1
+
+    def undo(self):
+        for ws, elems in reversed(self.specs):
+            for elem in reversed(elems):
+                if elem.unique_id in ws.element_ids:
+                    ws.element_ids.remove(elem.unique_id)
+                if elem in self.project.elements:
+                    self.project.elements.remove(elem)
+        for _ in self.specs:
+            self.project.workspaces.pop()
+        self.project.active_workspace_index = self._old_active
 
 
 class BatchRotateCommand(QUndoCommand):
@@ -1570,13 +1622,13 @@ class MainWindow(QMainWindow):
         saved_geom = cfg.get("window_geometry")
         if saved_geom:
             try:
-                from PyQt6.QtCore import QByteArray
                 self.restoreGeometry(QByteArray.fromHex(bytes(saved_geom, "ascii")))
             except Exception:
                 pass
 
         # Blank project so the viewport and Desktop Play Mode work before File > New.
         self._create_new_project()
+        self._apply_snap_grid_from_config()
 
     def _setup_global_shortcuts(self):
         """Editor-wide shortcuts for MIDI nudging regardless of focused widget."""
@@ -1877,9 +1929,18 @@ class MainWindow(QMainWindow):
         self.action_midi_overview.setShortcut("Ctrl+M")
         self.action_midi_overview.triggered.connect(self._on_open_midi_overview)
         view_menu.addSeparator()
+        snap_menu = view_menu.addMenu("Snap grid size")
+        for sz in (5, 10, 25, 50, 100):
+            act_snap = snap_menu.addAction(f"{sz} units")
+            act_snap.triggered.connect(lambda _checked=False, s=float(sz): self._on_set_snap_grid_size(s))
+        self.action_fit_ws_cam = view_menu.addAction("Fit camera to active workspace")
+        self.action_fit_ws_cam.triggered.connect(self._on_fit_active_workspace_camera)
+        view_menu.addSeparator()
         self.action_desktop_play = view_menu.addAction("Desktop Play Mode...")
         self.action_desktop_play.setShortcut("F11")
-        self.action_desktop_play.setToolTip("Fullscreen 3D play session (Esc exits)")
+        self.action_desktop_play.setToolTip(
+            "Desktop Play: resizable window (not forced fullscreen). Esc exits. Other apps can stack on top."
+        )
         self.action_desktop_play.triggered.connect(self._on_desktop_play_mode)
         view_menu.addSeparator()
         self.action_settings = view_menu.addAction("Settings...")
@@ -1971,6 +2032,12 @@ class MainWindow(QMainWindow):
                 act.setChecked(True)
             act.triggered.connect(lambda checked, l=label: self._set_template_orientation(l))
 
+        template_menu.addSeparator()
+        act_ws_lib = template_menu.addAction(WORKSPACE_LIBRARY_TEMPLATE_NAME)
+        act_ws_lib.triggered.connect(
+            lambda _checked=False, n=WORKSPACE_LIBRARY_TEMPLATE_NAME: self._on_add_template(n)
+        )
+
         # Import menu
         import_menu = file_menu.addMenu("Import 3D")
         self.action_import_glb = import_menu.addAction("GLB/glTF File...")
@@ -1991,6 +2058,7 @@ class MainWindow(QMainWindow):
         self.action_export_mp4 = export_menu.addAction("Orbit Animation MP4...")
         export_menu.addSeparator()
         self.action_export_touchosc = export_menu.addAction("TouchOSC Layout Blueprint (.json)...")
+        self.action_export_touchosc.setVisible(self.debug_mode)
         self.action_export_obj.triggered.connect(self._on_export_obj)
         self.action_export_glb.triggered.connect(self._on_export_glb)
         self.action_export_glb_orbit.triggered.connect(lambda: self._on_export_glb(orbit=True))
@@ -3137,6 +3205,10 @@ class MainWindow(QMainWindow):
                 self._set_panel(self.unknown_panel)
             else:
                 self._set_panel(self.unknown_normal_panel)
+        # Update Desktop Play property panel if active
+        pw = getattr(self, "_play_mode_window", None)
+        if pw is not None:
+            pw.show_element_properties(elem)
         # Always update performance panel (bypassed by blockSignals on tree)
         if isinstance(elem, (HitZone, MorphZone)):
             self.performance_panel.set_selected_elements([elem], self._perf_send)
@@ -3171,6 +3243,42 @@ class MainWindow(QMainWindow):
                     viewports.append(vp)
         return viewports
 
+    def _apply_snap_grid_from_config(self) -> None:
+        cfg = _load_config()
+        sz = float(cfg.get("snap_grid_size", 5.0))
+        for vp in self._all_viewports():
+            vp.set_snap_grid_size(sz)
+
+    def _on_set_snap_grid_size(self, size: float) -> None:
+        cfg = _load_config()
+        cfg["snap_grid_size"] = float(size)
+        _save_config(cfg)
+        for vp in self._all_viewports():
+            vp.set_snap_grid_size(size)
+        self.statusbar.showMessage(
+            f"Snap grid size {size:g} units — press G in the viewport to toggle snap on/off",
+            4000,
+        )
+        self._sync_viewports()
+
+    def _on_fit_active_workspace_camera(self) -> None:
+        if not self.project:
+            return
+        vp = self._active_viewport()
+        idx = int(self.project.active_workspace_index)
+        if vp.fit_workspace_bounds(idx):
+            self.statusbar.showMessage("Camera fitted to active workspace", 3000)
+        else:
+            self.statusbar.showMessage("Active workspace has no elements to frame", 4000)
+        self._sync_viewports()
+
+    def _on_play_camera_fit(self, ws_index: int) -> None:
+        if ws_index < 0 or self.viewport is None:
+            return
+        if self.viewport.fit_workspace_bounds(ws_index):
+            self.viewport.setFocus(Qt.FocusReason.OtherFocusReason)
+            self.viewport.update()
+
     def _on_toggle_debug_mode(self, checked: bool):
         self.debug_mode = bool(checked)
         cfg = _load_config()
@@ -3181,11 +3289,22 @@ class MainWindow(QMainWindow):
             2500,
         )
         self._apply_roliblock_debug_visibility()
+        self._apply_touchosc_debug_visibility()
         self._sync_roliblock_mirror_from_panel()
         if getattr(self, "_play_mode_window", None) is not None:
             self._restart_desktop_play_midi_in()
-        # Refresh panel for current selection so mode applies immediately.
         self._on_selection_changed()
+
+    def _apply_touchosc_debug_visibility(self):
+        vis = self.debug_mode
+        if hasattr(self, "action_export_touchosc"):
+            self.action_export_touchosc.setVisible(vis)
+        if hasattr(self, "_midi_overview_dialog") and self._midi_overview_dialog:
+            dlg = self._midi_overview_dialog
+            for attr in ("_export_touchosc_btn", "_open_touchosc_file_btn", "_open_touchosc_dir_btn"):
+                btn = getattr(dlg, attr, None)
+                if btn:
+                    btn.setVisible(vis)
 
     def _on_open_settings(self):
         if self._settings_dialog and not self._settings_dialog.isVisible():
@@ -3226,6 +3345,7 @@ class MainWindow(QMainWindow):
                     on_element_edited=self._on_midi_overview_element_edited,
                     parent=self,
                 )
+            self._apply_touchosc_debug_visibility()
             self._midi_overview_dialog.show()
             self._midi_overview_dialog.raise_()
         except Exception:
@@ -3559,20 +3679,32 @@ class MainWindow(QMainWindow):
         namespace = str(cfg.get("osc_bridge_namespace", "/mmc"))
 
         try:
-            from export_touchosc import export_touchosc_layout
+            from export_touchosc import ensure_json_extension, export_touchosc_layout
 
+            out_path = ensure_json_extension(file_path)
             summary = export_touchosc_layout(
                 self.project,
-                file_path,
+                str(out_path),
                 osc_host=host,
                 osc_port=port,
                 osc_namespace=namespace,
             )
-            self.statusbar.showMessage(f"TouchOSC layout blueprint exported to {file_path}", 5000)
+            cfg["touchosc_last_blueprint_path"] = summary.get("blueprint_path", str(out_path))
+            cfg["touchosc_last_mk1_gen_path"] = summary.get("mk1_generator_path", "")
+            _save_config(cfg)
+            self.statusbar.showMessage(
+                f"TouchOSC: blueprint + Mk1 generator JSON written ({out_path.name})",
+                6000,
+            )
             QMessageBox.information(
                 self,
                 "TouchOSC Export",
-                "TouchOSC layout blueprint exported successfully.\n\n"
+                "Wrote two files:\n"
+                f"1) Blueprint (OSC args): {summary.get('blueprint_path', '')}\n"
+                f"2) touchosc-generator input: {summary.get('mk1_generator_path', '')}\n\n"
+                "TouchOSC Editor does not import these JSON files as layouts. Use the blueprint as a "
+                "build sheet in the editor, or run touchosc.py (martinwittmann/touchosc-generator) on "
+                "file (2) to get a .touchosc for Mk1.\n\n"
                 f"Pages: {summary['page_count']}\n"
                 f"Pads/Notes: {summary['note_controls']}\n"
                 f"CC Controls: {summary['cc_controls']}\n"
@@ -4380,11 +4512,6 @@ class MainWindow(QMainWindow):
         target = self.viewport.camera.target
         origin = Vec3(target[0], target[1], 0.0)
 
-        generator = TEMPLATES.get(template_name)
-        if not generator:
-            QMessageBox.warning(self, "Template Missing", f"Template '{template_name}' was not found.")
-            return
-
         # --- Compute next-available MIDI CC and note values to avoid duplicates ---
         used_ccs = set()   # (channel, control) pairs
         used_notes = set()  # (channel, note) pairs
@@ -4418,6 +4545,54 @@ class MainWindow(QMainWindow):
                     return base
                 base += 1
             return start  # give up
+
+        if template_name == WORKSPACE_LIBRARY_TEMPLATE_NAME:
+            specs = generate_workspace_library_pack(self.project, origin)
+            all_elems = [e for _ws, elist in specs for e in elist]
+            if self._template_orientation == "Vertical":
+                for elem in all_elems:
+                    p = elem.transform.translation
+                    dy = p.y - origin.y
+                    p.y = origin.y
+                    p.z = origin.z + dy
+            elif self._template_orientation == "Side":
+                for elem in all_elems:
+                    p = elem.transform.translation
+                    dx = p.x - origin.x
+                    p.x = origin.x
+                    p.y = origin.y + dx
+            if all_elems:
+                min_z = min(
+                    elem.transform.translation.z - (elem.transform.scale.z / 2)
+                    for elem in all_elems
+                )
+                if min_z < 0.0:
+                    lift = -min_z
+                    for elem in all_elems:
+                        elem.transform.translation.z += lift
+            lib_index = len(self.project.workspaces)
+            cmd = AddMultiWorkspaceTemplateCommand(
+                self.project,
+                specs,
+                f"Add {template_name}",
+                active_workspace_index_after=lib_index,
+            )
+            self.undo_stack.push(cmd)
+            self._rebuild_tree()
+            self._update_statusbar()
+            self._sync_viewports()
+            self._sync_selection(all_elems)
+            self.statusbar.showMessage(
+                f"Added {template_name}: {len(specs)} workspaces, {len(all_elems)} elements",
+                6000,
+            )
+            self._active_viewport()._focus_selected()
+            return
+
+        generator = TEMPLATES.get(template_name)
+        if not generator:
+            QMessageBox.warning(self, "Template Missing", f"Template '{template_name}' was not found.")
+            return
 
         # Patch well-known templates with auto-incremented MIDI values
         from template_generator import (
@@ -4602,16 +4777,27 @@ class MainWindow(QMainWindow):
             prb.config_changed.connect(self._on_play_roliblock_changed)
             self._play_mode_window.navigator_workspace_changed.connect(self._on_play_nav_workspace)
             self._play_mode_window.navigator_element_clicked.connect(self._on_play_nav_element)
+            self._play_mode_window.camera_fit_requested.connect(self._on_play_camera_fit)
+            self._play_mode_window.midi_property_changed.connect(self._on_play_midi_prop_changed)
 
             self.viewport.play_mode = True
             self.viewport.lock_move = True
             self.viewport.update()
-            self._play_mode_window.showFullScreen()
+            cfg = _load_config()
+            dpg = cfg.get("desktop_play_geometry")
+            if dpg:
+                try:
+                    self._play_mode_window.restoreGeometry(QByteArray.fromHex(bytes(dpg, "ascii")))
+                except Exception:
+                    self._play_mode_window.resize(1280, 820)
+            else:
+                self._play_mode_window.resize(1280, 820)
+            self._play_mode_window.show()
             QApplication.processEvents()
             self._play_mode_window.raise_()
             self._play_mode_window.activateWindow()
             self.viewport.setFocus(Qt.FocusReason.OtherFocusReason)
-            self.statusbar.showMessage("Desktop Play Mode — Esc to exit", 4000)
+            self.statusbar.showMessage("Desktop Play — resizable window, Esc to exit", 4000)
             self._start_desktop_play_midi_in()
         except Exception:
             logging.exception("Desktop Play Mode failed to start")
@@ -4654,6 +4840,20 @@ class MainWindow(QMainWindow):
             pass
         try:
             pw.navigator_element_clicked.disconnect(self._on_play_nav_element)
+        except Exception:
+            pass
+        try:
+            pw.camera_fit_requested.disconnect(self._on_play_camera_fit)
+        except Exception:
+            pass
+        try:
+            pw.midi_property_changed.disconnect(self._on_play_midi_prop_changed)
+        except Exception:
+            pass
+        try:
+            cfg = _load_config()
+            cfg["desktop_play_geometry"] = pw.saveGeometry().toHex().data().decode("ascii")
+            _save_config(cfg)
         except Exception:
             pass
         pw.roliblock_strip.set_bind_callback(None)
@@ -4877,6 +5077,18 @@ class MainWindow(QMainWindow):
     def _on_play_nav_element(self, elem) -> None:
         self.viewport.set_selected(elem)
         self.viewport._emit_selection()
+        pw = getattr(self, "_play_mode_window", None)
+        if pw is not None:
+            pw.show_element_properties(elem)
+
+    def _on_play_midi_prop_changed(self, elem) -> None:
+        self._modified = True
+        self._update_statusbar()
+        self.viewport.update()
+        pw = getattr(self, "_play_mode_window", None)
+        if pw is not None:
+            pw.show_element_properties(elem)
+        self.statusbar.showMessage("MIDI values updated from property panel", 3000)
 
     def _on_play_perf_send(self, element_id: str, payload: dict):
         self._perf_send(element_id, payload)
@@ -5199,13 +5411,22 @@ class MidiOverviewDialog(QWidget):
         self._refresh_ports_btn.clicked.connect(self._refresh_midi_ports)
         filter_row.addWidget(self._refresh_ports_btn)
 
-        self._export_btn = QPushButton("Export Mappings")
+        self._export_btn = QPushButton("Export txt / csv")
         self._export_btn.clicked.connect(self._export_mappings_text)
         filter_row.addWidget(self._export_btn)
 
         self._export_touchosc_btn = QPushButton("Export TouchOSC")
         self._export_touchosc_btn.clicked.connect(self._export_touchosc_layout)
+        self._export_touchosc_btn.setVisible(False)
         filter_row.addWidget(self._export_touchosc_btn)
+        self._open_touchosc_file_btn = QPushButton("Open last TouchOSC file")
+        self._open_touchosc_file_btn.clicked.connect(self._open_last_touchosc_blueprint)
+        self._open_touchosc_file_btn.setVisible(False)
+        filter_row.addWidget(self._open_touchosc_file_btn)
+        self._open_touchosc_dir_btn = QPushButton("Open last export folder")
+        self._open_touchosc_dir_btn.clicked.connect(self._open_last_touchosc_folder)
+        self._open_touchosc_dir_btn.setVisible(False)
+        filter_row.addWidget(self._open_touchosc_dir_btn)
 
         refresh_btn = QPushButton("Refresh")
         refresh_btn.clicked.connect(self._populate)
@@ -5223,7 +5444,8 @@ class MidiOverviewDialog(QWidget):
             "Each row uses locked dropdowns instead of free-text parsing. "
             "The note and CC editors update the first mapping shown for that element; any additional mappings are preserved. "
             "Test sends either OSC bridge messages (/mmc/midi/cc or /mmc/midi/note) or direct MIDI output. "
-            "Use Export TouchOSC to generate a multi-page OSC control layout blueprint from this project."
+            "Export TouchOSC writes a blueprint JSON plus a touchosc-generator JSON (see TouchOSCExample/README.txt). "
+            "Use Open last export folder after an export."
         )
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -5879,16 +6101,44 @@ class MidiOverviewDialog(QWidget):
         self._table.setCellWidget(row, 8, test_btn)
 
     def _export_mappings_text(self):
-        file_path, _ = QFileDialog.getSaveFileName(
+        file_path, _sel = QFileDialog.getSaveFileName(
             self,
             "Export MIDI/OSC Mappings",
             "midi_osc_mappings.txt",
-            "Text Files (*.txt);;All Files (*)",
+            "Text (*.txt);;CSV (*.csv);;All Files (*)",
         )
         if not file_path:
             return
 
         cc_addr, note_addr = self._osc_addresses()
+        is_csv = file_path.lower().endswith(".csv")
+
+        if is_csv:
+            try:
+                with open(file_path, "w", encoding="utf-8", newline="") as handle:
+                    w = csv.writer(handle)
+                    w.writerow([
+                        "element_name",
+                        "element_type",
+                        "workspace",
+                        "note_summary",
+                        "cc_summary",
+                        "message_type",
+                    ])
+                    for elem in self.project.elements:
+                        w.writerow([
+                            elem.display_name or elem.unique_id,
+                            type(elem).__name__,
+                            self._element_workspace(elem),
+                            self._format_notes(elem),
+                            self._format_ccs(elem),
+                            str(getattr(elem, "midi_message_type", "") or ""),
+                        ])
+                self._mark_status(f"Exported CSV to {file_path}")
+            except Exception as exc:
+                QMessageBox.warning(self, "Export Mappings", f"Failed to export CSV: {exc}")
+            return
+
         lines = [
             "MoveMusic MIDI/OSC Mapping Export",
             "",
@@ -5955,24 +6205,31 @@ class MidiOverviewDialog(QWidget):
             return
 
         try:
-            from export_touchosc import export_touchosc_layout
+            from export_touchosc import ensure_json_extension, export_touchosc_layout
 
+            out_path = ensure_json_extension(file_path)
             summary = export_touchosc_layout(
                 self.project,
-                file_path,
+                str(out_path),
                 osc_host=self._osc_host_edit.text().strip() or "127.0.0.1",
                 osc_port=int(self._osc_port_spin.value()),
                 osc_namespace=self._osc_ns_edit.text().strip() or "/mmc",
             )
+            cfg = _load_config()
+            cfg["touchosc_last_blueprint_path"] = summary.get("blueprint_path", str(out_path))
+            cfg["touchosc_last_mk1_gen_path"] = summary.get("mk1_generator_path", "")
+            _save_config(cfg)
             self._mark_status(
-                f"TouchOSC export complete: {summary['page_count']} page(s), "
-                f"{summary['note_controls']} pads, {summary['cc_controls']} CC controls, "
-                f"{summary['morph_controls']} XY controls."
+                f"TouchOSC: blueprint + Mk1 generator — {summary['page_count']} page(s), "
+                f"{summary['note_controls']} pads, {summary['cc_controls']} CC, "
+                f"{summary['morph_controls']} morph."
             )
             QMessageBox.information(
                 self,
                 "TouchOSC Export",
-                "TouchOSC layout blueprint exported successfully.\n\n"
+                "Wrote blueprint + *_touchosc_mk1_gen.json (see TouchOSCExample/README.txt).\n\n"
+                f"Blueprint: {summary.get('blueprint_path', '')}\n"
+                f"Generator: {summary.get('mk1_generator_path', '')}\n\n"
                 f"Pages: {summary['page_count']}\n"
                 f"Pads/Notes: {summary['note_controls']}\n"
                 f"CC Controls: {summary['cc_controls']}\n"
@@ -5981,6 +6238,35 @@ class MidiOverviewDialog(QWidget):
         except Exception as exc:
             logging.exception("TouchOSC export failed")
             QMessageBox.warning(self, "TouchOSC Export", f"Failed to export TouchOSC layout: {exc}")
+
+    def _open_last_touchosc_blueprint(self):
+        cfg = _load_config()
+        p = cfg.get("touchosc_last_blueprint_path")
+        if not p:
+            QMessageBox.information(
+                self, "TouchOSC", "No saved export yet. Use Export TouchOSC once first.",
+            )
+            return
+        path = Path(p)
+        if not path.is_file():
+            QMessageBox.warning(self, "TouchOSC", f"File not found:\n{p}")
+            return
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(path.resolve())))
+
+    def _open_last_touchosc_folder(self):
+        cfg = _load_config()
+        p = cfg.get("touchosc_last_blueprint_path")
+        if not p:
+            QMessageBox.information(
+                self, "TouchOSC", "No saved export yet. Use Export TouchOSC once first.",
+            )
+            return
+        path = Path(p)
+        folder = path.parent if path.is_file() else path
+        if not folder.is_dir():
+            QMessageBox.warning(self, "TouchOSC", f"Folder not found:\n{folder}")
+            return
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(folder.resolve())))
 
     def _populate(self):
         self._set_loading(True, "Loading MIDI mappings... 0/0")
